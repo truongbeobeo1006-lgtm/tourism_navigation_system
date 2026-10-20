@@ -6,14 +6,17 @@ spring:
     name: poi-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/poitour
+    url: jdbc:postgresql://127.0.0.1:5432/poitour
     username: poitour
     password: poitour123
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -22,6 +25,6 @@ spring:
 
   data:
     redis:
-      host: localhost
+      host: 127.0.0.1
       port: 6379
       timeout: 2000ms
