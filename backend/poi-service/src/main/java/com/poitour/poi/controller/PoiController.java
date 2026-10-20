@@ -36,11 +36,24 @@ public class PoiController {
     }
 
     /**
-     * UC08: Xem thông tin chi tiết một POI
-     * Ví dụ: GET /api/v1/pois/550e8400-e29b-41d4-a716-446655440000?lang=en
+     * UC08 / Hình 4.8 Sequence: Xem chi tiết POI và lịch sử nghe
+     * GET /api/v1/pois/{id}/detail?lang=vi
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id}/detail")
     public ResponseEntity<PoiResponse> getPoiDetail(
+            @PathVariable UUID id,
+            @RequestParam(required = false, defaultValue = "vi") String lang) {
+
+        PoiResponse poi = poiService.getById(id, lang);
+        return ResponseEntity.ok(poi);
+    }
+
+    /**
+     * UC03 / Hình 4.3 Sequence: Lấy file âm thanh thuyết minh theo ngôn ngữ chọn
+     * GET /api/v1/pois/{id}/audio?lang=vi
+     */
+    @GetMapping("/{id}/audio")
+    public ResponseEntity<PoiResponse> getPoiAudio(
             @PathVariable UUID id,
             @RequestParam(required = false, defaultValue = "vi") String lang) {
 
