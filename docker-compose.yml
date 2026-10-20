@@ -2,6 +2,7 @@ services:
 
   # ─────────────────────────────────────────────
   # PostgreSQL — Cơ sở dữ liệu chính
+  # Đổi port máy thật sang 5433 để tránh đụng độ Postgres có sẵn trên máy
   # ─────────────────────────────────────────────
   postgres:
     image: postgres:15
@@ -12,7 +13,7 @@ services:
       POSTGRES_USER: poitour
       POSTGRES_PASSWORD: poitour123
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql

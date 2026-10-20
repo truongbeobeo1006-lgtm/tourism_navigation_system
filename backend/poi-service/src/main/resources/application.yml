@@ -6,7 +6,7 @@ spring:
     name: poi-service
 
   datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/poitour
+    url: jdbc:postgresql://127.0.0.1:5433/poitour
     username: poitour
     password: poitour123
     driver-class-name: org.postgresql.Driver
