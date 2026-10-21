@@ -4,8 +4,6 @@ import com.poitour.poi.dto.CreatePoiRequest;
 import com.poitour.poi.dto.PoiResponse;
 import com.poitour.poi.model.Poi;
 import com.poitour.poi.model.PoiAudioContent;
-import com.poitour.poi.model.PoiQrToken;
-import com.poitour.poi.repository.PoiQrTokenRepository;
 import com.poitour.poi.repository.PoiRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 public class PoiService {
 
     private final PoiRepository poiRepository;
-    private final PoiQrTokenRepository qrTokenRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
     private static final String REDIS_GEO_KEY = "pois_geo";
@@ -77,22 +74,6 @@ public class PoiService {
     public PoiResponse getById(UUID id, String lang) {
         Poi poi = poiRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy điểm tham quan với ID: " + id));
-
-        return mapToResponse(poi, (lang != null ? lang : "vi"), null);
-    }
-
-    /**
-     * UC04: Quét QR là phát ngay (Lấy thông tin POI qua QR Token)
-     */
-    @Transactional(readOnly = true)
-    public PoiResponse getByQrToken(String token, String lang) {
-        PoiQrToken qrToken = qrTokenRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Mã QR không hợp lệ hoặc đã hết hạn!"));
-
-        Poi poi = qrToken.getPoi();
-        if (!Boolean.TRUE.equals(poi.getIsActive())) {
-            throw new RuntimeException("Điểm tham quan này hiện đang tạm dừng hoạt động!");
-        }
 
         return mapToResponse(poi, (lang != null ? lang : "vi"), null);
     }

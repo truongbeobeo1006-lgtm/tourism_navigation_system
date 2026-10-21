@@ -62,19 +62,6 @@ public class PoiController {
     }
 
     /**
-     * UC04: Quét QR là phát ngay
-     * Ví dụ: GET /api/v1/pois/qr/DEMO-TOKEN-DINH-DOC-LAP-2024?lang=vi
-     */
-    @GetMapping("/qr/{token}")
-    public ResponseEntity<PoiResponse> getPoiByQr(
-            @PathVariable String token,
-            @RequestParam(required = false, defaultValue = "vi") String lang) {
-
-        PoiResponse poi = poiService.getByQrToken(token, lang);
-        return ResponseEntity.ok(poi);
-    }
-
-    /**
      * UC06: Admin quản lý nội dung - Thêm POI mới
      */
     @PostMapping

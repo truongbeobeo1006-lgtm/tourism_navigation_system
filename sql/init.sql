@@ -94,18 +94,22 @@ CREATE INDEX IF NOT EXISTS idx_usage_history_poi_id
     ON usage_history (poi_id);
 
 -- =======================================================
--- BẢNG 5: poi_qr_tokens
--- Mã QR cho từng điểm tham quan (UC04)
+-- BẢNG 5: access_tickets
+-- Mã QR vé truy cập App dành cho Du khách (Quét 1 lần, hiệu lực 24h)
+-- Thay thế đăng nhập mật khẩu trên mobile: Quét QR -> nhận JWT Session 24h
 -- =======================================================
-CREATE TABLE IF NOT EXISTS poi_qr_tokens (
-    id         UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    poi_id     UUID         NOT NULL REFERENCES pois(id) ON DELETE CASCADE,
-    token      VARCHAR(64)  UNIQUE NOT NULL,
-    -- Token ngẫu nhiên được mã hóa vào QR code
-    -- App quét QR → đọc token → gọi GET /api/v1/pois/qr/{token}
-    expires_at TIMESTAMP
-    -- NULL = không bao giờ hết hạn
-    -- Có thể đặt hạn để tăng bảo mật
+CREATE TABLE IF NOT EXISTS access_tickets (
+    id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    ticket_code    VARCHAR(64) UNIQUE NOT NULL,
+    -- Mã token in trong mã QR của vé tham quan (VD: 'TOUR-PASS-2024-SG')
+    status         VARCHAR(20) NOT NULL DEFAULT 'NEW',
+    -- 'NEW' (chưa quét) | 'ACTIVE' (đang dùng) | 'EXPIRED' (hết hạn 24h)
+    activated_at   TIMESTAMP,
+    -- Thời điểm du khách quét mã lần đầu tiên
+    expires_at     TIMESTAMP,
+    -- Thời điểm hết hạn (chính xác bằng activated_at + 24 giờ)
+    duration_hours INTEGER     NOT NULL DEFAULT 24,
+    created_at     TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
 -- =======================================================
@@ -164,11 +168,11 @@ SELECT
 FROM pois p WHERE p.name = 'Dinh Độc Lập'
 ON CONFLICT (poi_id, lang_code) DO NOTHING;
 
--- Thêm QR token mẫu cho Dinh Độc Lập
-INSERT INTO poi_qr_tokens (poi_id, token)
-SELECT p.id, 'DEMO-TOKEN-DINH-DOC-LAP-2024'
-FROM pois p WHERE p.name = 'Dinh Độc Lập'
-ON CONFLICT (token) DO NOTHING;
+-- Thêm vé QR mẫu để du khách quét vào App (hiệu lực 24h)
+INSERT INTO access_tickets (ticket_code, status, duration_hours) VALUES
+    ('TOUR-PASS-DEMO-24H', 'NEW', 24),
+    ('TOUR-PASS-SAIGON-24H', 'NEW', 24)
+ON CONFLICT (ticket_code) DO NOTHING;
 
 -- Thêm tài khoản admin mẫu
 -- Password: admin123 (đã bcrypt hash)
