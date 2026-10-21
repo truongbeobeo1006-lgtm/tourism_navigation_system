@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      # Cấu hình CORS toàn cục cho tất cả microservices
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            maxAge: 3600
+
+      # Định nghĩa các tuyến đường chuyển tiếp (Routes)
+      routes:
+        # 1. Chuyển tiếp các request POI sang poi-service (cổng 8082)
+        - id: poi-service-route
+          uri: http://127.0.0.1:8082
+          predicates:
+            - Path=/api/v1/pois/**
+
+        # 2. Chuyển tiếp các request Đăng nhập & QR Vé sang auth-service (cổng 8081)
+        - id: auth-service-route
+          uri: http://127.0.0.1:8081
+          predicates:
+            - Path=/api/v1/auth/**
+
+        # 3. Chuyển tiếp các request GPS định vị sang tracking-service (cổng 8083)
+        - id: tracking-service-route
+          uri: http://127.0.0.1:8083
+          predicates:
+            - Path=/api/v1/tracking/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway
