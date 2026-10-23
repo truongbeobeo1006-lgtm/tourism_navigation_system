@@ -136,36 +136,86 @@ CREATE TABLE IF NOT EXISTS tour_pois (
 
 -- =======================================================
 -- DỮ LIỆU MẪU (SEED DATA)
--- 5 điểm tham quan thật ở TP.HCM với tọa độ thật
--- Để test app ngay sau khi setup
+-- Tuyến tham quan di tích lịch sử trung tâm Quận 1, TP.HCM
+-- Tọa độ GPS chuẩn xác thực tế
 -- =======================================================
 
--- Thêm POI mẫu
+-- 1. Thêm 6 điểm POI trung tâm Quận 1
 INSERT INTO pois (name, lat, lng, radius_m, is_active) VALUES
     ('Dinh Độc Lập',           10.77692, 106.69531, 30, TRUE),
     ('Nhà Thờ Đức Bà',         10.77972, 106.69904, 30, TRUE),
     ('Bưu Điện Trung Tâm',     10.77957, 106.69930, 30, TRUE),
-    ('Bảo Tàng Chứng Tích Chiến Tranh', 10.77949, 106.69260, 30, TRUE),
-    ('Phố Đi Bộ Nguyễn Huệ',  10.77362, 106.70408, 50, TRUE)
+    ('Nhà Hát Thành Phố',      10.77665, 106.70318, 30, TRUE),
+    ('Chợ Bến Thành',          10.77253, 106.69803, 30, TRUE),
+    ('Phố Đi Bộ Nguyễn Huệ',  10.77362, 106.70408, 40, TRUE)
 ON CONFLICT DO NOTHING;
 
--- Thêm nội dung audio mẫu (tiếng Việt + tiếng Anh) cho Dinh Độc Lập
+-- 2. Thêm bài thuyết minh (Tiếng Việt & Tiếng Anh) cho từng điểm POI Quận 1
+
+-- POI 1: Dinh Độc Lập
 INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
-SELECT
-    p.id,
-    'vi',
-    'Chào mừng bạn đến Dinh Độc Lập, còn gọi là Dinh Thống Nhất. Đây là công trình kiến trúc mang tính biểu tượng của Sài Gòn, được xây dựng năm 1966.',
-    25
+SELECT p.id, 'vi', 'Chào mừng bạn đến Dinh Độc Lập, còn gọi là Dinh Thống Nhất. Đây là công trình lịch sử mang tính biểu tượng của Sài Gòn, chứng kiến thời khắc lịch sử ngày 30 tháng 4 năm 1975.', 30
 FROM pois p WHERE p.name = 'Dinh Độc Lập'
 ON CONFLICT (poi_id, lang_code) DO NOTHING;
 
 INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
-SELECT
-    p.id,
-    'en',
-    'Welcome to the Independence Palace, also known as Reunification Palace. This iconic landmark was built in 1966 and served as the headquarters of the South Vietnamese government.',
-    28
+SELECT p.id, 'en', 'Welcome to the Independence Palace, also known as Reunification Palace. This iconic historical landmark in District 1 witnessed the historic moment of reunification on April 30, 1975.', 30
 FROM pois p WHERE p.name = 'Dinh Độc Lập'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+-- POI 2: Nhà Thờ Đức Bà
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'vi', 'Bạn đang đứng trước Nhà Thờ Đức Bà Sài Gòn, kiệt tác kiến trúc Gothic cổ kính được xây dựng từ năm 1877 với toàn bộ gạch ngói nhập khẩu từ Marseille, Pháp.', 35
+FROM pois p WHERE p.name = 'Nhà Thờ Đức Bà'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'en', 'You are standing before Notre-Dame Cathedral of Saigon, an ancient French Romanesque and Gothic architectural masterpiece built in 1877 using red bricks imported from Marseille, France.', 35
+FROM pois p WHERE p.name = 'Nhà Thờ Đức Bà'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+-- POI 3: Bưu Điện Trung Tâm
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'vi', 'Bưu Điện Trung Tâm Sài Gòn là một trong những công trình kiến trúc thời Pháp đẹp nhất tại Quận 1, kết hợp hài hòa giữa phong cách Phục Hưng phương Tây và họa tiết phương Đông.', 30
+FROM pois p WHERE p.name = 'Bưu Điện Trung Tâm'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'en', 'The Saigon Central Post Office is one of the most stunning French colonial architectural gems in District 1, blending Renaissance elegance with delicate Eastern decorative motifs.', 30
+FROM pois p WHERE p.name = 'Bưu Điện Trung Tâm'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+-- POI 4: Nhà Hát Thành Phố
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'vi', 'Nhà Hát Lớn Thành Phố, tọa lạc tại Công trường Lam Sơn, khánh thành năm 1900 mang đậm phong cách kiến trúc Flamboyant Pháp, là trung tâm biểu diễn nghệ thuật danh giá hàng đầu.', 30
+FROM pois p WHERE p.name = 'Nhà Hát Thành Phố'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'en', 'The Saigon Opera House, located at Lam Son Square, opened in 1900 with flamboyant French architecture, serving as Ho Chi Minh City prestigious venue for theatrical performances.', 30
+FROM pois p WHERE p.name = 'Nhà Hát Thành Phố'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+-- POI 5: Chợ Bến Thành
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'vi', 'Chợ Bến Thành với tháp đồng hồ bốn mặt nổi tiếng là trái tim thương mại sôi động của Quận 1, nơi du khách thỏa sức khám phá ẩm thực đường phố và văn hóa bản địa đặc sắc.', 30
+FROM pois p WHERE p.name = 'Chợ Bến Thành'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'en', 'Ben Thanh Market, famous for its four-sided clock tower, is the vibrant commercial heart of District 1, offering rich local street delicacies and traditional handicrafts.', 30
+FROM pois p WHERE p.name = 'Chợ Bến Thành'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+-- POI 6: Phố Đi Bộ Nguyễn Huệ
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'vi', 'Phố Đi Bộ Nguyễn Huệ là quảng trường đi bộ hiện đại bậc nhất, trải dài từ trụ sở Ủy ban Nhân dân Thành phố đến bờ sông Sài Gòn, rực rỡ sắc màu về đêm.', 25
+FROM pois p WHERE p.name = 'Phố Đi Bộ Nguyễn Huệ'
+ON CONFLICT (poi_id, lang_code) DO NOTHING;
+
+INSERT INTO poi_audio_contents (poi_id, lang_code, tts_script, duration_sec)
+SELECT p.id, 'en', 'Nguyen Hue Walking Street is a premier pedestrian boulevard in District 1, extending from City Hall down to the scenic Saigon River waterfront, lively with music and cultural events.', 25
+FROM pois p WHERE p.name = 'Phố Đi Bộ Nguyễn Huệ'
 ON CONFLICT (poi_id, lang_code) DO NOTHING;
 
 -- Thêm vé QR mẫu để du khách quét vào App (hiệu lực 24h)
