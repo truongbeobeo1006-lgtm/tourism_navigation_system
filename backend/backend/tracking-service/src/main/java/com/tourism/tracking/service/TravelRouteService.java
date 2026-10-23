@@ -38,9 +38,27 @@ public class TravelRouteService {
             return null;
         }
 
-        existingRoute.setName(updatedRoute.getName());
-        existingRoute.setPoiIds(updatedRoute.getPoiIds());
+        if (updatedRoute.getName() != null) {
+            existingRoute.setName(updatedRoute.getName());
+        }
 
+        if (updatedRoute.getPoiIds() != null) {
+            existingRoute.setPoiIds(
+                    new ArrayList<>(updatedRoute.getPoiIds())
+            );
+        }
+
+        return existingRoute;
+    }
+
+    public TravelRoute updateRouteStops(Long id, List<Long> poiIds) {
+        TravelRoute existingRoute = getRouteById(id);
+
+        if (existingRoute == null) {
+            return null;
+        }
+
+        existingRoute.setPoiIds(new ArrayList<>(poiIds));
         return existingRoute;
     }
 
