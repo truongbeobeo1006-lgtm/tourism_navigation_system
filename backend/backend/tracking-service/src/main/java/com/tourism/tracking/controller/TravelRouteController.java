@@ -2,61 +2,83 @@
 package com.tourism.tracking.controller;
 
 import com.tourism.tracking.model.TravelRoute;
+import com.tourism.tracking.service.TravelRouteService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("/api/routes")
 public class TravelRouteController {
 
-    private final List<TravelRoute> routes = new ArrayList<>();
-    private final AtomicLong nextId = new AtomicLong(1);
+    private final TravelRouteService routeService;
+
+    public TravelRouteController(TravelRouteService routeService) {
+        this.routeService = routeService;
+    }
 
     @PostMapping
-    public TravelRoute createRoute(@RequestBody TravelRoute route) {
-        route.setId(nextId.getAndIncrement());
-        routes.add(route);
-        return route;
+    public ResponseEntity<TravelRoute> createRoute(
+            @RequestBody TravelRoute route) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(routeService.createRoute(route));
     }
 
     @GetMapping
     public List<TravelRoute> getAllRoutes() {
-        return routes;
+        return routeService.getAllRoutes();
     }
 
     @GetMapping("/{id}")
-    public TravelRoute getRouteById(@PathVariable Long id) {
-        return routes.stream()
-                .filter(route -> route.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+    public ResponseEntity<TravelRoute> getRouteById(
+            @PathVariable Long id) {
+        TravelRoute route = routeService.getRouteById(id);
+
+        if (route == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(route);
     }
 
     @PutMapping("/{id}")
-    public TravelRoute updateRoute(
+    public ResponseEntity<TravelRoute> updateRoute(
             @PathVariable Long id,
             @RequestBody TravelRoute updatedRoute) {
+        TravelRoute route =
+                routeService.updateRoute(id, updatedRoute);
 
-        for (TravelRoute route : routes) {
-            if (route.getId().equals(id)) {
-                route.setName(updatedRoute.getName());
-                route.setPoiIds(updatedRoute.getPoiIds());
-                return route;
-            }
+        if (route == null) {
+            return ResponseEntity.notFound().build();
         }
 
-        return null;
+        return ResponseEntity.ok(route);
+    }
+
+    @PutMapping("/{id}/stops")
+    public ResponseEntity<TravelRoute> updateRouteStops(
+            @PathVariable Long id,
+            @RequestBody List<Long> poiIds) {
+        TravelRoute route =
+                routeService.updateRouteStops(id, poiIds);
+
+        if (route == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(route);
     }
 
     @DeleteMapping("/{id}")
-    public String deleteRoute(@PathVariable Long id) {
-        boolean removed = routes.removeIf(
-                route -> route.getId().equals(id)
-        );
+    public ResponseEntity<Void> deleteRoute(
+            @PathVariable Long id) {
+        if (!routeService.deleteRoute(id)) {
+            return ResponseEntity.notFound().build();
+        }
 
-        return removed ? "Route deleted" : "Route not found";
+        return ResponseEntity.noContent().build();
     }
 }
+
