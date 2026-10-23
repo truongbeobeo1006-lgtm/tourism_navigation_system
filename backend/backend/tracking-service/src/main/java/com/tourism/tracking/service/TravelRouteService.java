@@ -2,67 +2,75 @@
 package com.tourism.tracking.service;
 
 import com.tourism.tracking.model.TravelRoute;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional;
+
+interface TravelRouteRepository extends JpaRepository<TravelRoute, Long> {
+}
 
 @Service
 public class TravelRouteService {
 
-    private final List<TravelRoute> routes = new ArrayList<>();
-    private final AtomicLong nextId = new AtomicLong(1);
+    private final TravelRouteRepository repository;
+
+    public TravelRouteService(TravelRouteRepository repository) {
+        this.repository = repository;
+    }
 
     public TravelRoute createRoute(TravelRoute route) {
-        route.setId(nextId.getAndIncrement());
-        routes.add(route);
-        return route;
+        route.setId(null);
+        return repository.save(route);
     }
 
     public List<TravelRoute> getAllRoutes() {
-        return new ArrayList<>(routes);
+        return repository.findAll();
     }
 
     public TravelRoute getRouteById(Long id) {
-        return routes.stream()
-                .filter(route -> route.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        return repository.findById(id).orElse(null);
     }
 
     public TravelRoute updateRoute(Long id, TravelRoute updatedRoute) {
-        TravelRoute existingRoute = getRouteById(id);
+        Optional<TravelRoute> result = repository.findById(id);
 
-        if (existingRoute == null) {
+        if (result.isEmpty()) {
             return null;
         }
+
+        TravelRoute existingRoute = result.get();
 
         if (updatedRoute.getName() != null) {
             existingRoute.setName(updatedRoute.getName());
         }
 
         if (updatedRoute.getPoiIds() != null) {
-            existingRoute.setPoiIds(
-                    new ArrayList<>(updatedRoute.getPoiIds())
-            );
+            existingRoute.setPoiIds(updatedRoute.getPoiIds());
         }
 
-        return existingRoute;
+        return repository.save(existingRoute);
     }
 
     public TravelRoute updateRouteStops(Long id, List<Long> poiIds) {
-        TravelRoute existingRoute = getRouteById(id);
+        TravelRoute route = repository.findById(id).orElse(null);
 
-        if (existingRoute == null) {
+        if (route == null) {
             return null;
         }
 
-        existingRoute.setPoiIds(new ArrayList<>(poiIds));
-        return existingRoute;
+        route.setPoiIds(poiIds);
+        return repository.save(route);
     }
 
     public boolean deleteRoute(Long id) {
-        return routes.removeIf(route -> route.getId().equals(id));
+        if (!repository.existsById(id)) {
+            return false;
+        }
+
+        repository.deleteById(id);
+        return true;
     }
 }
+
