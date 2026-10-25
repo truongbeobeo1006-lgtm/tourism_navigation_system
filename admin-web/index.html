@@ -128,9 +128,9 @@
                     </div>
                 </div>
 
-                <!-- 4 CARDS THỐNG KÊ -->
+                <!-- 4 CARDS THỐNG KÊ (DỮ LIỆU THỰC TẾ KHỞI ĐẦU TỪ 0) -->
                 <div class="stat-cards-grid">
-                    <!-- Card 1 -->
+                    <!-- Card 1: Tổng thính giả -->
                     <div class="stat-card">
                         <div class="card-top">
                             <span class="card-label">TỔNG THÍNH GIẢ LẮNG NGHE</span>
@@ -138,16 +138,16 @@
                                 <i class="fa-solid fa-headphones"></i>
                             </div>
                         </div>
-                        <div class="card-value">128,450</div>
+                        <div class="card-value" id="cardTotalAudience">0</div>
                         <div class="card-footer">
-                            <span class="trend-badge positive">
-                                <i class="fa-solid fa-arrow-trend-up"></i> +14.2%
+                            <span class="trend-badge neutral">
+                                <i class="fa-solid fa-minus"></i> 0%
                             </span>
-                            <span class="footer-note">so với tuần trước</span>
+                            <span class="footer-note">Chờ phát sinh lượt nghe đầu tiên</span>
                         </div>
                     </div>
 
-                    <!-- Card 2 -->
+                    <!-- Card 2: Điểm đến phổ biến -->
                     <div class="stat-card">
                         <div class="card-top">
                             <span class="card-label">ĐIỂM ĐẾN PHỔ BIẾN NHẤT</span>
@@ -155,36 +155,36 @@
                                 <i class="fa-regular fa-star"></i>
                             </div>
                         </div>
-                        <div class="card-value" id="topPoiTitle">Dinh Độc Lập</div>
-                        <div class="sub-value">42,810 lượt nghe</div>
+                        <div class="card-value" id="topPoiTitle">--</div>
+                        <div class="sub-value" id="topPoiSubValue">0 lượt nghe</div>
                         <div class="card-footer">
-                            <span class="footer-note">
-                                <i class="fa-solid fa-location-dot"></i> Chiếm 33.3% tổng lưu lượng
+                            <span class="footer-note" id="topPoiFooterNote">
+                                <i class="fa-solid fa-location-dot"></i> Chưa có dữ liệu tương tác
                             </span>
                         </div>
                     </div>
 
-                    <!-- Card 3 -->
+                    <!-- Card 3: Số thiết bị đang truy cập ở thời điểm hiện tại -->
                     <div class="stat-card">
                         <div class="card-top">
-                            <span class="card-label">NGÔN NGỮ SỬ DỤNG NHIỀU</span>
+                            <span class="card-label">THIẾT BỊ ĐANG TRUY CẬP HIỆN TẠI</span>
                             <div class="card-icon blue-icon">
-                                <i class="fa-solid fa-language"></i>
+                                <i class="fa-solid fa-mobile-screen-button"></i>
                             </div>
                         </div>
                         <div class="card-value-flex">
-                            <span class="card-value">Tiếng Việt</span>
-                            <span class="percent-badge">58%</span>
+                            <span class="card-value" id="cardActiveDevices">0</span>
+                            <span class="percent-badge" id="deviceStatusText" style="color: #64748b; font-size: 13px;">Thiết bị</span>
                         </div>
-                        <div class="sub-value">Tiếng Anh (26%) • Khác (16%)</div>
+                        <div class="sub-value" id="deviceBreakdown">Điện thoại di động (0) • Trình duyệt Web (0)</div>
                         <div class="progress-multi">
-                            <div class="progress-bar bar-vi" style="width: 58%;"></div>
-                            <div class="progress-bar bar-en" style="width: 26%;"></div>
-                            <div class="progress-bar bar-other" style="width: 16%;"></div>
+                            <div class="progress-bar bar-vi" id="barMobile" style="width: 0%;"></div>
+                            <div class="progress-bar bar-en" id="barWeb" style="width: 0%;"></div>
+                            <div class="progress-bar bar-other" id="barOther" style="width: 0%;"></div>
                         </div>
                     </div>
 
-                    <!-- Card 4 -->
+                    <!-- Card 4: Phiên hoạt động trực tiếp -->
                     <div class="stat-card">
                         <div class="card-top">
                             <span class="card-label">PHIÊN HOẠT ĐỘNG TRỰC TIẾP</span>
@@ -193,11 +193,11 @@
                             </div>
                         </div>
                         <div class="card-value live-val">
-                            <span class="live-dot"></span> 1,425
+                            <span class="live-dot" style="background: #94a3b8;"></span> <span id="cardLiveSessions">0</span>
                         </div>
                         <div class="card-footer space-between">
                             <span class="footer-note"><i class="fa-solid fa-location-crosshairs"></i> GPS kích hoạt chuẩn xác</span>
-                            <span class="status-tag">99.8% ổn định</span>
+                            <span class="status-tag">Sẵn sàng kết nối</span>
                         </div>
                     </div>
                 </div>
@@ -245,9 +245,9 @@
                         <div class="alert-info-bar">
                             <div class="alert-content">
                                 <i class="fa-solid fa-circle-info"></i>
-                                <span>Khung giờ 14:00 – 16:30 ghi nhận lưu lượng kích hoạt GPS audio tăng <strong>+28.4%</strong> tại cụm Dinh Độc Lập – Bưu Điện Trung Tâm.</span>
+                                <span id="alertTrendText">Hệ thống đang trực tuyến và sẵn sàng ghi nhận lượt nghe tự động thời gian thực khi du khách di chuyển vào vùng Geofence 30m.</span>
                             </div>
-                            <a href="#details" class="alert-link">Chi tiết báo cáo</a>
+                            <span class="status-tag" style="background: #e2e8f0; font-size: 11.5px;">Chờ dữ liệu</span>
                         </div>
                     </div>
 
