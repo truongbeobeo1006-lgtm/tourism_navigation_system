@@ -17,7 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/pois")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Hỗ trợ gọi từ App Android và Web Admin
+// CORS do API Gateway quản lý tập trung
 public class PoiController {
 
     private final PoiService poiService;
