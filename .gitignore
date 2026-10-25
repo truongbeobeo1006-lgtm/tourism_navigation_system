@@ -33,3 +33,7 @@ build/
 
 ### Others ###
 *.log
+
+
+.agents
+graphify-out

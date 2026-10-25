@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Bản đồ Di tích - Tourism Navigation System</title>
+  
+  <!-- Inline SVG Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+  
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Google Fonts: Plus Jakarta Sans / Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Outer Desktop Frame Wrapper -->
+  <div class="device-wrapper">
+    <div class="mobile-frame">
+      
+      <!-- TOP STATUS / HEADER BAR -->
+      <header class="app-header">
+        <div class="header-left">
+          <span class="active-dot"></span>
+          <h1 id="screenTitle">Bản đồ Di tích</h1>
+        </div>
+        <div id="gpsPill" class="gps-badge lost" title="Trạng thái GPS">
+          <svg class="gps-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
+            <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
+            <circle cx="12" cy="12" r="2"></circle>
+            <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
+            <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path>
+          </svg>
+          <span id="gpsText">GPS: Mất tín hiệu</span>
+        </div>
+      </header>
+
+      <!-- MAIN CONTENT PAGES -->
+      <main class="content-container">
+
+        <!-- ==========================================
+             TAB 1: BẢN ĐỒ DI TÍCH
+             ========================================== -->
+        <section id="tabMap" class="tab-page active">
+          
+          <!-- MAP CONTAINER CARD -->
+          <div class="map-card-wrapper">
+            <div id="map" class="map-view"></div>
+            
+            <!-- Map Overlay Status Bar (Bottom of Map) -->
+            <div class="map-overlay-bar">
+              <div class="overlay-col left-col">
+                <span class="overlay-label" id="distLabel">KHOẢNG CÁCH TỚI DINH</span>
+                <span class="overlay-value blue" id="distValue">316 m</span>
+              </div>
+              <div class="overlay-col right-col">
+                <span class="overlay-label">TRẠNG THÁI VÙNG</span>
+                <span class="zone-badge outside" id="zoneBadge">Ngoài vùng (316m)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- POI INFO & AUDIO PLAYER CARD -->
+          <div class="poi-player-card">
+            
+            <!-- Top info row -->
+            <div class="poi-info-row">
+              <div class="poi-thumb-box">
+                <img id="poiThumb" src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=200&auto=format&fit=crop&q=80" alt="POI Thumbnail" class="poi-thumb">
+                <div class="thumb-icon-overlay">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="poi-details">
+                <span class="highlight-badge">★ ĐIỂM NỔI BẬT</span>
+                <h2 id="poiName" class="poi-title">Dinh Độc Lập</h2>
+                <p id="poiAddress" class="poi-address">135 Nam Kỳ Khởi Nghĩa, Phường Bến Thành, Quận 1</p>
+              </div>
+            </div>
+
+            <!-- Big Start Narration CTA Button -->
+            <button id="startNarrationBtn" class="primary-cta-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+              <span id="startNarrationText">Bắt đầu thuyết minh Dinh Độc Lập</span>
+            </button>
+
+            <!-- Dotted Timeline Progress Bar -->
+            <div class="progress-track-wrapper">
+              <div id="dotTrack" class="dot-track">
+                <!-- 16 dots representing audio progress -->
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              </div>
+              <div id="clickProgressBar" class="progress-interactive-bar">
+                <div id="progressFill" class="progress-fill-line"></div>
+              </div>
+              <div class="time-row">
+                <span id="timeElapsed" class="time-text">00:00</span>
+                <span id="timeTotal" class="time-text">02:15</span>
+              </div>
+            </div>
+
+            <!-- Player Controls (Rewind 10s, Big Play, Speed) -->
+            <div class="player-controls-row">
+              <button id="rewindBtn" class="circle-btn" title="Lùi 10 giây">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <path d="M3 3v5h5"></path>
+                </svg>
+              </button>
+
+              <button id="mainPlayBtn" class="main-play-btn" title="Phát / Dừng">
+                <svg id="playIcon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="6 4 20 12 6 20 6 4"></polygon>
+                </svg>
+                <svg id="pauseIcon" class="hidden" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                  <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+                </svg>
+              </button>
+
+              <button id="speedBtn" class="speed-btn" title="Tốc độ đọc">
+                <span id="speedText">1.0x</span>
+              </button>
+            </div>
+
+            <!-- Narration Script Box -->
+            <div class="script-quote-box">
+              <p id="poiScriptText" class="script-quote-content">
+                Nhấn phát để nghe bài thuyết minh lịch sử và kiến trúc đặc sắc của Dinh Độc Lập...
+              </p>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ==========================================
+             TAB 2: LỘ TRÌNH TỔNG QUAN
+             ========================================== -->
+        <section id="tabTours" class="tab-page">
+          <div class="tours-header">
+            <h2>Tuyến tham quan gợi ý</h2>
+            <p>Danh sách các vùng di tích tiêu biểu tại TP. Hồ Chí Minh</p>
+          </div>
+
+          <div class="tours-list">
+            
+            <!-- Card 1 (Active Tour) -->
+            <div class="tour-card active" data-tour="1">
+              <div class="tour-top-meta">
+                <span class="tour-badge badge-joining">ĐANG THAM GIA</span>
+                <span class="tour-time">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  2.5 giờ
+                </span>
+              </div>
+              <h3 class="tour-name">Tuyến Di tích Lịch sử Quận 1</h3>
+              <p class="tour-desc">Khám phá dấu ấn kiến trúc và lịch sử hào hùng qua Dinh Độc Lập, Bưu điện Trung tâm và Nhà thờ Đức Bà.</p>
+              <div class="tour-divider"></div>
+              <div class="tour-bottom-meta">
+                <span class="meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  3 cụm chính
+                </span>
+                <span class="meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M13 4v16M6 9l7-5 7 5M6 15l7 5 7-5"/></svg>
+                  1.8 km
+                </span>
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="tour-card" data-tour="2">
+              <div class="tour-top-meta">
+                <span class="tour-badge badge-suggested">ĐỀ XUẤT</span>
+                <span class="tour-time">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  3.0 giờ
+                </span>
+              </div>
+              <h3 class="tour-name">Tuyến Văn hóa & Di sản Sài Gòn</h3>
+              <p class="tour-desc">Tổng quan các bảo tàng nghệ thuật, kiến trúc Pháp cổ và chợ Bến Thành truyền thống.</p>
+              <div class="tour-divider"></div>
+              <div class="tour-bottom-meta">
+                <span class="meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  4 cụm chính
+                </span>
+                <span class="meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M13 4v16M6 9l7-5 7 5M6 15l7 5 7-5"/></svg>
+                  2.4 km
+                </span>
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="tour-card" data-tour="3">
+              <div class="tour-top-meta">
+                <span class="tour-badge badge-afternoon">BUỔI CHIỀU</span>
+                <span class="tour-time">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  1.5 giờ
+                </span>
+              </div>
+              <h3 class="tour-name">Tuyến Công viên & Không gian Xanh</h3>
+              <p class="tour-desc">Thư giãn qua mảng xanh Công viên Tao Đàn, Thảo Cầm Viên và Quảng trường đi bộ.</p>
+              <div class="tour-divider"></div>
+              <div class="tour-bottom-meta">
+                <span class="meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  2 cụm chính
+                </span>
+                <span class="meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><path d="M13 4v16M6 9l7-5 7 5M6 15l7 5 7-5"/></svg>
+                  1.2 km
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ==========================================
+             TAB 3: CÀI ĐẶT & THỬ NGHIỆM
+             ========================================== -->
+        <section id="tabSettings" class="tab-page">
+          <div class="settings-header">
+            <h2>Cài đặt hệ thống</h2>
+            <p>Tùy biến ngôn ngữ, định vị và chế độ thử nghiệm</p>
+          </div>
+
+          <div class="settings-content">
+            
+            <!-- Section 1: ÂM THANH & THUYẾT MINH -->
+            <div class="settings-group">
+              <h3 class="group-title">ÂM THANH & THUYẾT MINH</h3>
+              
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Ngôn ngữ thuyết minh</span>
+                  <span class="setting-subtext">Chọn giọng đọc kịch bản</span>
+                </div>
+                <div class="setting-control">
+                  <select id="settingLang" class="styled-select">
+                    <option value="vi" selected>Tiếng Việt</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="setting-divider"></div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Tự động phát khi tới gần</span>
+                  <span class="setting-subtext">Tự kích hoạt khi cách dưới 30m</span>
+                </div>
+                <div class="setting-control">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="autoPlayToggle" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: CÔNG CỤ KIỂM THỬ & GIẢ LẬP GPS -->
+            <div class="settings-group">
+              <h3 class="group-title">CÔNG CỤ KIỂM THỬ & GIẢ LẬP GPS</h3>
+              <p class="tool-desc">
+                <span class="flask-icon">🧪</span> Dùng để test tính năng thuyết minh trực tiếp trên máy tính mà không cần ra hiện trường:
+              </p>
+
+              <button id="simNearBtn" class="sim-action-btn green-btn">
+                <span class="btn-icon">🎯</span>
+                <span class="btn-text"><b>Giả lập: Đứng tại Dinh</b> (Khoảng cách: 10m)</span>
+              </button>
+
+              <button id="simFarBtn" class="sim-action-btn yellow-btn">
+                <span class="btn-icon">🚶</span>
+                <span class="btn-text"><b>Giả lập: Ra xa Dinh</b> (Khoảng cách: 350m)</span>
+              </button>
+
+              <button id="realGpsBtn" class="sim-action-btn blue-btn">
+                <span class="btn-icon">🛰️</span>
+                <span class="btn-text"><b>Dùng GPS thiết bị thực tế</b></span>
+              </button>
+            </div>
+
+            <!-- Section 3: THÔNG TIN ỨNG DỤNG -->
+            <div class="settings-group">
+              <h3 class="group-title">THÔNG TIN ỨNG DỤNG</h3>
+              <div class="info-row">
+                <span class="info-label">Phiên bản</span>
+                <span class="info-val font-mono">v2.4.0 (Build Web-Mobile)</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Tọa độ đích (Dinh Độc Lập)</span>
+                <span class="info-val font-mono">10.77692, 106.69531 (R: 30m)</span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+      <!-- BOTTOM NAVIGATION BAR (3 TABS) -->
+      <nav class="bottom-tab-bar">
+        <button class="tab-btn active" data-target="tabMap" id="btnTabMap">
+          <div class="tab-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+              <line x1="8" y1="2" x2="8" y2="18"></line>
+              <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+          </div>
+          <span class="tab-label">Bản đồ</span>
+        </button>
+
+        <button class="tab-btn" data-target="tabTours" id="btnTabTours">
+          <div class="tab-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <path d="M6 16v-6a4 4 0 0 1 4-4h4"></path>
+            </svg>
+          </div>
+          <span class="tab-label">Lộ trình</span>
+        </button>
+
+        <button class="tab-btn" data-target="tabSettings" id="btnTabSettings">
+          <div class="tab-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+          </div>
+          <span class="tab-label">Cài đặt</span>
+        </button>
+      </nav>
+
+    </div>
+  </div>
+
+  <!-- Real Audio Element for URL playback fallback -->
+  <audio id="realAudio" preload="auto"></audio>
+
+  <!-- Leaflet Map Script -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Main App Script -->
+  <script src="app.js"></script>
+</body>
+</html>
