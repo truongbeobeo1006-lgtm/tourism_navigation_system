@@ -53,6 +53,22 @@ const server = http.createServer((req, res) => {
         const devId = event.deviceId || ('dev_' + clientIp.replace(/[^a-zA-Z0-9]/g, ''));
         const devType = event.deviceType || 'mobile';
 
+        // Xử lý sự kiện du khách thoát ra / đóng tab
+        if (event.type === 'DEVICE_OFFLINE') {
+          activeDevices.delete(devId);
+          console.log(`[REALTIME] Device OFFLINE: ${devId} - Active Devices: ${activeDevices.size}`);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ status: 'ok', activeCount: activeDevices.size, totalAudience }));
+          return;
+        }
+
+        // Tự động dọn dẹp các thiết bị đã quá 10 giây không có nhịp tim
+        for (const [id, dev] of activeDevices.entries()) {
+          if (now - dev.lastSeen > 10000) {
+            activeDevices.delete(id);
+          }
+        }
+
         // Ghi nhận thiết bị này đang ACTIVE (cho MỌI loại sự kiện, kể cả nghe audio)
         activeDevices.set(devId, {
           type: devType,
@@ -90,9 +106,9 @@ const server = http.createServer((req, res) => {
 
   if (rawUrl === '/api/realtime-stats' && req.method === 'GET') {
     const now = Date.now();
-    // Giữ thiết bị online trong 5 phút (300,000 ms) theo chuẩn Realtime Analytics
+    // Giữ thiết bị online trong 10 giây nếu không có nhịp tim
     for (const [id, dev] of activeDevices.entries()) {
-      if (now - dev.lastSeen > 300000) {
+      if (now - dev.lastSeen > 10000) {
         activeDevices.delete(id);
       }
     }

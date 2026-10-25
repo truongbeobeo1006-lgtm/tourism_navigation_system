@@ -420,31 +420,73 @@ function togglePlayback() {
 // ==========================================
 // REALTIME TRACKING FOR ADMIN DASHBOARD
 // ==========================================
+function getOrCreateDeviceId() {
+  let devId = null;
+  try {
+    devId = localStorage.getItem('poitour_device_id') || sessionStorage.getItem('poitour_device_id');
+  } catch (e) {}
+
+  if (!devId) {
+    const fp = (window.screen ? (screen.width + 'x' + screen.height) : 'dev') + '_' + Math.random().toString(36).substring(2, 7);
+    devId = 'dev_' + fp;
+    try {
+      localStorage.setItem('poitour_device_id', devId);
+      sessionStorage.setItem('poitour_device_id', devId);
+    } catch (e) {}
+  }
+  return devId;
+}
+
 function sendRealtimeHeartbeat() {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  let devId = localStorage.getItem('poitour_device_id');
-  if (!devId) {
-    devId = 'dev_' + Math.random().toString(36).substring(2, 9);
-    localStorage.setItem('poitour_device_id', devId);
-  }
+  const devId = getOrCreateDeviceId();
   fetch(CONFIG.REALTIME_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'DEVICE_ONLINE', deviceType: isMobile ? 'mobile' : 'web', deviceId: devId })
   }).catch(() => {});
 }
+
+function sendDeviceOffline() {
+  const devId = getOrCreateDeviceId();
+  const payload = JSON.stringify({ type: 'DEVICE_OFFLINE', deviceId: devId });
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(CONFIG.REALTIME_URL, new Blob([payload], { type: 'application/json' }));
+  } else {
+    fetch(CONFIG.REALTIME_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      keepalive: true
+    }).catch(() => {});
+  }
+}
+
 sendRealtimeHeartbeat();
-setInterval(sendRealtimeHeartbeat, 6000);
+setInterval(sendRealtimeHeartbeat, 3000); // Gửi nhịp tim định kỳ mỗi 3 giây
 window.addEventListener("click", sendRealtimeHeartbeat, { passive: true });
 window.addEventListener("touchstart", sendRealtimeHeartbeat, { passive: true });
 
+// Thoát trang / đóng tab / chuyển ứng dụng -> Báo OFFLINE ngay lập tức
+window.addEventListener("beforeunload", sendDeviceOffline);
+window.addEventListener("pagehide", sendDeviceOffline);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === 'hidden') {
+    sendDeviceOffline();
+  } else if (document.visibilityState === 'visible') {
+    sendRealtimeHeartbeat();
+  }
+});
+
 function notifyPoiPlay(poi) {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  const devId = getOrCreateDeviceId();
   fetch(CONFIG.REALTIME_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       type: 'POI_PLAY',
+      deviceId: devId,
       poiId: poi.id,
       poiName: poi.name,
       language: state.selectedLang || 'vi',
