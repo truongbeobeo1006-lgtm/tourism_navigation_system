@@ -524,56 +524,80 @@ function recordRealtimeEvent(eventData) {
     updateStatCards();
 }
 
-// ================= 7. LẮNG NGHE KẾT NỐI THỰC TẾ TỪ CLIENT =================
+
+// ================= 7. LẮNG NGHE KẾT NỐI THỜI GIAN THỰC TỪ SERVER (PORT 3000) =================
 function setupSyncListener() {
-    function handleEvent(data) {
-        if (!data) return;
+    async function pollRealtimeStats() {
+        try {
+            const host = window.location.hostname || '127.0.0.1';
+            const res = await fetch(`http://${host}:3000/api/realtime-stats`);
+            if (res.ok) {
+                const data = await res.json();
 
-        // 1. Khi có thiết bị ping online
-        if (data.type === "DEVICE_HEARTBEAT" || data.type === "DEVICE_ONLINE") {
-            const deviceId = data.deviceId || "dev_" + Math.random().toString(36).substring(7);
-            activeDevices.set(deviceId, {
-                type: data.deviceType || "mobile",
-                lastSeen: Date.now()
-            });
-            updateStatCards();
-        }
+                // 1. Cập nhật số thiết bị online
+                const totalDev = data.activeDevicesCount || 0;
+                document.getElementById("cardActiveDevices").textContent = totalDev;
+                document.getElementById("deviceStatusText").textContent = totalDev > 0 ? "Đang Online" : "Trực tuyến";
+                document.getElementById("deviceBreakdown").textContent = `Điện thoại di động (${data.mobileCount || 0}) • Trình duyệt Web (${data.webCount || 0})`;
 
-        // 2. Khi du khách kích hoạt phát audio (qua GPS 30m hoặc bấm nút nghe)
-        if (data.type === "POI_AUDIO_TRIGGER" || data.type === "POI_PLAY") {
-            recordRealtimeEvent({
-                poiId: data.poiId,
-                poiName: data.poiName,
-                poiCode: data.poiCode,
-                language: data.language || "Tiếng Việt",
-                deviceInfo: data.deviceInfo || (data.deviceType === "mobile" ? "Điện thoại di động" : "Trình duyệt Web")
-            });
+                const denom = totalDev || 1;
+                document.getElementById("barMobile").style.width = totalDev > 0 ? `${((data.mobileCount || 0) / denom) * 100}%` : "0%";
+                document.getElementById("barWeb").style.width = totalDev > 0 ? `${((data.webCount || 0) / denom) * 100}%` : "0%";
+                document.getElementById("cardLiveSessions").textContent = totalDev;
+
+                // 2. Cập nhật tổng thính giả
+                totalAudienceCount = data.totalAudience || 0;
+                document.getElementById("cardTotalAudience").textContent = totalAudienceCount.toLocaleString();
+
+                // 3. Cập nhật số lượt nghe từng POI
+                if (data.poiListens) {
+                    poiList.forEach(poi => {
+                        if (data.poiListens[poi.name] !== undefined) {
+                            poi.listens = data.poiListens[poi.name];
+                        }
+                    });
+                }
+
+                // 4. Cập nhật Feed sự kiện mới nhất
+                if (Array.isArray(data.recentEvents) && data.recentEvents.length > 0) {
+                    const feed = document.getElementById("activityFeed");
+                    const emptyState = document.getElementById("emptyFeedState");
+                    if (emptyState) emptyState.remove();
+
+                    feed.innerHTML = data.recentEvents.slice(0, 6).map(ev => {
+                        const secAgo = Math.max(1, Math.round((Date.now() - ev.timestamp) / 1000));
+                        return `
+                            <div class="feed-item">
+                                <div class="feed-left">
+                                    <div class="feed-icon"><i class="fa-solid fa-location-crosshairs"></i></div>
+                                    <div>
+                                        <div class="feed-title">${ev.poiName} <span class="feed-id">#${ev.poiCode}</span></div>
+                                        <div class="feed-sub">Thiết bị: ${ev.deviceInfo}</div>
+                                    </div>
+                                </div>
+                                <div class="feed-right">
+                                    <span class="feed-lang">${ev.language}</span>
+                                    <span class="feed-time">${secAgo}s trước</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+                }
+
+                renderDashboardTopPois();
+                renderPoiTable();
+                updateStatCards();
+            }
+        } catch (e) {
+            // console.warn("Lỗi poll realtime stats:", e);
         }
     }
 
-    // Lắng nghe qua BroadcastChannel
-    if (syncChannel) {
-        syncChannel.onmessage = (event) => handleEvent(event.data);
-    }
-
-    // Fallback: Lắng nghe qua storage event (khi mở 2 tab cùng trình duyệt)
-    window.addEventListener("storage", (e) => {
-        if (e.key === "poitour_last_event" && e.newValue) {
-            try {
-                handleEvent(JSON.parse(e.newValue));
-            } catch (err) {}
-        }
-    });
-
-    // Dọn dẹp thiết bị offline sau 60 giây không gửi heartbeat
-    setInterval(() => {
-        const now = Date.now();
-        activeDevices.forEach((val, key) => {
-            if (now - val.lastSeen > 60000) activeDevices.delete(key);
-        });
-        updateStatCards();
-    }, 10000);
+    // Polling đều đặn mỗi 2 giây
+    pollRealtimeStats();
+    setInterval(pollRealtimeStats, 2000);
 }
+
 
 // ================= 8. XỬ LÝ MODAL THÊM / SỬA / XÓA POI =================
 const poiModal = document.getElementById("poiModal");

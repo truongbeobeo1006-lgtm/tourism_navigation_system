@@ -9,7 +9,8 @@ let availableVoices = [];
 let hasUserInteracted = false;
 
 const CONFIG = {
-  API_GATEWAY_URL: 'http://localhost:8080',
+  API_GATEWAY_URL: 'http://' + (window.location.hostname || 'localhost') + ':8080',
+  REALTIME_URL: 'http://' + (window.location.hostname || 'localhost') + ':3000/api/event',
   DEFAULT_CENTER: [10.77692, 106.69531], // Dinh Độc Lập
   GEOFENCE_RADIUS_M: 30,
   GEOFENCE_COOLDOWN_MS: 120000,
@@ -415,7 +416,43 @@ function togglePlayback() {
   }
 }
 
+
+// ==========================================
+// REALTIME TRACKING FOR ADMIN DASHBOARD
+// ==========================================
+function sendRealtimeHeartbeat() {
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  let devId = localStorage.getItem('poitour_device_id');
+  if (!devId) {
+    devId = 'dev_' + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem('poitour_device_id', devId);
+  }
+  fetch(CONFIG.REALTIME_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'DEVICE_ONLINE', deviceType: isMobile ? 'mobile' : 'web', deviceId: devId })
+  }).catch(() => {});
+}
+sendRealtimeHeartbeat();
+setInterval(sendRealtimeHeartbeat, 6000);
+
+function notifyPoiPlay(poi) {
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  fetch(CONFIG.REALTIME_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'POI_PLAY',
+      poiId: poi.id,
+      poiName: poi.name,
+      language: state.selectedLang || 'vi',
+      deviceType: isMobile ? 'mobile' : 'web'
+    })
+  }).catch(() => {});
+}
+
 function startPlayback() {
+  if (state.activePoi) notifyPoiPlay(state.activePoi);
   if (!state.activePoi) return;
 
   unlockAudio();
