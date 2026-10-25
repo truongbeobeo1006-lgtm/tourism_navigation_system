@@ -322,6 +322,23 @@ async function fetchPoisFromBackend() {
     updateStatCards();
 }
 
+function getPoiThumbHtml(poi) {
+    const icons = {
+        'Dinh Độc Lập': 'fa-landmark',
+        'Bưu Điện Trung Tâm': 'fa-envelope-open-text',
+        'Nhà Thờ Đức Bà': 'fa-church',
+        'Nhà Hát Thành Phố': 'fa-masks-theater',
+        'Chợ Bến Thành': 'fa-store',
+        'Phố Đi Bộ Nguyễn Huệ': 'fa-person-walking'
+    };
+    const iconClass = icons[poi.name] || 'fa-map-pin';
+
+    if (poi.imageUrl && poi.imageUrl.startsWith('http')) {
+        return `<img src="${poi.imageUrl}" alt="${poi.name}" class="poi-thumb" onerror="this.outerHTML='<div class=\\\'poi-thumb-box\\\'><i class=\\\'fa-solid ${iconClass}\\\'></i></div>'">`;
+    }
+    return `<div class="poi-thumb-box"><i class="fa-solid ${iconClass}"></i></div>`;
+}
+
 // ================= 5. HIỂN THỊ DỮ LIỆU BẢNG =================
 function renderDashboardTopPois() {
     const tbody = document.getElementById("topPoisTableBody");
@@ -345,7 +362,7 @@ function renderDashboardTopPois() {
         tr.innerHTML = `
             <td>
                 <div class="poi-cell">
-                    <img src="${poi.imageUrl}" alt="${poi.name}" class="poi-thumb" onerror="this.src='https://via.placeholder.com/42'">
+                    ${getPoiThumbHtml(poi)}
                     <div>
                         <span class="poi-name-text">${poi.name}</span>
                         <span class="poi-sub-text">${poi.category}</span>

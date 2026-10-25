@@ -435,6 +435,8 @@ function sendRealtimeHeartbeat() {
 }
 sendRealtimeHeartbeat();
 setInterval(sendRealtimeHeartbeat, 6000);
+window.addEventListener("click", sendRealtimeHeartbeat, { passive: true });
+window.addEventListener("touchstart", sendRealtimeHeartbeat, { passive: true });
 
 function notifyPoiPlay(poi) {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
