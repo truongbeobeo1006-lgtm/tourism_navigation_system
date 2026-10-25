@@ -112,7 +112,9 @@ let trendChartInstance = null;
 // Biến trạng thái thời gian thực
 let totalAudienceCount = 0;
 let liveSessionsCount = 0;
-let activeDevices = new Map(); // Quản lý danh sách thiết bị đang online
+let currentActiveDevicesCount = 0;
+let currentMobileCount = 0;
+let currentWebCount = 0;
 
 // Kênh đồng bộ liên ứng dụng (BroadcastChannel giữa Client Web và Admin Web)
 let syncChannel = null;
@@ -332,11 +334,7 @@ function getPoiThumbHtml(poi) {
         'Phố Đi Bộ Nguyễn Huệ': 'fa-person-walking'
     };
     const iconClass = icons[poi.name] || 'fa-map-pin';
-
-    if (poi.imageUrl && poi.imageUrl.startsWith('http')) {
-        return `<img src="${poi.imageUrl}" alt="${poi.name}" class="poi-thumb" onerror="this.outerHTML='<div class=\\\'poi-thumb-box\\\'><i class=\\\'fa-solid ${iconClass}\\\'></i></div>'">`;
-    }
-    return `<div class="poi-thumb-box"><i class="fa-solid ${iconClass}"></i></div>`;
+    return `<div class="poi-thumb-box" title="${poi.name}"><i class="fa-solid ${iconClass}"></i></div>`;
 }
 
 // ================= 5. HIỂN THỊ DỮ LIỆU BẢNG =================
@@ -450,22 +448,14 @@ function updateStatCards() {
     }
 
     // 3. Số thiết bị đang truy cập hiện tại
-    const deviceCount = activeDevices.size;
+    const deviceCount = currentActiveDevicesCount;
     document.getElementById("cardActiveDevices").textContent = deviceCount;
     document.getElementById("deviceStatusText").textContent = deviceCount > 0 ? "Đang Online" : "Trực tuyến";
-
-    let mobileCount = 0;
-    let webCount = 0;
-    activeDevices.forEach((dev) => {
-        if (dev.type === "mobile") mobileCount++;
-        else webCount++;
-    });
-
-    document.getElementById("deviceBreakdown").textContent = `Điện thoại di động (${mobileCount}) • Trình duyệt Web (${webCount})`;
+    document.getElementById("deviceBreakdown").textContent = `Điện thoại di động (${currentMobileCount}) • Trình duyệt Web (${currentWebCount})`;
 
     const totalDev = deviceCount || 1;
-    document.getElementById("barMobile").style.width = deviceCount > 0 ? `${(mobileCount / totalDev) * 100}%` : "0%";
-    document.getElementById("barWeb").style.width = deviceCount > 0 ? `${(webCount / totalDev) * 100}%` : "0%";
+    document.getElementById("barMobile").style.width = deviceCount > 0 ? `${(currentMobileCount / totalDev) * 100}%` : "0%";
+    document.getElementById("barWeb").style.width = deviceCount > 0 ? `${(currentWebCount / totalDev) * 100}%` : "0%";
 
     // 4. Phiên hoạt động trực tiếp
     document.getElementById("cardLiveSessions").textContent = liveSessionsCount;
@@ -492,7 +482,11 @@ function recordRealtimeEvent(eventData) {
 
     // Tăng tổng thính giả & lượt nghe của POI tương ứng
     totalAudienceCount++;
-    liveSessionsCount = Math.max(1, activeDevices.size);
+    if (currentActiveDevicesCount === 0) {
+        currentActiveDevicesCount = 1;
+        currentMobileCount = 1;
+    }
+    liveSessionsCount = Math.max(1, currentActiveDevicesCount);
 
     const matchedPoi = poiList.find(p => p.id === eventData.poiId || p.name === eventData.poiName);
     if (matchedPoi) {
@@ -551,20 +545,14 @@ function setupSyncListener() {
             if (res.ok) {
                 const data = await res.json();
 
-                // 1. Cập nhật số thiết bị online
-                const totalDev = data.activeDevicesCount || 0;
-                document.getElementById("cardActiveDevices").textContent = totalDev;
-                document.getElementById("deviceStatusText").textContent = totalDev > 0 ? "Đang Online" : "Trực tuyến";
-                document.getElementById("deviceBreakdown").textContent = `Điện thoại di động (${data.mobileCount || 0}) • Trình duyệt Web (${data.webCount || 0})`;
-
-                const denom = totalDev || 1;
-                document.getElementById("barMobile").style.width = totalDev > 0 ? `${((data.mobileCount || 0) / denom) * 100}%` : "0%";
-                document.getElementById("barWeb").style.width = totalDev > 0 ? `${((data.webCount || 0) / denom) * 100}%` : "0%";
-                document.getElementById("cardLiveSessions").textContent = totalDev;
+                // 1. Cập nhật số thiết bị online từ Server
+                currentActiveDevicesCount = data.activeDevicesCount || 0;
+                currentMobileCount = data.mobileCount || 0;
+                currentWebCount = data.webCount || 0;
+                liveSessionsCount = currentActiveDevicesCount;
 
                 // 2. Cập nhật tổng thính giả
                 totalAudienceCount = data.totalAudience || 0;
-                document.getElementById("cardTotalAudience").textContent = totalAudienceCount.toLocaleString();
 
                 // 3. Cập nhật số lượt nghe từng POI
                 if (data.poiListens) {

@@ -10,7 +10,7 @@ let hasUserInteracted = false;
 
 const CONFIG = {
   API_GATEWAY_URL: 'http://' + (window.location.hostname || 'localhost') + ':8080',
-  REALTIME_URL: '/api/event' + (window.location.hostname || 'localhost') + ':3000/api/event',
+  REALTIME_URL: '/api/event',
   DEFAULT_CENTER: [10.77692, 106.69531], // Dinh Độc Lập
   GEOFENCE_RADIUS_M: 30,
   GEOFENCE_COOLDOWN_MS: 120000,
