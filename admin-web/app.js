@@ -529,8 +529,8 @@ function recordRealtimeEvent(eventData) {
 function setupSyncListener() {
     async function pollRealtimeStats() {
         try {
-            const host = window.location.hostname || '127.0.0.1';
-            const res = await fetch(`http://${host}:3000/api/realtime-stats`);
+            const statsUrl = (window.location.protocol.startsWith('http') ? '' : 'http://127.0.0.1:3000') + '/api/realtime-stats';
+            const res = await fetch(statsUrl);
             if (res.ok) {
                 const data = await res.json();
 
