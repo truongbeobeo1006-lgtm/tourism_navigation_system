@@ -2,14 +2,11 @@
 package com.tourism.tracking.service;
 
 import com.tourism.tracking.model.TravelRoute;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.tourism.tracking.repository.TravelRouteRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
-interface TravelRouteRepository extends JpaRepository<TravelRoute, Long> {
-}
 
 @Service
 public class TravelRouteService {
@@ -34,20 +31,21 @@ public class TravelRouteService {
     }
 
     public TravelRoute updateRoute(Long id, TravelRoute updatedRoute) {
-        Optional<TravelRoute> result = repository.findById(id);
+        TravelRoute existingRoute =
+                repository.findById(id).orElse(null);
 
-        if (result.isEmpty()) {
+        if (existingRoute == null) {
             return null;
         }
-
-        TravelRoute existingRoute = result.get();
 
         if (updatedRoute.getName() != null) {
             existingRoute.setName(updatedRoute.getName());
         }
 
         if (updatedRoute.getPoiIds() != null) {
-            existingRoute.setPoiIds(updatedRoute.getPoiIds());
+            existingRoute.setPoiIds(
+                    new ArrayList<>(updatedRoute.getPoiIds())
+            );
         }
 
         return repository.save(existingRoute);
@@ -60,7 +58,7 @@ public class TravelRouteService {
             return null;
         }
 
-        route.setPoiIds(poiIds);
+        route.setPoiIds(new ArrayList<>(poiIds));
         return repository.save(route);
     }
 
@@ -73,4 +71,3 @@ public class TravelRouteService {
         return true;
     }
 }
-
