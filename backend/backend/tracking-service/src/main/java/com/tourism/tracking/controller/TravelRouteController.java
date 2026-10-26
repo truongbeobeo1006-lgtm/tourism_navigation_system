@@ -3,6 +3,7 @@ package com.tourism.tracking.controller;
 
 import com.tourism.tracking.model.TravelRoute;
 import com.tourism.tracking.service.TravelRouteService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class TravelRouteController {
 
     @PostMapping
     public ResponseEntity<TravelRoute> createRoute(
-            @RequestBody TravelRoute route) {
+            @Valid @RequestBody TravelRoute route) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(routeService.createRoute(route));
     }
@@ -46,7 +47,7 @@ public class TravelRouteController {
     @PutMapping("/{id}")
     public ResponseEntity<TravelRoute> updateRoute(
             @PathVariable Long id,
-            @RequestBody TravelRoute updatedRoute) {
+            @Valid @RequestBody TravelRoute updatedRoute) {
         TravelRoute route =
                 routeService.updateRoute(id, updatedRoute);
 
@@ -81,4 +82,3 @@ public class TravelRouteController {
         return ResponseEntity.noContent().build();
     }
 }
-
