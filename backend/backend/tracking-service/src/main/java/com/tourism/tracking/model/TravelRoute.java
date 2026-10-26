@@ -1,13 +1,38 @@
 
 package com.tourism.tracking.model;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "travel_routes")
 public class TravelRoute {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String name;
+
+    @ElementCollection
+    @CollectionTable(
+        name = "travel_route_pois",
+        joinColumns = @JoinColumn(name = "route_id")
+    )
+    @OrderColumn(name = "stop_order")
+    @Column(name = "poi_id", nullable = false)
     private List<Long> poiIds = new ArrayList<>();
 
     public TravelRoute() {
