@@ -12,7 +12,52 @@ const PORT = 3000;
 const activeDevices = new Map(); // deviceId -> { type, lastSeen, ip }
 const poiListens = new Map();   // poiName -> count
 let totalAudience = 0;
-const recentEvents = [];
+let recentEvents = [];
+
+const STATS_FILE = path.join(__dirname, 'stats-data.json');
+
+// Khôi phục dữ liệu đã tích lũy (không bị xóa về 0 khi khởi động lại máy hay tạo link QR mới)
+function loadPersistentStats() {
+  try {
+    if (fs.existsSync(STATS_FILE)) {
+      const raw = fs.readFileSync(STATS_FILE, 'utf8');
+      const data = JSON.parse(raw);
+      totalAudience = data.totalAudience || 0;
+      if (data.poiListens && typeof data.poiListens === 'object') {
+        for (const [k, v] of Object.entries(data.poiListens)) {
+          poiListens.set(k, v);
+        }
+      }
+      if (Array.isArray(data.recentEvents)) {
+        recentEvents = data.recentEvents;
+      }
+      console.log(`[PERSISTENCE] Đã khôi phục dữ liệu: ${totalAudience} thính giả, ${recentEvents.length} sự kiện`);
+    }
+  } catch (err) {
+    console.warn('[PERSISTENCE] Chưa có tệp dữ liệu:', err.message);
+  }
+}
+
+// Lưu dữ liệu tích lũy xuống ổ đĩa
+function savePersistentStats() {
+  try {
+    const listensObj = {};
+    for (const [k, v] of poiListens.entries()) {
+      listensObj[k] = v;
+    }
+    const data = {
+      totalAudience,
+      poiListens: listensObj,
+      recentEvents: recentEvents.slice(0, 30),
+      lastUpdated: new Date().toISOString()
+    };
+    fs.writeFileSync(STATS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[PERSISTENCE] Lỗi khi ghi tệp dữ liệu:', err.message);
+  }
+}
+
+loadPersistentStats();
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -89,6 +134,7 @@ const server = http.createServer((req, res) => {
             timestamp: now
           });
           if (recentEvents.length > 20) recentEvents.pop();
+          savePersistentStats();
           console.log(`[REALTIME] POI Play: ${pName} - Total Audience: ${totalAudience} - Active Devices: ${activeDevices.size}`);
         } else {
           console.log(`[REALTIME] Heartbeat from ${devId} (${devType}) - Active Devices: ${activeDevices.size}`);

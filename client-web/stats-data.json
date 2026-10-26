@@ -1,0 +1,16 @@
+{
+  "totalAudience": 1,
+  "poiListens": {
+    "Dinh Độc Lập": 1
+  },
+  "recentEvents": [
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "Q1-POI-0001",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1740510000000
+    }
+  ],
+  "lastUpdated": "2026-10-26T01:40:00.000Z"
+}
