@@ -431,7 +431,7 @@ function renderPoiTable() {
 
 // Cập nhật 4 thẻ thống kê trên Dashboard theo dữ liệu thực tế
 function updateStatCards() {
-    // 1. Tổng thính giả
+    // 1. Tổng lượt nghe thuyết minh
     document.getElementById("cardTotalAudience").textContent = totalAudienceCount.toLocaleString();
 
     // 2. Điểm đến phổ biến nhất
