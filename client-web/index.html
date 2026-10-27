@@ -52,6 +52,27 @@
           <div class="map-card-wrapper">
             <div id="map" class="map-view"></div>
             
+            <!-- Map Top Overlay: Geofence Notification Banner -->
+            <div id="geofenceBanner" class="geofence-banner hidden">
+              <div class="banner-icon-pulse">🔊</div>
+              <div class="banner-info">
+                <span class="banner-title" id="bannerTitle">Đã đến Dinh Độc Lập</span>
+                <span class="banner-sub">Đang tự động phát thuyết minh di tích...</span>
+              </div>
+            </div>
+
+            <!-- Floating Recenter / Real GPS Button -->
+            <button id="recenterBtn" class="map-float-btn" title="Định vị vị trí của tôi">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="7"></circle>
+                <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+                <line x1="12" y1="2" x2="12" y2="5"></line>
+                <line x1="12" y1="19" x2="12" y2="22"></line>
+                <line x1="2" y1="12" x2="5" y2="12"></line>
+                <line x1="19" y1="12" x2="22" y2="12"></line>
+              </svg>
+            </button>
+
             <!-- Map Overlay Status Bar (Bottom of Map) -->
             <div class="map-overlay-bar">
               <div class="overlay-col left-col">
