@@ -707,7 +707,7 @@ function initModalHandlers() {
     });
 }
 
-window.openEditModal = function(id) {
+window.openEditModal = function (id) {
     const poi = poiList.find(p => p.id === id);
     if (!poi) return;
 
@@ -723,12 +723,12 @@ window.openEditModal = function(id) {
     poiModal.classList.remove("hide");
 };
 
-window.openAudioModal = function(id) {
+window.openAudioModal = function (id) {
     document.getElementById("audioPoiId").value = id;
     audioModal.classList.remove("hide");
 };
 
-window.deletePoi = async function(id) {
+window.deletePoi = async function (id) {
     if (confirm("Bạn có chắc chắn muốn xóa điểm di tích này không?")) {
         try {
             await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
@@ -793,7 +793,7 @@ function initQrGenerator() {
         if (qrPreviewImg) qrPreviewImg.src = qrApiUrl;
     }
 
-    window.openQrModal = function() {
+    window.openQrModal = function () {
         updateQrPreview();
         if (qrModal) qrModal.classList.remove("hide");
     };
