@@ -133,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initRealtimeActivityFeed();
     initModalHandlers();
     setupSyncListener();
+    initQrGenerator();
 });
 
 // ================= 1. ĐIỀU HƯỚNG TẮT/BẬT MÀN HÌNH =================
@@ -140,6 +141,8 @@ function initNavigation() {
     const navDashboard = document.getElementById("navDashboard");
     const navPois = document.getElementById("navPois");
     const linkViewAllPois = document.getElementById("linkViewAllPois");
+    const navQrCode = document.getElementById("navQrCode");
+    if (navQrCode) navQrCode.addEventListener("click", (e) => { e.preventDefault(); if (window.openQrModal) window.openQrModal(); });
 
     const secDashboard = document.getElementById("sectionDashboard");
     const secPois = document.getElementById("sectionPois");
@@ -738,3 +741,165 @@ window.deletePoi = async function(id) {
         alert("✅ Đã xóa điểm tham quan!");
     }
 };
+
+// ================= 9. QR CODE GENERATOR FOR TOUR PASS (UC04) =================
+function initQrGenerator() {
+    const qrModal = document.getElementById("qrModal");
+    const btnOpenQrModal = document.getElementById("btnOpenQrModal");
+    const btnCloseQrModal = document.getElementById("btnCloseQrModal");
+    const btnApplyQrModal = document.getElementById("btnApplyQrModal");
+    const btnGenRandomTicket = document.getElementById("btnGenRandomTicket");
+    const btnCopyQrUrl = document.getElementById("btnCopyQrUrl");
+    const btnDownloadQr = document.getElementById("btnDownloadQr");
+    const btnPrintQr = document.getElementById("btnPrintQr");
+
+    const qrBaseUrl = document.getElementById("qrBaseUrl");
+    const qrTicketCode = document.getElementById("qrTicketCode");
+    const qrValidity = document.getElementById("qrValidity");
+    const qrStartPoi = document.getElementById("qrStartPoi");
+    const qrPreviewImg = document.getElementById("qrPreviewImg");
+    const qrFullUrlPreview = document.getElementById("qrFullUrlPreview");
+    const qrCopyNotice = document.getElementById("qrCopyNotice");
+
+    // Auto-detect base URL
+    if (window.location.protocol.startsWith("http")) {
+        const port = window.location.port;
+        if (port === "3000") {
+            qrBaseUrl.value = window.location.origin;
+        } else {
+            qrBaseUrl.value = `${window.location.protocol}//${window.location.hostname}:3000`;
+        }
+    }
+
+    function buildQrUrl() {
+        const base = (qrBaseUrl.value || "http://localhost:3000").trim().replace(/\/+$/, "");
+        const ticket = (qrTicketCode.value || "TOUR-PASS-DEMO-24H").trim();
+        let fullUrl = `${base}/?ticket=${encodeURIComponent(ticket)}`;
+        if (qrValidity && qrValidity.value && qrValidity.value !== "24h") {
+            fullUrl += `&valid=${encodeURIComponent(qrValidity.value)}`;
+        }
+        if (qrStartPoi && qrStartPoi.value) {
+            fullUrl += `&poi=${encodeURIComponent(qrStartPoi.value)}`;
+        }
+        return fullUrl;
+    }
+
+    function updateQrPreview() {
+        const fullUrl = buildQrUrl();
+        if (qrFullUrlPreview) qrFullUrlPreview.value = fullUrl;
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(fullUrl)}`;
+        if (qrPreviewImg) qrPreviewImg.src = qrApiUrl;
+    }
+
+    window.openQrModal = function() {
+        updateQrPreview();
+        if (qrModal) qrModal.classList.remove("hide");
+    };
+
+    if (btnOpenQrModal) btnOpenQrModal.addEventListener("click", window.openQrModal);
+    if (btnCloseQrModal) btnCloseQrModal.addEventListener("click", () => qrModal.classList.add("hide"));
+    if (btnApplyQrModal) btnApplyQrModal.addEventListener("click", () => qrModal.classList.add("hide"));
+
+    // Real-time input updates
+    [qrBaseUrl, qrTicketCode, qrValidity, qrStartPoi].forEach(el => {
+        if (el) {
+            el.addEventListener("input", updateQrPreview);
+            el.addEventListener("change", updateQrPreview);
+        }
+    });
+
+    // Generate random ticket code
+    if (btnGenRandomTicket) {
+        btnGenRandomTicket.addEventListener("click", () => {
+            const randCode = "TOUR-" + Math.random().toString(36).substring(2, 6).toUpperCase() + "-" + Math.floor(100 + Math.random() * 900);
+            qrTicketCode.value = randCode;
+            updateQrPreview();
+        });
+    }
+
+    // Copy link
+    if (btnCopyQrUrl) {
+        btnCopyQrUrl.addEventListener("click", async () => {
+            const url = qrFullUrlPreview.value;
+            try {
+                await navigator.clipboard.writeText(url);
+            } catch (err) {
+                qrFullUrlPreview.select();
+                document.execCommand("copy");
+            }
+            if (qrCopyNotice) {
+                qrCopyNotice.style.display = "inline-block";
+                setTimeout(() => { qrCopyNotice.style.display = "none"; }, 3000);
+            }
+        });
+    }
+
+    // Download PNG
+    if (btnDownloadQr) {
+        btnDownloadQr.addEventListener("click", async () => {
+            const fullUrl = buildQrUrl();
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=15&data=${encodeURIComponent(fullUrl)}`;
+            try {
+                const res = await fetch(qrApiUrl);
+                const blob = await res.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = blobUrl;
+                a.download = `QR-${qrTicketCode.value || "TourPass"}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                window.open(qrApiUrl, "_blank");
+            }
+        });
+    }
+
+    // Print Ticket
+    if (btnPrintQr) {
+        btnPrintQr.addEventListener("click", () => {
+            const fullUrl = buildQrUrl();
+            const ticket = qrTicketCode.value || "TOUR-PASS-DEMO-24H";
+            const validity = qrValidity.options[qrValidity.selectedIndex].text;
+            const startPoi = qrStartPoi.value ? qrStartPoi.options[qrStartPoi.selectedIndex].text : "Tự do khám phá 6 di tích Quận 1";
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=${encodeURIComponent(fullUrl)}`;
+
+            const printWindow = window.open("", "_blank", "width=600,height=750");
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>VÉ THAM QUAN - GEO TOUR</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f1f5f9; }
+                        .ticket-card { width: 360px; background: white; border-radius: 20px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; border: 2px dashed #0284c7; }
+                        .brand { color: #0284c7; font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+                        .sub-brand { font-size: 11px; color: #64748b; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px; }
+                        .qr-img { width: 220px; height: 220px; margin: 0 auto 16px; border-radius: 12px; border: 1px solid #e2e8f0; }
+                        .ticket-code { font-size: 16px; font-weight: 800; color: #0f172a; background: #f8fafc; padding: 8px 12px; border-radius: 8px; margin-bottom: 14px; font-family: monospace; letter-spacing: 1px; }
+                        .info-row { display: flex; justify-content: space-between; font-size: 12px; color: #475569; padding: 6px 0; border-bottom: 1px solid #f1f5f9; }
+                        .guide { margin-top: 18px; font-size: 11px; color: #64748b; line-height: 1.5; }
+                    </style>
+                </head>
+                <body>
+                    <div class="ticket-card">
+                        <div class="brand">🏛️ GEO TOUR QUẬN 1</div>
+                        <div class="sub-brand">HỆ THỐNG THUYẾT MINH DU LỊCH TỰ ĐỘNG</div>
+                        <img src="${qrApiUrl}" class="qr-img" alt="QR Code">
+                        <div class="ticket-code">${ticket}</div>
+                        <div class="info-row"><span>Thời hạn vé:</span><strong>${validity}</strong></div>
+                        <div class="info-row"><span>Điểm xuất phát:</span><strong>${startPoi}</strong></div>
+                        <div class="info-row"><span>Hỗ trợ:</span><strong>6 Di tích Lịch sử Quận 1</strong></div>
+                        <div class="guide">👉 <strong>Hướng dẫn:</strong> Dùng camera điện thoại quét mã QR để vào ngay ứng dụng dẫn đường và nghe thuyết minh tự động (Geofence 30m).</div>
+                    </div>
+                    <script>
+                        window.onload = function() { window.print(); };
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        });
+    }
+}

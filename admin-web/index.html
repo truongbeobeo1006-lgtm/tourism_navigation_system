@@ -118,6 +118,9 @@
                             <button class="filter-btn">Tháng này</button>
                             <button class="filter-btn">Tùy chỉnh <i class="fa-regular fa-calendar"></i></button>
                         </div>
+                        <button class="btn btn-primary" id="btnOpenQrModal" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: white; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-qrcode"></i> Tạo Mã QR Vé
+                        </button>
                         <button class="btn btn-export">
                             <i class="fa-solid fa-download"></i> Xuất báo cáo PDF/Excel
                         </button>
@@ -528,6 +531,90 @@
                     <button type="submit" class="btn btn-primary">Lưu Bài Thuyết Minh</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: TẠO MÃ QR VÉ TRUY CẬP (TOUR PASS QR) ================= -->
+    <div class="modal-backdrop hide" id="qrModal">
+        <div class="modal-container qr-modal-container">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 38px; height: 38px; border-radius: 10px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 17px; font-weight: 800;">Tạo Mã QR Vé Truy Cập (Tour Pass QR)</h3>
+                        <p style="margin: 0; font-size: 12px; color: #64748b;">Sinh mã QR vé tham quan tự động kích hoạt UC04 cho du khách</p>
+                    </div>
+                </div>
+                <button class="btn-close" id="btnCloseQrModal">&times;</button>
+            </div>
+            <div class="qr-modal-body">
+                <!-- Cột trái: Cấu hình thông số vé -->
+                <div class="qr-config-col">
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-link text-blue"></i> Đường Dẫn Ứng Dụng (Base App URL)</label>
+                        <input type="text" id="qrBaseUrl" value="http://localhost:3000" placeholder="http://localhost:3000 hoặc URL Cloudflare">
+                        <small style="font-size: 11px; color: #64748b;">Mẹo: Nhập URL Cloudflare Tunnel hoặc IP LAN để quét từ điện thoại thật.</small>
+                    </div>
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label><i class="fa-solid fa-ticket text-blue"></i> Mã Vé Tham Quan (Ticket Code)</label>
+                            <button type="button" id="btnGenRandomTicket" style="background: none; border: none; color: #0284c7; font-size: 11.5px; font-weight: 700; cursor: pointer;">
+                                <i class="fa-solid fa-arrows-rotate"></i> Sinh ngẫu nhiên
+                            </button>
+                        </div>
+                        <input type="text" id="qrTicketCode" value="TOUR-PASS-DEMO-24H" placeholder="TOUR-PASS-DEMO-24H">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-clock text-blue"></i> Thời Hạn Hiệu Lực</label>
+                        <select id="qrValidity">
+                            <option value="24h" selected>24 Giờ (Tour 1 ngày tiêu chuẩn)</option>
+                            <option value="48h">48 Giờ (Tour 2 ngày mở rộng)</option>
+                            <option value="7d">7 Ngày (Tour khám phá dài hạn)</option>
+                            <option value="unlimited">Không giới hạn thời gian</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-location-dot text-blue"></i> Điểm Bắt Đầu Đề Xuất (Tùy chọn)</label>
+                        <select id="qrStartPoi">
+                            <option value="" selected>Tự do (Theo GPS gần nhất)</option>
+                            <option value="Dinh Độc Lập">Dinh Độc Lập</option>
+                            <option value="Bưu Điện Trung Tâm">Bưu Điện Trung Tâm</option>
+                            <option value="Nhà Thờ Đức Bà">Nhà Thờ Đức Bà</option>
+                            <option value="Nhà Hát Thành Phố">Nhà Hát Thành Phố</option>
+                            <option value="Chợ Bến Thành">Chợ Bến Thành</option>
+                            <option value="Bảo Tàng Chứng Tích Chiến Tranh">Bảo Tàng Chứng Tích Chiến Tranh</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Live QR Code Preview -->
+                <div class="qr-preview-box">
+                    <div class="qr-img-wrapper" id="qrImageWrapper">
+                        <img id="qrPreviewImg" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://localhost:3000/?ticket=TOUR-PASS-DEMO-24H" alt="QR Code Tour Pass">
+                    </div>
+                    <div class="qr-url-box">
+                        <span style="display: block; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Liên kết truy cập</span>
+                        <div class="qr-url-input-group">
+                            <input type="text" id="qrFullUrlPreview" readonly value="http://localhost:3000/?ticket=TOUR-PASS-DEMO-24H">
+                            <button type="button" id="btnCopyQrUrl" title="Sao chép liên kết">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <span id="qrCopyNotice" style="font-size: 12px; color: #16a34a; font-weight: 600; display: none;">
+                    <i class="fa-solid fa-circle-check"></i> Đã sao chép liên kết vào bộ nhớ tạm!
+                </span>
+                <div style="display: flex; gap: 10px; margin-left: auto;">
+                    <button type="button" class="btn btn-outline" id="btnDownloadQr"><i class="fa-solid fa-download"></i> Tải ảnh PNG</button>
+                    <button type="button" class="btn btn-outline" id="btnPrintQr"><i class="fa-solid fa-print"></i> In Thẻ Vé</button>
+                    <button type="button" class="btn btn-primary" id="btnApplyQrModal">Đóng</button>
+                </div>
+            </div>
         </div>
     </div>
 
