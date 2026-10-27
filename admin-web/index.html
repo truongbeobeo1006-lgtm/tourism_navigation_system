@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEO TOUR - Điều Hành & Quản Trị Du Lịch Thông Minh</title>
+    
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        <!-- ================= 1. SIDEBAR (BÊN TRÁI) ================= -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-compass"></i>
+                </div>
+                <div class="brand-text">
+                    <h2>GEO TOUR</h2>
+                    <p>ĐIỀU HÀNH DU LỊCH</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" id="navDashboard">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <span>Bảng Điều Khiển</span>
+                </a>
+                <a href="#pois" class="nav-item" id="navPois">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span>Quản Lý Điểm Đến (POI)</span>
+                </a>
+                <a href="#analytics" class="nav-item">
+                    <i class="fa-solid fa-chart-simple"></i>
+                    <span>Thống Kê & Phân Tích</span>
+                </a>
+                <a href="#settings" class="nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Cài Đặt Hệ Thống</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span>
+                    <i class="fa-solid fa-globe"></i>
+                    <span>Hệ Thống Trực Tuyến</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ================= 2. MAIN CONTENT ================= -->
+        <main class="main-content">
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="globalSearch" placeholder="Tìm kiếm điểm đến, lộ trình, vị trí tọa độ...">
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="lang-toggle">
+                        <button class="lang-btn active">VIE</button>
+                        <button class="lang-btn">ENG</button>
+                    </div>
+
+                    <button class="icon-btn notification-btn" title="Thông báo">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="badge-dot"></span>
+                    </button>
+
+                    <div class="user-profile">
+                        <div class="user-info">
+                            <span class="user-name">Nguyễn Văn An</span>
+                            <span class="user-role">Quản trị viên cấp cao</span>
+                        </div>
+                        <div class="user-avatar">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- SECTION 1: BẢNG ĐIỀU KHIỂN & PHÂN TÍCH HỆ THỐNG (DASHBOARD) -->
+            <section id="sectionDashboard" class="page-section active">
+                <div class="section-header">
+                    <div class="title-group">
+                        <div class="breadcrumbs">
+                            <span>PHÂN HỆ QUẢN TRỊ TRUNG TÂM</span>
+                            <span class="separator">/</span>
+                            <span class="highlight">THỜI GIAN THỰC</span>
+                        </div>
+                        <h1 class="main-title">Bảng Điều Khiển & Phân Tích Hệ Thống</h1>
+                        <p class="subtitle">Theo dõi tổng lượt nghe thuyết minh, điểm tham quan phổ biến và phiên nghe thời gian thực.</p>
+                    </div>
+
+                    <div class="action-group">
+                        <div class="date-filter">
+                            <button class="filter-btn active">Hôm nay</button>
+                            <button class="filter-btn">7 ngày qua</button>
+                            <button class="filter-btn">Tháng này</button>
+                            <button class="filter-btn">Tùy chỉnh <i class="fa-regular fa-calendar"></i></button>
+                        </div>
+                        <button class="btn btn-primary" id="btnOpenQrModal" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: white; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-qrcode"></i> Tạo Mã QR Vé
+                        </button>
+                        <button class="btn btn-export">
+                            <i class="fa-solid fa-download"></i> Xuất báo cáo PDF/Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 CARDS THỐNG KÊ (DỮ LIỆU THỰC TẾ KHỞI ĐẦU TỪ 0) -->
+                <div class="stat-cards-grid">
+                    <!-- Card 1: Tổng lượt nghe thuyết minh -->
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">TỔNG LƯỢT NGHE THUYẾT MINH</span>
+                            <div class="card-icon blue-icon">
+                                <i class="fa-solid fa-headphones"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="cardTotalAudience">0</div>
+                        <div class="card-footer">
+                            <span class="trend-badge neutral">
+                                <i class="fa-solid fa-minus"></i> 0%
+                            </span>
+                            <span class="footer-note">Chờ phát sinh lượt nghe đầu tiên</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Điểm đến phổ biến -->
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">ĐIỂM ĐẾN PHỔ BIẾN NHẤT</span>
+                            <div class="card-icon blue-icon">
+                                <i class="fa-regular fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="card-value" id="topPoiTitle">--</div>
+                        <div class="sub-value" id="topPoiSubValue">0 lượt nghe</div>
+                        <div class="card-footer">
+                            <span class="footer-note" id="topPoiFooterNote">
+                                <i class="fa-solid fa-location-dot"></i> Chưa có dữ liệu tương tác
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Số thiết bị đang truy cập ở thời điểm hiện tại -->
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">THIẾT BỊ ĐANG TRUY CẬP HIỆN TẠI</span>
+                            <div class="card-icon blue-icon">
+                                <i class="fa-solid fa-mobile-screen-button"></i>
+                            </div>
+                        </div>
+                        <div class="card-value-flex">
+                            <span class="card-value" id="cardActiveDevices">0</span>
+                            <span class="percent-badge" id="deviceStatusText" style="color: #64748b; font-size: 13px;">Thiết bị</span>
+                        </div>
+                        <div class="sub-value" id="deviceBreakdown">Điện thoại di động (0) • Trình duyệt Web (0)</div>
+                        <div class="progress-multi">
+                            <div class="progress-bar bar-vi" id="barMobile" style="width: 0%;"></div>
+                            <div class="progress-bar bar-en" id="barWeb" style="width: 0%;"></div>
+                            <div class="progress-bar bar-other" id="barOther" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Phiên hoạt động trực tiếp -->
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">PHIÊN HOẠT ĐỘNG TRỰC TIẾP</span>
+                            <div class="card-icon blue-icon">
+                                <i class="fa-solid fa-tower-broadcast"></i>
+                            </div>
+                        </div>
+                        <div class="card-value live-val">
+                            <span class="live-dot" style="background: #94a3b8;"></span> <span id="cardLiveSessions">0</span>
+                        </div>
+                        <div class="card-footer space-between">
+                            <span class="footer-note"><i class="fa-solid fa-location-crosshairs"></i> GPS kích hoạt chuẩn xác</span>
+                            <span class="status-tag">Sẵn sàng kết nối</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 2: BIỂU ĐỒ XU HƯỚNG & BẢN ĐỒ GEOFENCE HEATMAP -->
+                <div class="middle-grid">
+                    <!-- Biểu đồ Xu hướng (Trái) -->
+                    <div class="chart-panel card-box">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">
+                                    <span class="blue-dot"></span> Xu Hướng Lượt Nghe Thuyết Minh Tự Động
+                                </h3>
+                                <p class="panel-subtitle">Phân bổ lưu lượng điều hướng tự động theo các khung giờ cao điểm</p>
+                            </div>
+                            <div class="chart-legend">
+                                <span class="legend-item"><span class="dot today-dot"></span> Hôm nay</span>
+                                <span class="legend-item"><span class="dot week-dot"></span> Trung bình tuần</span>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+
+                        <div class="chart-time-labels">
+                            <div class="time-slot">
+                                <strong>06:00 – 09:00</strong>
+                                <span>Buổi Sáng</span>
+                            </div>
+                            <div class="time-slot">
+                                <strong>10:00 – 13:00</strong>
+                                <span>Buổi Trưa</span>
+                            </div>
+                            <div class="time-slot highlight-slot">
+                                <strong>14:00 – 17:00</strong>
+                                <span class="tag-peak">Cao Điểm Chiều</span>
+                            </div>
+                            <div class="time-slot">
+                                <strong>18:00 – 21:00</strong>
+                                <span>Buổi Tối</span>
+                            </div>
+                        </div>
+
+                        <div class="alert-info-bar">
+                            <div class="alert-content">
+                                <i class="fa-solid fa-circle-info"></i>
+                                <span id="alertTrendText">Hệ thống đang trực tuyến và sẵn sàng ghi nhận lượt nghe tự động thời gian thực khi du khách di chuyển vào vùng Geofence 30m.</span>
+                            </div>
+                            <span class="status-tag" style="background: #e2e8f0; font-size: 11.5px;">Chờ dữ liệu</span>
+                        </div>
+                    </div>
+
+                    <!-- Bản đồ Mật độ Heatmap (Phải) -->
+                    <div class="map-panel card-box">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">
+                                    <i class="fa-regular fa-compass text-blue"></i> Bản Đồ Mật Độ & Điểm Nóng (Heatmap)
+                                </h3>
+                                <p class="panel-subtitle">Vùng địa giới Geofencing và tần suất kích hoạt âm thanh</p>
+                            </div>
+                            <div class="area-badge">TP. Hồ Chí Minh - Quận 1</div>
+                        </div>
+
+                        <!-- Khung Bản đồ Leaflet -->
+                        <div id="heatmapLeaflet" class="heatmap-map"></div>
+
+                        <div class="map-legend-bar">
+                            <span class="legend-badge red"><span class="dot"></span> Cao</span>
+                            <span class="legend-badge blue"><span class="dot"></span> Trung bình</span>
+                            <span class="legend-badge gray"><span class="dot"></span> Thấp</span>
+                        </div>
+
+                        <div class="map-quick-stats">
+                            <div class="mstat-item">
+                                <span class="mstat-label">Điểm Geofence</span>
+                                <strong class="mstat-val" id="mapGeofenceCount">6 điểm Q.1</strong>
+                            </div>
+                            <div class="mstat-item">
+                                <span class="mstat-label">Bán kính quét</span>
+                                <strong class="mstat-val">30m – 50m</strong>
+                            </div>
+                            <div class="mstat-item">
+                                <span class="mstat-label">Độ chuẩn xác</span>
+                                <strong class="mstat-val">±1.2m</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 3: TOP 5 POI & HOẠT ĐỘNG GPS LIVE STREAM -->
+                <div class="bottom-grid">
+                    <!-- Top 5 Điểm tham quan (Trái) -->
+                    <div class="top-pois-panel card-box">
+                        <div class="panel-header">
+                            <div class="title-with-icon">
+                                <i class="fa-regular fa-star text-blue"></i>
+                                <h3 class="panel-title">Top Điểm Tham Quan Có Đánh Giá Cao Nhất</h3>
+                            </div>
+                            <a href="#pois" class="link-action" id="linkViewAllPois">Xem toàn bộ danh mục</a>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>TÊN ĐIỂM ĐẾN</th>
+                                        <th>TỈNH / THÀNH</th>
+                                        <th>LƯỢT NGHE</th>
+                                        <th>ĐÁNH GIÁ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topPoisTableBody">
+                                    <!-- Dữ liệu render từ JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Hoạt động kích hoạt GPS mới nhất (Phải) -->
+                    <div class="live-activity-panel card-box">
+                        <div class="panel-header">
+                            <div class="title-with-icon">
+                                <i class="fa-solid fa-clock-rotate-left text-blue"></i>
+                                <h3 class="panel-title">Hoạt Động Kích Hoạt GPS Mới Nhất</h3>
+                            </div>
+                            <span class="live-badge"><span class="pulse-dot"></span> Trực tiếp</span>
+                        </div>
+
+                        <div class="activity-feed" id="activityFeed">
+                            <!-- Dữ liệu realtime log tự động sinh từ JS -->
+                        </div>
+
+                        <div class="feed-footer">
+                            <span class="sync-text">Tự động đồng bộ mỗi 5 giây</span>
+                            <a href="#live-console" class="console-link">Mở Console Trực Tuyến <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: QUẢN LÝ ĐIỂM ĐẾN POI (MÀN HÌNH THEO DESIGN 2) -->
+            <section id="sectionPois" class="page-section">
+                <div class="section-header">
+                    <div class="title-group">
+                        <div class="breadcrumbs">
+                            <span>Quản Lý Điểm Đến</span>
+                            <span class="separator">></span>
+                            <span class="highlight">Danh Sách Điểm Đến (POI)</span>
+                        </div>
+                        <h1 class="main-title">
+                            <i class="fa-solid fa-location-dot text-blue"></i> Quản Lý Điểm Đến Du Lịch (POI)
+                            <span class="count-badge" id="poiTotalBadge">6 Địa Điểm</span>
+                        </h1>
+                        <p class="subtitle">Quản lý danh sách điểm tham quan, tọa độ GPS, bán kính kích hoạt Geofence và tệp âm thanh đa ngữ.</p>
+                    </div>
+
+                    <div class="action-group">
+                        <button class="btn btn-outline" id="btnExportData">
+                            <i class="fa-solid fa-download"></i> Xuất Dữ Liệu
+                        </button>
+                        <button class="btn btn-primary" id="btnOpenAddModal">
+                            <i class="fa-solid fa-plus"></i> Thêm Điểm Đến Mới
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Thẻ thống kê POI -->
+                <div class="stat-cards-grid">
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">TỔNG ĐIỂM POI</span>
+                            <div class="card-icon blue-icon"><i class="fa-solid fa-location-dot"></i></div>
+                        </div>
+                        <div class="card-value" id="cardPoiCount">6</div>
+                        <div class="card-footer">
+                            <span class="footer-note blue-text"><i class="fa-solid fa-satellite-dish"></i> 6 Vùng Geofence sẵn sàng</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">ĐANG HOẠT ĐỘNG</span>
+                            <div class="card-icon green-icon"><i class="fa-regular fa-circle-check"></i></div>
+                        </div>
+                        <div class="card-value" id="cardActiveCount">6</div>
+                        <div class="card-footer">
+                            <span class="footer-note"><span class="dot blue-dot"></span> 100% Đang kích hoạt</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">TỆP AUDIO ĐÃ NẠP</span>
+                            <div class="card-icon blue-icon"><i class="fa-solid fa-headphones"></i></div>
+                        </div>
+                        <div class="card-value" id="cardAudioCount">12</div>
+                        <div class="card-footer">
+                            <span class="footer-note">Song ngữ chuẩn (VI, EN, ...)</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">BÁN KÍNH TRUNG BÌNH</span>
+                            <div class="card-icon blue-icon"><i class="fa-solid fa-ruler-combined"></i></div>
+                        </div>
+                        <div class="card-value">30m</div>
+                        <div class="card-footer">
+                            <span class="footer-note">Sai số GPS ± 1.2m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POI Table Panel -->
+                <div class="card-box mt-4">
+                    <div class="table-toolbar">
+                        <div class="search-input-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="poiSearchInput" placeholder="Tìm kiếm điểm đến, lộ trình, vị trí tọa độ...">
+                        </div>
+                        <div class="pagination-info">
+                            <span>Hiển thị <strong id="showingCount">1 - 6</strong> trong tổng số <strong id="totalPoiText">6</strong> điểm đến</span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table-custom table-pois">
+                            <thead>
+                                <tr>
+                                    <th>MÃ POI</th>
+                                    <th>TÊN ĐIỂM ĐẾN</th>
+                                    <th>TỌA ĐỘ GPS</th>
+                                    <th>BÁN KÍNH GEOFENCE</th>
+                                    <th>NGÔN NGỮ HỖ TRỢ</th>
+                                    <th>TRẠNG THÁI</th>
+                                    <th class="text-center">THAO TÁC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="poiTableBody">
+                                <!-- Render danh sách 6 POI từ Backend -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ================= MODAL: THÊM / SỬA POI ================= -->
+    <div class="modal-backdrop hide" id="poiModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm Điểm Đến Du Lịch Mới</h3>
+                <button class="btn-close" id="btnCloseModal">&times;</button>
+            </div>
+            <form id="poiForm">
+                <input type="hidden" id="formPoiId">
+                <div class="form-grid">
+                    <div class="form-group span-2">
+                        <label>Tên Điểm Tham Quan *</label>
+                        <input type="text" id="formName" required placeholder="Ví dụ: Chợ Bến Thành, Dinh Độc Lập...">
+                    </div>
+                    <div class="form-group">
+                        <label>Vĩ Độ (Latitude) *</label>
+                        <input type="number" step="any" id="formLat" required placeholder="10.77692">
+                    </div>
+                    <div class="form-group">
+                        <label>Kinh Độ (Longitude) *</label>
+                        <input type="number" step="any" id="formLng" required placeholder="106.69531">
+                    </div>
+                    <div class="form-group">
+                        <label>Bán Kính Geofence (Mét)</label>
+                        <input type="number" id="formRadius" value="30">
+                    </div>
+                    <div class="form-group">
+                        <label>Trạng Thái</label>
+                        <select id="formIsActive">
+                            <option value="true">Đang hoạt động</option>
+                            <option value="false">Tạm dừng</option>
+                        </select>
+                    </div>
+                    <div class="form-group span-2">
+                        <label>Đường Dẫn Ảnh (Image URL)</label>
+                        <input type="url" id="formImageUrl" placeholder="https://example.com/image.jpg">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btnCancelModal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary" id="btnSavePoi">Lưu Thông Tin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: SOẠN BÀI THUYẾT MINH ÂM THANH ================= -->
+    <div class="modal-backdrop hide" id="audioModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="audioModalTitle">Quản Lý Thuyết Minh Âm Thanh</h3>
+                <button class="btn-close" id="btnCloseAudioModal">&times;</button>
+            </div>
+            <form id="audioForm">
+                <input type="hidden" id="audioPoiId">
+                <div class="form-group">
+                    <label>Ngôn Ngữ Thuyết Minh</label>
+                    <select id="audioLangCode">
+                        <option value="vi">🇻🇳 Tiếng Việt (vi)</option>
+                        <option value="en">🇬🇧 English (en)</option>
+                        <option value="zh">🇨🇳 中文 (zh)</option>
+                        <option value="ja">🇯🇵 日本語 (ja)</option>
+                        <option value="ko">🇰🇷 한국어 (ko)</option>
+                        <option value="fr">🇫🇷 Français (fr)</option>
+                        <option value="ru">🇷🇺 Русский (ru)</option>
+                        <option value="de">🇩🇪 Deutsch (de)</option>
+                        <option value="es">🇪🇸 Español (es)</option>
+                        <option value="th">🇹🇭 ไทย (th)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Đường Dẫn File Audio (MP3 Stream)</label>
+                    <input type="url" id="audioUrlInput" placeholder="https://domain.com/audio_vi.mp3">
+                </div>
+                <div class="form-group">
+                    <label>Nội Dung Kịch Bản Thuyết Minh (TTS Script)</label>
+                    <textarea id="audioScriptInput" rows="4" placeholder="Nhập bài thuyết minh chi tiết cho du khách..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Thời Lượng Dự Kiến (Giây)</label>
+                    <input type="number" id="audioDurationInput" value="30">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btnCancelAudioModal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu Bài Thuyết Minh</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: TẠO MÃ QR VÉ TRUY CẬP (TOUR PASS QR) ================= -->
+    <div class="modal-backdrop hide" id="qrModal">
+        <div class="modal-container qr-modal-container">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 38px; height: 38px; border-radius: 10px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 17px; font-weight: 800;">Tạo Mã QR Vé Truy Cập (Tour Pass QR)</h3>
+                        <p style="margin: 0; font-size: 12px; color: #64748b;">Sinh mã QR vé tham quan tự động kích hoạt UC04 cho du khách</p>
+                    </div>
+                </div>
+                <button class="btn-close" id="btnCloseQrModal">&times;</button>
+            </div>
+            <div class="qr-modal-body">
+                <!-- Cột trái: Cấu hình thông số vé -->
+                <div class="qr-config-col">
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-link text-blue"></i> Đường Dẫn Ứng Dụng (Base App URL)</label>
+                        <input type="text" id="qrBaseUrl" value="https://boats-diet-demonstrated-lender.trycloudflare.com" placeholder="http://localhost:3000 hoặc URL Cloudflare">
+                        <small style="font-size: 11px; color: #64748b;">Mẹo: Nhập URL Cloudflare Tunnel hoặc IP LAN để quét từ điện thoại thật.</small>
+                    </div>
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label><i class="fa-solid fa-ticket text-blue"></i> Mã Vé Tham Quan (Ticket Code)</label>
+                            <button type="button" id="btnGenRandomTicket" style="background: none; border: none; color: #0284c7; font-size: 11.5px; font-weight: 700; cursor: pointer;">
+                                <i class="fa-solid fa-arrows-rotate"></i> Sinh ngẫu nhiên
+                            </button>
+                        </div>
+                        <input type="text" id="qrTicketCode" value="TOUR-PASS-DEMO-24H" placeholder="TOUR-PASS-DEMO-24H">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-clock text-blue"></i> Thời Hạn Hiệu Lực</label>
+                        <select id="qrValidity">
+                            <option value="24h" selected>24 Giờ (Tour 1 ngày tiêu chuẩn)</option>
+                            <option value="48h">48 Giờ (Tour 2 ngày mở rộng)</option>
+                            <option value="7d">7 Ngày (Tour khám phá dài hạn)</option>
+                            <option value="unlimited">Không giới hạn thời gian</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-location-dot text-blue"></i> Điểm Bắt Đầu Đề Xuất (Tùy chọn)</label>
+                        <select id="qrStartPoi">
+                            <option value="" selected>Tự do (Theo GPS gần nhất)</option>
+                            <option value="Dinh Độc Lập">Dinh Độc Lập</option>
+                            <option value="Bưu Điện Trung Tâm">Bưu Điện Trung Tâm</option>
+                            <option value="Nhà Thờ Đức Bà">Nhà Thờ Đức Bà</option>
+                            <option value="Nhà Hát Thành Phố">Nhà Hát Thành Phố</option>
+                            <option value="Chợ Bến Thành">Chợ Bến Thành</option>
+                            <option value="Bảo Tàng Chứng Tích Chiến Tranh">Bảo Tàng Chứng Tích Chiến Tranh</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Live QR Code Preview -->
+                <div class="qr-preview-box">
+                    <div class="qr-img-wrapper" id="qrImageWrapper">
+                        <img id="qrPreviewImg" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://boats-diet-demonstrated-lender.trycloudflare.com/?ticket=TOUR-PASS-DEMO-24H" alt="QR Code Tour Pass">
+                    </div>
+                    <div class="qr-url-box">
+                        <span style="display: block; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Liên kết truy cập</span>
+                        <div class="qr-url-input-group">
+                            <input type="text" id="qrFullUrlPreview" readonly value="https://boats-diet-demonstrated-lender.trycloudflare.com/?ticket=TOUR-PASS-DEMO-24H">
+                            <button type="button" id="btnCopyQrUrl" title="Sao chép liên kết">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <span id="qrCopyNotice" style="font-size: 12px; color: #16a34a; font-weight: 600; display: none;">
+                    <i class="fa-solid fa-circle-check"></i> Đã sao chép liên kết vào bộ nhớ tạm!
+                </span>
+                <div style="display: flex; gap: 10px; margin-left: auto;">
+                    <button type="button" class="btn btn-outline" id="btnDownloadQr"><i class="fa-solid fa-download"></i> Tải ảnh PNG</button>
+                    <button type="button" class="btn btn-outline" id="btnPrintQr"><i class="fa-solid fa-print"></i> In Thẻ Vé</button>
+                    <button type="button" class="btn btn-primary" id="btnApplyQrModal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -41,7 +41,7 @@ spring:
         - id: tracking-service-route
           uri: ${TRACKING_SERVICE_URI:http://127.0.0.1:8083}
           predicates:
-            - Path=/api/v1/tracking/**
+            - Path=/api/v1/tracking/**, /api/tracking/**, /api/routes/**
 
 management:
   endpoints:

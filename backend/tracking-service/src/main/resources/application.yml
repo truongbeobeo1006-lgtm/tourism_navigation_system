@@ -1,0 +1,31 @@
+
+server:
+  port: 8083
+
+spring:
+  application:
+    name: tracking-service
+
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5433/poitour?options=-c%20timezone=Asia/Ho_Chi_Minh
+    username: poitour
+    password: poitour123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      timeout: 2000ms
