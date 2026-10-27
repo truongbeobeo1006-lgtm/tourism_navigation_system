@@ -353,8 +353,21 @@ function startGpsTracking() {
   }
 
   dom.gpsPill.className = 'gps-badge connecting';
-  dom.gpsText.innerText = 'GPS: Đang tìm...';
+  dom.gpsText.innerText = 'GPS: Đang lấy vị trí thực...';
 
+  // 1. Get fast immediate fix from hardware GPS
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      console.log('[GPS Fast Fix Received]:', pos.coords.latitude, pos.coords.longitude);
+      onGpsPositionUpdate(pos);
+    },
+    (err) => {
+      console.warn('[GPS Fast Fix Pending]:', err.message);
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+  );
+
+  // 2. Continuous real-time position tracking
   if (state.watchId !== null) {
     navigator.geolocation.clearWatch(state.watchId);
     state.watchId = null;
@@ -365,8 +378,8 @@ function startGpsTracking() {
     onGpsPositionError,
     {
       enableHighAccuracy: true,
-      maximumAge: 2000,
-      timeout: 10000
+      maximumAge: 1000,
+      timeout: 15000
     }
   );
 }
@@ -374,18 +387,19 @@ function startGpsTracking() {
 function onGpsPositionUpdate(pos) {
   const { latitude, longitude, accuracy } = pos.coords;
   state.isSimulating = false;
+  state.hasRealGps = true;
 
   dom.gpsPill.className = 'gps-badge active';
-  dom.gpsText.innerText = accuracy ? `GPS: Trực tiếp (±${Math.round(accuracy)}m)` : 'GPS: Trực tiếp';
+  dom.gpsText.innerText = accuracy ? `GPS Thật: ±${Math.round(accuracy)}m` : 'GPS: Trực tiếp';
   if (dom.recenterBtn) dom.recenterBtn.classList.add('active-tracking');
 
-  // Update user marker and position
+  // Cập nhật vị trí và marker người dùng tới đúng tọa độ GPS thực tế
   updateUserPosition(latitude, longitude, accuracy);
 
-  // Center on first real GPS fix
+  // Căn giữa bản đồ vào vị trí GPS thực tế của du khách
   if (!state.hasFirstGpsFix) {
     state.hasFirstGpsFix = true;
-    state.map.setView([latitude, longitude], 17);
+    state.map.setView([latitude, longitude], 16);
   }
 }
 
@@ -451,15 +465,15 @@ function checkGeofenceAndDistances() {
     }
   }
 
-  const targetPoi = poiInsideZone || state.activePoi || closestPoi;
+  const targetPoi = poiInsideZone || closestPoi || state.activePoi;
   if (!targetPoi) return;
 
   const targetDist = calculateHaversine(state.currentLat, state.currentLng, targetPoi.lat, targetPoi.lng);
   const roundedDist = Math.round(targetDist);
 
-  // Update Distance Display
+  // Update Distance Display (meters or km)
   dom.distLabel.innerText = `KHOẢNG CÁCH TỚI ${targetPoi.name.toUpperCase()}`;
-  dom.distValue.innerText = `${roundedDist} m`;
+  dom.distValue.innerText = roundedDist >= 1000 ? `${(roundedDist / 1000).toFixed(1)} km` : `${roundedDist} m`;
 
   if (poiInsideZone) {
     // --- DU KHÁCH ĐÃ ĐI VÀO VÙNG 30M ---
