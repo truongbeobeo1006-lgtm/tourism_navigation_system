@@ -488,6 +488,19 @@ const UI_LOCALES = {
   }
 };
 
+
+// Map popup localized strings
+UI_LOCALES.vi.youAreHere = 'Bạn ở đây';
+UI_LOCALES.en.youAreHere = 'You are here';
+UI_LOCALES.zh.youAreHere = '您在这里';
+UI_LOCALES.ja.youAreHere = '現在地';
+UI_LOCALES.ko.youAreHere = '현재 위치';
+UI_LOCALES.fr.youAreHere = 'Vous êtes ici';
+UI_LOCALES.ru.youAreHere = 'Вы здесь';
+UI_LOCALES.de.youAreHere = 'Sie sind hier';
+UI_LOCALES.es.youAreHere = 'Estás aquí';
+UI_LOCALES.th.youAreHere = 'คุณอยู่ที่นี่';
+
 const POI_MULTILANG_SCRIPTS = {
   // 1. Dinh Độc Lập
   'q1-poi-0001': {
@@ -725,9 +738,49 @@ const POI_MULTILANG_SCRIPTS = {
   }
 };
 
+// Flexible POI multi-language resolver matching ID or names
+function findPoiMultilang(poi) {
+  if (!poi) return null;
+  if (typeof POI_MULTILANG_SCRIPTS === 'undefined') return null;
+
+  // Direct ID check
+  if (POI_MULTILANG_SCRIPTS[poi.id]) return POI_MULTILANG_SCRIPTS[poi.id];
+
+  // Map fallback IDs
+  if (poi.id === 'poi-dinh-doc-lap') return POI_MULTILANG_SCRIPTS['q1-poi-0001'];
+  if (poi.id === 'poi-nha-tho-duc-ba') return POI_MULTILANG_SCRIPTS['q1-poi-0002'];
+  if (poi.id === 'poi-buu-dien') return POI_MULTILANG_SCRIPTS['q1-poi-0003'];
+  if (poi.id === 'poi-nha-hat') return POI_MULTILANG_SCRIPTS['q1-poi-0004'];
+  if (poi.id === 'poi-cho-ben-thanh') return POI_MULTILANG_SCRIPTS['q1-poi-0005'];
+  if (poi.id === 'poi-bao-tang') return POI_MULTILANG_SCRIPTS['q1-poi-0006'];
+
+  // Fuzzy check on name and ID
+  const str = ((poi.id || '') + ' ' + (poi.name || '')).toLowerCase();
+  if (str.includes('dinh') || str.includes('độc lập') || str.includes('doc lap') || str.includes('independence') || str.includes('reunification')) {
+    return POI_MULTILANG_SCRIPTS['q1-poi-0001'];
+  }
+  if (str.includes('đức bà') || str.includes('duc ba') || str.includes('notre')) {
+    return POI_MULTILANG_SCRIPTS['q1-poi-0002'];
+  }
+  if (str.includes('bưu điện') || str.includes('buu dien') || str.includes('post office')) {
+    return POI_MULTILANG_SCRIPTS['q1-poi-0003'];
+  }
+  if (str.includes('nhà hát') || str.includes('nha hat') || str.includes('opera')) {
+    return POI_MULTILANG_SCRIPTS['q1-poi-0004'];
+  }
+  if (str.includes('bến thành') || str.includes('ben thanh')) {
+    return POI_MULTILANG_SCRIPTS['q1-poi-0005'];
+  }
+  if (str.includes('chứng tích') || str.includes('chung tich') || str.includes('war remnants')) {
+    return POI_MULTILANG_SCRIPTS['q1-poi-0006'];
+  }
+  return null;
+}
+
 function getLocalizedPoi(poi, lang) {
-  const multilang = POI_MULTILANG_SCRIPTS[poi.id];
+  if (!poi) return poi;
   const l = lang || state.selectedLang || 'vi';
+  const multilang = findPoiMultilang(poi);
   if (!multilang) return poi;
 
   const locName = (multilang.name && multilang.name[l]) ? multilang.name[l] : poi.name;
@@ -767,7 +820,7 @@ function applyUiTranslations(lang) {
   const startNarrationText = document.getElementById('startNarrationText');
   if (startNarrationText && state.activePoi) {
     const locPoi = getLocalizedPoi(state.activePoi, l);
-    startNarrationText.innerText = state.isPlaying ? `${t.pauseNarration} ${locPoi.name}` : `${t.startNarration} ${locPoi.name}`;
+    startNarrationText.innerText = state.isPlaying ? `${t.pauseNarration}: ${locPoi.name}` : `${t.startNarration}: ${locPoi.name}`;
   }
 
   // 5. Controls Tooltips
@@ -873,9 +926,19 @@ function applyUiTranslations(lang) {
   if (state.activePoi) {
     const locPoi = getLocalizedPoi(state.activePoi, l);
     dom.poiName.innerText = locPoi.name;
-    dom.sheetPoiName.innerText = locPoi.name;
+    if (dom.sheetPoiName) dom.sheetPoiName.innerText = locPoi.name;
     dom.poiAddress.innerText = locPoi.address;
     dom.poiScriptText.innerText = locPoi.ttsScript;
+  }
+
+  // 10. Update User Marker Popup
+  if (state.userMarker) {
+    state.userMarker.bindPopup(`<b>${t.youAreHere || 'Bạn ở đây'}</b>`);
+  }
+
+  // 11. Refresh map landmark markers with localized labels
+  if (typeof renderPoiMarkers === 'function') {
+    renderPoiMarkers();
   }
 }
 
@@ -1126,6 +1189,8 @@ function initMap() {
   });
 
   state.userMarker = L.marker([state.currentLat, state.currentLng], { icon: userIcon, zIndexOffset: 2000 }).addTo(state.map);
+  const _initLoc = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[state.selectedLang || 'vi']) ? UI_LOCALES[state.selectedLang || 'vi'] : { youAreHere: 'Bạn ở đây' };
+  state.userMarker.bindPopup(`<b>${_initLoc.youAreHere || 'Bạn ở đây'}</b>`);
 
   // Map click moves user in simulation mode
   state.map.on('click', (e) => {
@@ -1143,12 +1208,16 @@ function initMap() {
 }
 
 function renderPoiMarkers() {
+  if (!state.map) return;
   Object.values(state.poiMarkers).forEach(m => state.map.removeLayer(m));
   Object.values(state.poiGeofenceCircles).forEach(c => state.map.removeLayer(c));
   state.poiMarkers = {};
   state.poiGeofenceCircles = {};
 
+  const l = state.selectedLang || 'vi';
+
   state.pois.forEach(poi => {
+    const locPoi = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(poi, l) : poi;
     // Landmark Red Pin
     const poiIcon = L.divIcon({
       className: 'poi-marker-wrapper',
@@ -1159,7 +1228,7 @@ function renderPoiMarkers() {
               <path d="M4 10v7h3v-7H4zm6 0v7h4v-7h-4zm7 0v7h3v-7h-3zM2 22h20v-3H2v3zm10-20L2 6v2h20V6l-10-4z"></path>
             </svg>
           </div>
-          <div class="poi-label-pill">${poi.name}</div>
+          <div class="poi-label-pill">${locPoi.name}</div>
         </div>
       `,
       iconSize: [80, 56],
@@ -1271,7 +1340,12 @@ function onGpsPositionUpdate(pos) {
   state.hasRealGps = true;
 
   dom.gpsPill.className = 'gps-badge active';
-  dom.gpsText.innerText = accuracy ? `GPS Thật: ±${Math.round(accuracy)}m` : 'GPS: Trực tiếp';
+  const _lGps = state.selectedLang || 'vi';
+  const _tGps = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[_lGps]) ? UI_LOCALES[_lGps] : { gpsReal: 'GPS Thật', youAreHere: 'Bạn ở đây' };
+  dom.gpsText.innerText = accuracy ? `${_tGps.gpsReal}: ±${Math.round(accuracy)}m` : _tGps.gpsReal;
+  if (state.userMarker) {
+    state.userMarker.bindPopup(`<b>${_tGps.youAreHere || 'Bạn ở đây'}</b>`);
+  }
   if (dom.recenterBtn) dom.recenterBtn.classList.add('active-tracking');
 
   // Cập nhật vị trí và marker người dùng tới đúng tọa độ GPS thực tế
@@ -1329,6 +1403,9 @@ function updateUserPosition(lat, lng, accuracy = null) {
 function checkGeofenceAndDistances() {
   if (!state.pois || state.pois.length === 0) return;
 
+  const l = state.selectedLang || 'vi';
+  const t = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[l]) ? UI_LOCALES[l] : UI_LOCALES.vi;
+
   let closestPoi = null;
   let closestDist = Infinity;
   let poiInsideZone = null;
@@ -1349,17 +1426,18 @@ function checkGeofenceAndDistances() {
   const targetPoi = poiInsideZone || closestPoi || state.activePoi;
   if (!targetPoi) return;
 
+  const locTargetPoi = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(targetPoi, l) : targetPoi;
   const targetDist = calculateHaversine(state.currentLat, state.currentLng, targetPoi.lat, targetPoi.lng);
   const roundedDist = Math.round(targetDist);
 
-  // Update Distance Display (meters or km)
-  dom.distLabel.innerText = `KHOẢNG CÁCH TỚI ${targetPoi.name.toUpperCase()}`;
+  // Update Distance Display in active language
+  dom.distLabel.innerText = `${t.distLabelPrefix} ${locTargetPoi.name.toUpperCase()}`;
   dom.distValue.innerText = roundedDist >= 1000 ? `${(roundedDist / 1000).toFixed(1)} km` : `${roundedDist} m`;
 
   if (poiInsideZone) {
     // --- DU KHÁCH ĐÃ ĐI VÀO VÙNG 30M ---
     dom.zoneBadge.className = 'zone-badge inside';
-    dom.zoneBadge.innerText = `Trong vùng (${roundedDist}m)`;
+    dom.zoneBadge.innerText = `${t.zoneInside} (${roundedDist}m)`;
 
     // Switch active POI to the one entered
     if (!state.activePoi || state.activePoi.id !== poiInsideZone.id) {
@@ -1372,12 +1450,12 @@ function checkGeofenceAndDistances() {
       const lastTime = state.lastTriggeredTime[poiInsideZone.id] || 0;
       if (now - lastTime > CONFIG.GEOFENCE_COOLDOWN_MS) {
         state.lastTriggeredTime[poiInsideZone.id] = now;
-        console.log(`[GEOFENCE TRIGGERED] Đã vào vùng 30m của: ${poiInsideZone.name} (${roundedDist}m)`);
+        console.log(`[GEOFENCE TRIGGERED] Entered: ${locTargetPoi.name} (${roundedDist}m)`);
         
         // Audio notification cue
         playNotificationChime();
 
-        // Show banner notification
+        // Show banner notification in active language
         showGeofenceBanner(poiInsideZone);
 
         // Auto start narration
@@ -1387,7 +1465,8 @@ function checkGeofenceAndDistances() {
   } else {
     // --- NGOÀI VÙNG 30M ---
     dom.zoneBadge.className = 'zone-badge outside';
-    dom.zoneBadge.innerText = `Ngoài vùng (${roundedDist}m)`;
+    const distFormatted = roundedDist >= 1000 ? `${(roundedDist / 1000).toFixed(1)}km` : `${roundedDist}m`;
+    dom.zoneBadge.innerText = `${t.zoneOutside} (${distFormatted})`;
     hideGeofenceBanner();
 
     // If not playing, keep card synced to closest landmark
@@ -1401,7 +1480,14 @@ function checkGeofenceAndDistances() {
 
 function showGeofenceBanner(poi) {
   if (!dom.geofenceBanner) return;
-  dom.bannerTitle.innerText = `Đã đến ${poi.name}!`;
+  const l = state.selectedLang || 'vi';
+  const t = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[l]) ? UI_LOCALES[l] : UI_LOCALES.vi;
+  const locPoi = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(poi, l) : poi;
+
+  dom.bannerTitle.innerText = `${t.bannerComing} ${locPoi.name}!`;
+  const subSpan = dom.geofenceBanner.querySelector('.banner-sub');
+  if (subSpan) subSpan.innerText = t.bannerSub;
+
   dom.geofenceBanner.classList.remove('hidden');
   clearTimeout(state.bannerTimeout);
   state.bannerTimeout = setTimeout(() => {
@@ -1431,12 +1517,17 @@ function selectPoi(poi, autoPlay = false) {
   const isSame = state.activePoi && state.activePoi.id === poi.id;
   state.activePoi = poi;
 
+  const l = state.selectedLang || 'vi';
+  const t = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[l]) ? UI_LOCALES[l] : UI_LOCALES.vi;
+  const locPoi = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(poi, l) : poi;
+
   // Update Player Card
-  dom.poiName.innerText = poi.name;
-  dom.poiAddress.innerText = poi.address || 'Quận 1, TP. Hồ Chí Minh';
+  dom.poiName.innerText = locPoi.name;
+  if (dom.sheetPoiName) dom.sheetPoiName.innerText = locPoi.name;
+  dom.poiAddress.innerText = locPoi.address || 'Quận 1, TP. Hồ Chí Minh';
   dom.poiThumb.src = poi.imageUrl || 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=200&auto=format&fit=crop&q=80';
-  dom.startNarrationText.innerText = `Bắt đầu thuyết minh ${poi.name}`;
-  dom.poiScriptText.innerText = poi.ttsScript || `Nhấn phát để nghe bài thuyết minh lịch sử và kiến trúc đặc sắc của ${poi.name}...`;
+  dom.startNarrationText.innerText = state.isPlaying ? `${t.pauseNarration}: ${locPoi.name}` : `${t.startNarration}: ${locPoi.name}`;
+  dom.poiScriptText.innerText = locPoi.ttsScript || locPoi.name;
 
   state.audioDuration = poi.durationSec || 135;
   dom.timeTotal.innerText = formatTime(state.audioDuration);
@@ -1540,7 +1631,10 @@ function startPlayback() {
   unlockAudio();
   state.isPlaying = true;
   updatePlayButtonUI(true);
-  dom.startNarrationText.innerText = `Tạm dừng thuyết minh ${state.activePoi.name}`;
+  const _l = state.selectedLang || 'vi';
+  const _t = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[_l]) ? UI_LOCALES[_l] : { pauseNarration: 'Tạm dừng thuyết minh' };
+  const _loc = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(state.activePoi, _l) : state.activePoi;
+  dom.startNarrationText.innerText = `${_t.pauseNarration}: ${_loc.name}`;
 
   // Notification chime
   playNotificationChime();
@@ -1631,7 +1725,10 @@ function stopPlayback() {
   state.isPlaying = false;
   updatePlayButtonUI(false);
   if (state.activePoi) {
-    dom.startNarrationText.innerText = `Bắt đầu thuyết minh ${state.activePoi.name}`;
+    const _l2 = state.selectedLang || 'vi';
+  const _t2 = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[_l2]) ? UI_LOCALES[_l2] : { startNarration: 'Bắt đầu thuyết minh' };
+  const _loc2 = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(state.activePoi, _l2) : state.activePoi;
+  dom.startNarrationText.innerText = `${_t2.startNarration}: ${_loc2.name}`;
   }
   clearInterval(state.playbackInterval);
 
