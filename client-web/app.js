@@ -1,6 +1,10 @@
 /**
  * TOURISM NAVIGATION SYSTEM - CLIENT WEB APP
- * Implemented according to the exact 3-screen UI design specification
+ * Features:
+ * - Real GPS tracking with live customer location updates
+ * - 30m Geofencing around heritage POIs with automatic audio/TTS narration
+ * - Graceful fallback to simulation mode for desktop/laptop testing
+ * - Interactive 3-tab smartphone UI (Bản đồ, Lộ trình, Cài đặt)
  */
 
 // Global reference for Web Speech Utterance to prevent Chrome GC bug
@@ -13,7 +17,7 @@ const CONFIG = {
   REALTIME_URL: '/api/event',
   DEFAULT_CENTER: [10.77692, 106.69531], // Dinh Độc Lập
   GEOFENCE_RADIUS_M: 30,
-  GEOFENCE_COOLDOWN_MS: 120000,
+  GEOFENCE_COOLDOWN_MS: 60000, // 60s cooldown per POI to avoid repeated triggers in the same zone
 };
 
 // Seed fallback data matching District 1 POIs
@@ -98,12 +102,16 @@ const state = {
   isPlaying: false,
   map: null,
   userMarker: null,
+  accuracyCircle: null,
+  watchId: null,
+  hasFirstGpsFix: false,
   poiMarkers: {},
   poiGeofenceCircles: {},
   lastTriggeredTime: {},
   audioDuration: 135,
   audioCurrentTime: 0,
   playbackInterval: null,
+  bannerTimeout: null,
 };
 
 // DOM References
@@ -114,6 +122,9 @@ const dom = {
   distLabel: document.getElementById('distLabel'),
   distValue: document.getElementById('distValue'),
   zoneBadge: document.getElementById('zoneBadge'),
+  recenterBtn: document.getElementById('recenterBtn'),
+  geofenceBanner: document.getElementById('geofenceBanner'),
+  bannerTitle: document.getElementById('bannerTitle'),
   poiThumb: document.getElementById('poiThumb'),
   poiName: document.getElementById('poiName'),
   poiAddress: document.getElementById('poiAddress'),
@@ -153,6 +164,8 @@ window.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   loadSpeechVoices();
   fetchPois();
+  // Automatically start requesting and tracking real GPS from device
+  startGpsTracking();
 });
 
 function loadSpeechVoices() {
@@ -174,6 +187,7 @@ function unlockAudio() {
 }
 window.addEventListener('click', unlockAudio, { capture: true });
 window.addEventListener('touchstart', unlockAudio, { capture: true });
+window.addEventListener('pointerdown', unlockAudio, { capture: true });
 
 function playNotificationChime() {
   try {
@@ -186,7 +200,7 @@ function playNotificationChime() {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(523.25, ctx.currentTime);
     osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
-    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
     osc.connect(gain);
     gain.connect(ctx.destination);
@@ -206,7 +220,7 @@ function initMap() {
     attributionControl: false
   }).setView(CONFIG.DEFAULT_CENTER, 17);
 
-  // Standard Google Maps Tile Layer
+  // Standard Google Maps Tile Layer (no watermark, crisp Vietnamese labels)
   L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
@@ -234,6 +248,15 @@ function initMap() {
 
   // Map click moves user in simulation mode
   state.map.on('click', (e) => {
+    // If user clicks the map, pause real GPS watch temporarily so they can test any coordinates
+    if (!state.isSimulating && state.watchId !== null) {
+      navigator.geolocation.clearWatch(state.watchId);
+      state.watchId = null;
+      state.isSimulating = true;
+      dom.gpsPill.className = 'gps-badge sim';
+      dom.gpsText.innerText = 'GPS: Mô phỏng';
+      if (dom.recenterBtn) dom.recenterBtn.classList.remove('active-tracking');
+    }
     updateUserPosition(e.latlng.lat, e.latlng.lng);
   });
 }
@@ -317,13 +340,65 @@ async function fetchPois() {
   // Default active POI: Dinh Độc Lập
   const defaultPoi = state.pois.find(p => p.name.includes('Dinh Độc Lập')) || state.pois[0];
   selectPoi(defaultPoi, false);
-  updateDistancesAndZone();
+  checkGeofenceAndDistances();
 }
 
 // ==========================================
-// 4. POSITION & GEOFENCE LOGIC
+// 4. REAL GPS & POSITION TRACKING
 // ==========================================
-function updateUserPosition(lat, lng) {
+function startGpsTracking() {
+  if (!navigator.geolocation) {
+    onGpsPositionError({ code: 0, message: 'Thiết bị không hỗ trợ Geolocation' });
+    return;
+  }
+
+  dom.gpsPill.className = 'gps-badge connecting';
+  dom.gpsText.innerText = 'GPS: Đang tìm...';
+
+  if (state.watchId !== null) {
+    navigator.geolocation.clearWatch(state.watchId);
+    state.watchId = null;
+  }
+
+  state.watchId = navigator.geolocation.watchPosition(
+    onGpsPositionUpdate,
+    onGpsPositionError,
+    {
+      enableHighAccuracy: true,
+      maximumAge: 2000,
+      timeout: 10000
+    }
+  );
+}
+
+function onGpsPositionUpdate(pos) {
+  const { latitude, longitude, accuracy } = pos.coords;
+  state.isSimulating = false;
+
+  dom.gpsPill.className = 'gps-badge active';
+  dom.gpsText.innerText = accuracy ? `GPS: Trực tiếp (±${Math.round(accuracy)}m)` : 'GPS: Trực tiếp';
+  if (dom.recenterBtn) dom.recenterBtn.classList.add('active-tracking');
+
+  // Update user marker and position
+  updateUserPosition(latitude, longitude, accuracy);
+
+  // Center on first real GPS fix
+  if (!state.hasFirstGpsFix) {
+    state.hasFirstGpsFix = true;
+    state.map.setView([latitude, longitude], 17);
+  }
+}
+
+function onGpsPositionError(err) {
+  console.warn('[GPS] Vị trí phần cứng:', err.message);
+  // Laptop/Mac without GPS chip or permission denied -> fallback gracefully to simulation
+  state.isSimulating = true;
+  dom.gpsPill.className = 'gps-badge sim';
+  dom.gpsText.innerText = 'GPS: Mô phỏng';
+  if (dom.recenterBtn) dom.recenterBtn.classList.remove('active-tracking');
+}
+
+function updateUserPosition(lat, lng, accuracy = null) {
   state.currentLat = lat;
   state.currentLng = lng;
 
@@ -331,37 +406,117 @@ function updateUserPosition(lat, lng) {
     state.userMarker.setLatLng([lat, lng]);
   }
 
-  updateDistancesAndZone();
+  // Draw or update GPS Accuracy Circle
+  if (accuracy && accuracy < 250) {
+    if (!state.accuracyCircle) {
+      state.accuracyCircle = L.circle([lat, lng], {
+        radius: accuracy,
+        color: '#0284c7',
+        fillColor: '#38bdf8',
+        fillOpacity: 0.12,
+        weight: 1
+      }).addTo(state.map);
+    } else {
+      state.accuracyCircle.setLatLng([lat, lng]);
+      state.accuracyCircle.setRadius(accuracy);
+    }
+  } else if (state.accuracyCircle) {
+    state.map.removeLayer(state.accuracyCircle);
+    state.accuracyCircle = null;
+  }
+
+  checkGeofenceAndDistances();
 }
 
-function updateDistancesAndZone() {
-  if (!state.activePoi) return;
+// ==========================================
+// 5. 30M GEOFENCING & AUTO-NARRATION LOGIC
+// ==========================================
+function checkGeofenceAndDistances() {
+  if (!state.pois || state.pois.length === 0) return;
 
-  const dist = calculateHaversine(state.currentLat, state.currentLng, state.activePoi.lat, state.activePoi.lng);
-  const roundedDist = Math.round(dist);
+  let closestPoi = null;
+  let closestDist = Infinity;
+  let poiInsideZone = null;
 
-  // Update Map Overlay Bar
-  dom.distLabel.innerText = `KHOẢNG CÁCH TỚI ${state.activePoi.name.toUpperCase()}`;
+  // Search across all POIs
+  for (const poi of state.pois) {
+    const dist = calculateHaversine(state.currentLat, state.currentLng, poi.lat, poi.lng);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestPoi = poi;
+    }
+    const radius = poi.radiusM || CONFIG.GEOFENCE_RADIUS_M || 30;
+    if (dist <= radius) {
+      poiInsideZone = poi;
+    }
+  }
+
+  const targetPoi = poiInsideZone || state.activePoi || closestPoi;
+  if (!targetPoi) return;
+
+  const targetDist = calculateHaversine(state.currentLat, state.currentLng, targetPoi.lat, targetPoi.lng);
+  const roundedDist = Math.round(targetDist);
+
+  // Update Distance Display
+  dom.distLabel.innerText = `KHOẢNG CÁCH TỚI ${targetPoi.name.toUpperCase()}`;
   dom.distValue.innerText = `${roundedDist} m`;
 
-  const isInside = dist <= (state.activePoi.radiusM || CONFIG.GEOFENCE_RADIUS_M);
-  if (isInside) {
+  if (poiInsideZone) {
+    // --- DU KHÁCH ĐÃ ĐI VÀO VÙNG 30M ---
     dom.zoneBadge.className = 'zone-badge inside';
     dom.zoneBadge.innerText = `Trong vùng (${roundedDist}m)`;
 
-    // Check Geofence auto-trigger
-    if (state.autoPlayGeofence && hasUserInteracted) {
+    // Switch active POI to the one entered
+    if (!state.activePoi || state.activePoi.id !== poiInsideZone.id) {
+      selectPoi(poiInsideZone, false);
+    }
+
+    // Trigger Auto Narration
+    if (state.autoPlayGeofence) {
       const now = Date.now();
-      const last = state.lastTriggeredTime[state.activePoi.id] || 0;
-      if (now - last > CONFIG.GEOFENCE_COOLDOWN_MS) {
-        state.lastTriggeredTime[state.activePoi.id] = now;
+      const lastTime = state.lastTriggeredTime[poiInsideZone.id] || 0;
+      if (now - lastTime > CONFIG.GEOFENCE_COOLDOWN_MS) {
+        state.lastTriggeredTime[poiInsideZone.id] = now;
+        console.log(`[GEOFENCE TRIGGERED] Đã vào vùng 30m của: ${poiInsideZone.name} (${roundedDist}m)`);
+        
+        // Audio notification cue
+        playNotificationChime();
+
+        // Show banner notification
+        showGeofenceBanner(poiInsideZone);
+
+        // Auto start narration
         startPlayback();
       }
     }
   } else {
+    // --- NGOÀI VÙNG 30M ---
     dom.zoneBadge.className = 'zone-badge outside';
     dom.zoneBadge.innerText = `Ngoài vùng (${roundedDist}m)`;
+    hideGeofenceBanner();
+
+    // If not playing, keep card synced to closest landmark
+    if (closestPoi && (!state.activePoi || !state.isPlaying)) {
+      if (!state.activePoi || state.activePoi.id !== closestPoi.id) {
+        selectPoi(closestPoi, false);
+      }
+    }
   }
+}
+
+function showGeofenceBanner(poi) {
+  if (!dom.geofenceBanner) return;
+  dom.bannerTitle.innerText = `Đã đến ${poi.name}!`;
+  dom.geofenceBanner.classList.remove('hidden');
+  clearTimeout(state.bannerTimeout);
+  state.bannerTimeout = setTimeout(() => {
+    hideGeofenceBanner();
+  }, 10000);
+}
+
+function hideGeofenceBanner() {
+  if (!dom.geofenceBanner) return;
+  dom.geofenceBanner.classList.add('hidden');
 }
 
 function calculateHaversine(lat1, lon1, lat2, lon2) {
@@ -375,7 +530,7 @@ function calculateHaversine(lat1, lon1, lat2, lon2) {
 }
 
 // ==========================================
-// 5. POI SELECTION & UI SYNC
+// 6. POI SELECTION & UI SYNC
 // ==========================================
 function selectPoi(poi, autoPlay = false) {
   const isSame = state.activePoi && state.activePoi.id === poi.id;
@@ -391,47 +546,28 @@ function selectPoi(poi, autoPlay = false) {
   state.audioDuration = poi.durationSec || 135;
   dom.timeTotal.innerText = formatTime(state.audioDuration);
 
-  // Center Map
+  // Center Map on selected POI
   state.map.panTo([poi.lat, poi.lng]);
-  updateDistancesAndZone();
   resetAudioProgress();
 
   if (autoPlay) {
     if (isSame && state.isPlaying) return;
     startPlayback();
-  } else {
+  } else if (!state.isPlaying) {
     stopPlayback();
   }
 }
 
 // ==========================================
-// 6. AUDIO & TTS NARRATION ENGINE
-// ==========================================
-function togglePlayback() {
-  unlockAudio();
-  if (state.isPlaying) {
-    stopPlayback();
-  } else {
-    startPlayback();
-  }
-}
-
-
-// ==========================================
-// REALTIME TRACKING FOR ADMIN DASHBOARD
+// REALTIME DEVICE ONLINE & TRACKING
 // ==========================================
 function getOrCreateDeviceId() {
-  let devId = null;
-  try {
-    devId = localStorage.getItem('poitour_device_id') || sessionStorage.getItem('poitour_device_id');
-  } catch (e) {}
-
+  let devId = localStorage.getItem('poi_tour_device_id') || sessionStorage.getItem('poi_tour_device_id');
   if (!devId) {
-    const fp = (window.screen ? (screen.width + 'x' + screen.height) : 'dev') + '_' + Math.random().toString(36).substring(2, 7);
-    devId = 'dev_' + fp;
+    devId = 'dev_' + window.screen.width + 'x' + window.screen.height + '_' + Math.random().toString(36).substring(2, 9);
     try {
-      localStorage.setItem('poitour_device_id', devId);
-      sessionStorage.setItem('poitour_device_id', devId);
+      localStorage.setItem('poi_tour_device_id', devId);
+      sessionStorage.setItem('poi_tour_device_id', devId);
     } catch (e) {}
   }
   return devId;
@@ -443,34 +579,29 @@ function sendRealtimeHeartbeat() {
   fetch(CONFIG.REALTIME_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'DEVICE_ONLINE', deviceType: isMobile ? 'mobile' : 'web', deviceId: devId })
+    body: JSON.stringify({ type: 'DEVICE_ONLINE', deviceId: devId, deviceType: isMobile ? 'mobile' : 'web' })
   }).catch(() => {});
 }
 
 function sendDeviceOffline() {
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   const devId = getOrCreateDeviceId();
-  const payload = JSON.stringify({ type: 'DEVICE_OFFLINE', deviceId: devId });
+  const payload = JSON.stringify({ type: 'DEVICE_OFFLINE', deviceId: devId, deviceType: isMobile ? 'mobile' : 'web' });
   if (navigator.sendBeacon) {
     navigator.sendBeacon(CONFIG.REALTIME_URL, new Blob([payload], { type: 'application/json' }));
   } else {
-    fetch(CONFIG.REALTIME_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload,
-      keepalive: true
-    }).catch(() => {});
+    fetch(CONFIG.REALTIME_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
   }
 }
 
+// Heartbeat every 3s
+setInterval(sendRealtimeHeartbeat, 3000);
 sendRealtimeHeartbeat();
-setInterval(sendRealtimeHeartbeat, 3000); // Gửi nhịp tim định kỳ mỗi 3 giây
-window.addEventListener("click", sendRealtimeHeartbeat, { passive: true });
-window.addEventListener("touchstart", sendRealtimeHeartbeat, { passive: true });
 
-// Thoát trang / đóng tab / chuyển ứng dụng -> Báo OFFLINE ngay lập tức
-window.addEventListener("beforeunload", sendDeviceOffline);
-window.addEventListener("pagehide", sendDeviceOffline);
-document.addEventListener("visibilitychange", () => {
+// Instant offline detection on page leave / background
+window.addEventListener('pagehide', sendDeviceOffline);
+window.addEventListener('beforeunload', sendDeviceOffline);
+document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
     sendDeviceOffline();
   } else if (document.visibilityState === 'visible') {
@@ -495,6 +626,18 @@ function notifyPoiPlay(poi) {
   }).catch(() => {});
 }
 
+// ==========================================
+// 7. AUDIO & TTS NARRATION ENGINE
+// ==========================================
+function togglePlayback() {
+  unlockAudio();
+  if (state.isPlaying) {
+    stopPlayback();
+  } else {
+    startPlayback();
+  }
+}
+
 function startPlayback() {
   if (state.activePoi) notifyPoiPlay(state.activePoi);
   if (!state.activePoi) return;
@@ -504,7 +647,7 @@ function startPlayback() {
   updatePlayButtonUI(true);
   dom.startNarrationText.innerText = `Tạm dừng thuyết minh ${state.activePoi.name}`;
 
-  // Notification sound cue
+  // Notification chime
   playNotificationChime();
 
   if (state.activePoi.audioUrl) {
@@ -567,13 +710,18 @@ function playViaTTS() {
   utterance.onerror = (e) => {
     window._activeUtterance = null;
     if (e.error !== 'interrupted' && e.error !== 'canceled') {
+      console.warn('SpeechSynthesis error:', e.error);
       stopPlayback();
     }
   };
 
   setTimeout(() => {
-    window.speechSynthesis.speak(utterance);
-    if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+    try {
+      window.speechSynthesis.speak(utterance);
+      if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+    } catch (err) {
+      console.warn('SpeechSynthesis blocked pending gesture:', err);
+    }
   }, 60);
 }
 
@@ -643,7 +791,7 @@ function formatTime(secs) {
 }
 
 // ==========================================
-// 7. TAB NAVIGATION & EVENT LISTENERS
+// 8. TAB NAVIGATION & EVENT LISTENERS
 // ==========================================
 function setupEventListeners() {
   // Bottom Tab Navigation
@@ -653,6 +801,24 @@ function setupEventListeners() {
       switchTab(targetId, btn);
     });
   });
+
+  // Floating Recenter / GPS Button on Map
+  if (dom.recenterBtn) {
+    dom.recenterBtn.addEventListener('click', () => {
+      unlockAudio();
+      state.map.setView([state.currentLat, state.currentLng], 17);
+      startGpsTracking();
+    });
+  }
+
+  // Geofence Notification Banner Click
+  if (dom.geofenceBanner) {
+    dom.geofenceBanner.addEventListener('click', () => {
+      unlockAudio();
+      startPlayback();
+      hideGeofenceBanner();
+    });
+  }
 
   // Player Buttons
   dom.mainPlayBtn.addEventListener('click', togglePlayback);
@@ -698,37 +864,39 @@ function setupEventListeners() {
     state.autoPlayGeofence = e.target.checked;
   });
 
-  // Simulation Tool 1: Near Dinh (10m)
+  // Simulation Tool 1: Near Dinh (10m) -> Triggers 30m geofence
   dom.simNearBtn.addEventListener('click', () => {
+    if (state.watchId !== null) {
+      navigator.geolocation.clearWatch(state.watchId);
+      state.watchId = null;
+    }
+    state.isSimulating = true;
+    dom.gpsPill.className = 'gps-badge sim';
+    dom.gpsText.innerText = 'GPS: Mô phỏng';
+    if (dom.recenterBtn) dom.recenterBtn.classList.remove('active-tracking');
     updateUserPosition(10.77685, 106.69530); // ~10m from Dinh
     switchTab('tabMap', document.getElementById('btnTabMap'));
   });
 
   // Simulation Tool 2: Far from Dinh (350m)
   dom.simFarBtn.addEventListener('click', () => {
-    updateUserPosition(10.77450, 106.69420); // ~316m - 350m
+    if (state.watchId !== null) {
+      navigator.geolocation.clearWatch(state.watchId);
+      state.watchId = null;
+    }
+    state.isSimulating = true;
+    dom.gpsPill.className = 'gps-badge sim';
+    dom.gpsText.innerText = 'GPS: Mô phỏng';
+    if (dom.recenterBtn) dom.recenterBtn.classList.remove('active-tracking');
     stopPlayback();
+    updateUserPosition(10.77450, 106.69420); // ~316m - 350m
     switchTab('tabMap', document.getElementById('btnTabMap'));
   });
 
   // Simulation Tool 3: Real Device GPS
   dom.realGpsBtn.addEventListener('click', () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          dom.gpsPill.className = 'gps-badge active';
-          dom.gpsText.innerText = 'GPS: Sẵn sàng';
-          updateUserPosition(pos.coords.latitude, pos.coords.longitude);
-          switchTab('tabMap', document.getElementById('btnTabMap'));
-        },
-        () => {
-          dom.gpsPill.className = 'gps-badge lost';
-          dom.gpsText.innerText = 'GPS: Mất tín hiệu';
-          alert('Không thể truy cập GPS thực tế. Vui lòng cấp quyền vị trí hoặc dùng chế độ giả lập!');
-        },
-        { enableHighAccuracy: false, timeout: 5000 }
-      );
-    }
+    startGpsTracking();
+    switchTab('tabMap', document.getElementById('btnTabMap'));
   });
 }
 
