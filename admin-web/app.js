@@ -752,6 +752,9 @@ function initQrGenerator() {
     const btnCopyQrUrl = document.getElementById("btnCopyQrUrl");
     const btnDownloadQr = document.getElementById("btnDownloadQr");
     const btnPrintQr = document.getElementById("btnPrintQr");
+    const btnMode4G = document.getElementById("btnMode4G");
+    const btnModeLan = document.getElementById("btnModeLan");
+    const qrNetworkHint = document.getElementById("qrNetworkHint");
 
     const qrBaseUrl = document.getElementById("qrBaseUrl");
     const qrTicketCode = document.getElementById("qrTicketCode");
@@ -761,20 +764,61 @@ function initQrGenerator() {
     const qrFullUrlPreview = document.getElementById("qrFullUrlPreview");
     const qrCopyNotice = document.getElementById("qrCopyNotice");
 
-    // Auto-detect base URL (defaults to Public Cloudflare Tunnel for 4G/remote scanning)
-    const PUBLIC_APP_URL = "https://boats-diet-demonstrated-lender.trycloudflare.com";
-    qrBaseUrl.value = PUBLIC_APP_URL;
-    if (window.location.protocol.startsWith("http")) {
-        const port = window.location.port;
-        if (port === "3000") {
-            qrBaseUrl.value = window.location.origin;
-        } else {
-            qrBaseUrl.value = `${window.location.protocol}//${window.location.hostname}:3000`;
-        }
+    let networkUrls = {
+        tunnelUrl: 'https://hosting-extensions-fact-shot.trycloudflare.com',
+        lanUrl: 'http://localhost:3000',
+        localUrl: 'http://localhost:3000'
+    };
+
+    function fetchNetworkUrls() {
+        fetch('/api/tunnel-url')
+            .then(res => res.json())
+            .then(data => {
+                if (data.tunnelUrl) networkUrls.tunnelUrl = data.tunnelUrl;
+                if (data.lanUrl) networkUrls.lanUrl = data.lanUrl;
+                if (data.localUrl) networkUrls.localUrl = data.localUrl;
+                
+                // Luôn ưu tiên dùng Tunnel 4G công khai để quét khác mạng
+                if (qrBaseUrl && (!qrBaseUrl.value || qrBaseUrl.value.includes('localhost') || qrBaseUrl.value.includes('127.0.0.1') || qrBaseUrl.value.includes('boats-diet'))) {
+                    qrBaseUrl.value = networkUrls.tunnelUrl;
+                    updateQrPreview();
+                }
+            })
+            .catch(() => {});
+    }
+    fetchNetworkUrls();
+
+    // Default to 4G Public Tunnel
+    qrBaseUrl.value = networkUrls.tunnelUrl;
+
+    if (btnMode4G) {
+        btnMode4G.addEventListener("click", () => {
+            qrBaseUrl.value = networkUrls.tunnelUrl;
+            btnMode4G.className = "btn btn-primary";
+            if (btnModeLan) btnModeLan.className = "btn btn-outline";
+            if (qrNetworkHint) {
+                qrNetworkHint.innerText = "✅ Đang dùng link 4G công khai: Quét được từ mọi điện thoại từ xa.";
+                qrNetworkHint.style.color = "#16a34a";
+            }
+            updateQrPreview();
+        });
+    }
+
+    if (btnModeLan) {
+        btnModeLan.addEventListener("click", () => {
+            qrBaseUrl.value = networkUrls.lanUrl;
+            btnModeLan.className = "btn btn-primary";
+            if (btnMode4G) btnMode4G.className = "btn btn-outline";
+            if (qrNetworkHint) {
+                qrNetworkHint.innerText = "ℹ️ Đang dùng IP mạng LAN: Điện thoại và máy tính phải bắt chung 1 mạng Wi-Fi.";
+                qrNetworkHint.style.color = "#0284c7";
+            }
+            updateQrPreview();
+        });
     }
 
     function buildQrUrl() {
-        const base = (qrBaseUrl.value || "http://localhost:3000").trim().replace(/\/+$/, "");
+        let base = (qrBaseUrl.value || networkUrls.tunnelUrl).trim().replace(/\/+$/, "");
         const ticket = (qrTicketCode.value || "TOUR-PASS-DEMO-24H").trim();
         let fullUrl = `${base}/?ticket=${encodeURIComponent(ticket)}`;
         if (qrValidity && qrValidity.value && qrValidity.value !== "24h") {
@@ -789,11 +833,16 @@ function initQrGenerator() {
     function updateQrPreview() {
         const fullUrl = buildQrUrl();
         if (qrFullUrlPreview) qrFullUrlPreview.value = fullUrl;
-        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(fullUrl)}`;
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=${encodeURIComponent(fullUrl)}`;
         if (qrPreviewImg) qrPreviewImg.src = qrApiUrl;
     }
 
     window.openQrModal = function () {
+        fetchNetworkUrls();
+        // Đảm bảo không bao giờ gán localhost khi mở modal
+        if (!qrBaseUrl.value || qrBaseUrl.value.includes('localhost') || qrBaseUrl.value.includes('127.0.0.1')) {
+            qrBaseUrl.value = networkUrls.tunnelUrl;
+        }
         updateQrPreview();
         if (qrModal) qrModal.classList.remove("hide");
     };
