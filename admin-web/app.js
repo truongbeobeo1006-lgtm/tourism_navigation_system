@@ -872,7 +872,7 @@ function initQrGenerator() {
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>VÉ THAM QUAN - GEO TOUR</title>
+                    <title>VÉ THAM QUAN - QUẢN LÍ DU LỊCH QUẬN 1</title>
                     <style>
                         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f1f5f9; }
                         .ticket-card { width: 360px; background: white; border-radius: 20px; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; border: 2px dashed #0284c7; }
@@ -886,7 +886,7 @@ function initQrGenerator() {
                 </head>
                 <body>
                     <div class="ticket-card">
-                        <div class="brand">🏛️ GEO TOUR QUẬN 1</div>
+                        <div class="brand">🏛️ QUẢN LÍ DU LỊCH QUẬN 1</div>
                         <div class="sub-brand">HỆ THỐNG THUYẾT MINH DU LỊCH TỰ ĐỘNG</div>
                         <img src="${qrApiUrl}" class="qr-img" alt="QR Code">
                         <div class="ticket-code">${ticket}</div>

@@ -17,7 +17,7 @@ const LANG_MAP = {
 
 const UI_LOCALES = {
   vi: {
-    screenTitle: 'Bản đồ Di tích',
+    screenTitle: 'Quản lí du lịch Quận 1',
     gpsLost: 'GPS: Mất tín hiệu',
     gpsSearching: 'GPS: Đang lấy vị trí...',
     gpsSim: 'GPS: Mô phỏng',
