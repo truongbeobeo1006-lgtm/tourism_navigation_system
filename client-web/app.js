@@ -871,6 +871,10 @@ function setupEventListeners() {
   dom.settingLang.addEventListener('change', (e) => {
     state.selectedLang = e.target.value;
     stopPlayback();
+    applyUiTranslations(state.selectedLang);
+    if (state.activePoi) {
+      selectPoi(state.activePoi, false);
+    }
     fetchPois();
   });
 
