@@ -761,7 +761,9 @@ function initQrGenerator() {
     const qrFullUrlPreview = document.getElementById("qrFullUrlPreview");
     const qrCopyNotice = document.getElementById("qrCopyNotice");
 
-    // Auto-detect base URL
+    // Auto-detect base URL (defaults to Public Cloudflare Tunnel for 4G/remote scanning)
+    const PUBLIC_APP_URL = "https://boats-diet-demonstrated-lender.trycloudflare.com";
+    qrBaseUrl.value = PUBLIC_APP_URL;
     if (window.location.protocol.startsWith("http")) {
         const port = window.location.port;
         if (port === "3000") {

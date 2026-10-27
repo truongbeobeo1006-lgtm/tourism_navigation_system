@@ -554,7 +554,7 @@
                 <div class="qr-config-col">
                     <div class="form-group">
                         <label><i class="fa-solid fa-link text-blue"></i> Đường Dẫn Ứng Dụng (Base App URL)</label>
-                        <input type="text" id="qrBaseUrl" value="http://localhost:3000" placeholder="http://localhost:3000 hoặc URL Cloudflare">
+                        <input type="text" id="qrBaseUrl" value="https://boats-diet-demonstrated-lender.trycloudflare.com" placeholder="http://localhost:3000 hoặc URL Cloudflare">
                         <small style="font-size: 11px; color: #64748b;">Mẹo: Nhập URL Cloudflare Tunnel hoặc IP LAN để quét từ điện thoại thật.</small>
                     </div>
                     <div class="form-group">
@@ -592,12 +592,12 @@
                 <!-- Cột phải: Live QR Code Preview -->
                 <div class="qr-preview-box">
                     <div class="qr-img-wrapper" id="qrImageWrapper">
-                        <img id="qrPreviewImg" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://localhost:3000/?ticket=TOUR-PASS-DEMO-24H" alt="QR Code Tour Pass">
+                        <img id="qrPreviewImg" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://boats-diet-demonstrated-lender.trycloudflare.com/?ticket=TOUR-PASS-DEMO-24H" alt="QR Code Tour Pass">
                     </div>
                     <div class="qr-url-box">
                         <span style="display: block; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Liên kết truy cập</span>
                         <div class="qr-url-input-group">
-                            <input type="text" id="qrFullUrlPreview" readonly value="http://localhost:3000/?ticket=TOUR-PASS-DEMO-24H">
+                            <input type="text" id="qrFullUrlPreview" readonly value="https://boats-diet-demonstrated-lender.trycloudflare.com/?ticket=TOUR-PASS-DEMO-24H">
                             <button type="button" id="btnCopyQrUrl" title="Sao chép liên kết">
                                 <i class="fa-regular fa-copy"></i>
                             </button>
