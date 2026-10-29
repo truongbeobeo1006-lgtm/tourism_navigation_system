@@ -86,6 +86,39 @@ const server = http.createServer((req, res) => {
 
   const rawUrl = req.url.split('?')[0];
 
+  // ================= 0. API TUNNEL & NETWORK URLS =================
+  if (rawUrl === '/api/tunnel-url' && req.method === 'GET') {
+    let tunnelUrl = 'https://hosting-extensions-fact-shot.trycloudflare.com';
+    const tunnelFile = path.join(ROOT_DIR, 'tunnel-url.txt');
+    try {
+      if (fs.existsSync(tunnelFile)) {
+        const content = fs.readFileSync(tunnelFile, 'utf8').trim();
+        if (content.startsWith('http')) tunnelUrl = content;
+      }
+    } catch (e) {}
+
+    const os = require('os');
+    const nets = os.networkInterfaces();
+    let lanIp = 'localhost';
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name]) {
+        if (net.family === 'IPv4' && !net.internal) {
+          lanIp = net.address;
+          break;
+        }
+      }
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({
+      tunnelUrl: tunnelUrl,
+      lanUrl: `http://${lanIp}:${PORT}`,
+      localUrl: `http://localhost:${PORT}`
+    }));
+    return;
+  }
+
+
   // ================= 1. API REALTIME =================
   if (rawUrl === '/api/event' && req.method === 'POST') {
     let body = '';

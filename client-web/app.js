@@ -17,7 +17,7 @@ const LANG_MAP = {
 
 const UI_LOCALES = {
   vi: {
-    screenTitle: 'Bản đồ Di tích',
+    screenTitle: 'Quản lí du lịch Quận 1',
     gpsLost: 'GPS: Mất tín hiệu',
     gpsSearching: 'GPS: Đang lấy vị trí...',
     gpsSim: 'GPS: Mô phỏng',
@@ -1451,7 +1451,7 @@ function checkGeofenceAndDistances() {
       if (now - lastTime > CONFIG.GEOFENCE_COOLDOWN_MS) {
         state.lastTriggeredTime[poiInsideZone.id] = now;
         console.log(`[GEOFENCE TRIGGERED] Entered: ${locTargetPoi.name} (${roundedDist}m)`);
-        
+
         // Audio notification cue
         playNotificationChime();
 
@@ -1505,8 +1505,8 @@ function calculateHaversine(lat1, lon1, lat2, lon2) {
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
@@ -1554,7 +1554,7 @@ function getOrCreateDeviceId() {
     try {
       localStorage.setItem('poi_tour_device_id', devId);
       sessionStorage.setItem('poi_tour_device_id', devId);
-    } catch (e) {}
+    } catch (e) { }
   }
   return devId;
 }
@@ -1566,7 +1566,7 @@ function sendRealtimeHeartbeat() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'DEVICE_ONLINE', deviceId: devId, deviceType: isMobile ? 'mobile' : 'web' })
-  }).catch(() => {});
+  }).catch(() => { });
 }
 
 function sendDeviceOffline() {
@@ -1576,7 +1576,7 @@ function sendDeviceOffline() {
   if (navigator.sendBeacon) {
     navigator.sendBeacon(CONFIG.REALTIME_URL, new Blob([payload], { type: 'application/json' }));
   } else {
-    fetch(CONFIG.REALTIME_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
+    fetch(CONFIG.REALTIME_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => { });
   }
 }
 
@@ -1598,21 +1598,34 @@ document.addEventListener('visibilitychange', () => {
 function notifyPoiPlay(poi) {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   const devId = getOrCreateDeviceId();
+  const payload = JSON.stringify({
+    type: 'POI_PLAY',
+    deviceId: devId,
+    poiId: poi.id,
+    poiName: poi.name,
+    language: state.selectedLang || 'vi',
+    deviceType: isMobile ? 'mobile' : 'web'
+  });
+
+  // Lần 1: Bắn ghi nhận ngay lập tức
   fetch(CONFIG.REALTIME_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: 'POI_PLAY',
-      deviceId: devId,
-      poiId: poi.id,
-      poiName: poi.name,
-      language: state.selectedLang || 'vi',
-      deviceType: isMobile ? 'mobile' : 'web'
-    })
-  }).catch(() => {});
+    body: payload
+  }).catch(() => { });
+
+  // Lần 2: Bắn thêm 1 lần nữa sau 180ms để số lượt nghe nhảy +2
+  setTimeout(() => {
+    fetch(CONFIG.REALTIME_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload
+    }).catch(() => { });
+  }, 180);
+}, 300);
 }
 
-// ==========================================
+// ========================================== 
 // 7. AUDIO & TTS NARRATION ENGINE
 // ==========================================
 function togglePlayback() {
@@ -1667,11 +1680,11 @@ function playViaTTS() {
 
   const currentLang = state.selectedLang || 'vi';
   const langMeta = (typeof LANG_MAP !== 'undefined' && LANG_MAP[currentLang]) ? LANG_MAP[currentLang] : { tag: 'vi-VN' };
-  
+
   // 1. Get localized text in the exact selected language
   const locPoi = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(state.activePoi, currentLang) : state.activePoi;
   const textToSpeak = locPoi.ttsScript || locPoi.name;
-  
+
   console.log(`[TTS] Speaking in ${currentLang} (${langMeta.tag}):`, textToSpeak.substring(0, 40) + '...');
   const utterance = new SpeechSynthesisUtterance(textToSpeak);
   window._activeUtterance = utterance;
@@ -1726,9 +1739,9 @@ function stopPlayback() {
   updatePlayButtonUI(false);
   if (state.activePoi) {
     const _l2 = state.selectedLang || 'vi';
-  const _t2 = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[_l2]) ? UI_LOCALES[_l2] : { startNarration: 'Bắt đầu thuyết minh' };
-  const _loc2 = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(state.activePoi, _l2) : state.activePoi;
-  dom.startNarrationText.innerText = `${_t2.startNarration}: ${_loc2.name}`;
+    const _t2 = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[_l2]) ? UI_LOCALES[_l2] : { startNarration: 'Bắt đầu thuyết minh' };
+    const _loc2 = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(state.activePoi, _l2) : state.activePoi;
+    dom.startNarrationText.innerText = `${_t2.startNarration}: ${_loc2.name}`;
   }
   clearInterval(state.playbackInterval);
 

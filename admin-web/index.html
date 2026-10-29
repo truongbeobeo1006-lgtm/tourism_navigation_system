@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GEO TOUR - Điều Hành & Quản Trị Du Lịch Thông Minh</title>
+    <title>Quản lí du lịch Quận 1 - Hệ Thống Điều Hành & Giám Sát</title>
     
     <!-- Google Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,8 +33,8 @@
                     <i class="fa-solid fa-compass"></i>
                 </div>
                 <div class="brand-text">
-                    <h2>GEO TOUR</h2>
-                    <p>ĐIỀU HÀNH DU LỊCH</p>
+                    <h2>QUẢN LÍ DU LỊCH</h2>
+                    <p>QUẬN 1 - TP. HỒ CHÍ MINH</p>
                 </div>
             </div>
 
@@ -557,9 +557,19 @@
                 <!-- Cột trái: Cấu hình thông số vé -->
                 <div class="qr-config-col">
                     <div class="form-group">
-                        <label><i class="fa-solid fa-link text-blue"></i> Đường Dẫn Ứng Dụng (Base App URL)</label>
-                        <input type="text" id="qrBaseUrl" value="https://boats-diet-demonstrated-lender.trycloudflare.com" placeholder="http://localhost:3000 hoặc URL Cloudflare">
-                        <small style="font-size: 11px; color: #64748b;">Mẹo: Nhập URL Cloudflare Tunnel hoặc IP LAN để quét từ điện thoại thật.</small>
+                        <label><i class="fa-solid fa-network-wired text-blue"></i> Chế độ mạng quét mã QR</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <button type="button" id="btnMode4G" class="btn btn-primary" style="font-size: 11.5px; padding: 6px 12px; border-radius: 8px;">
+                                🌐 Khác mạng (4G / Internet)
+                            </button>
+                            <button type="button" id="btnModeLan" class="btn btn-outline" style="font-size: 11.5px; padding: 6px 12px; border-radius: 8px;">
+                                🏠 Chung Wi-Fi (LAN)
+                            </button>
+                        </div>
+                        <input type="text" id="qrBaseUrl" value="https://hosting-extensions-fact-shot.trycloudflare.com" placeholder="URL ứng dụng">
+                        <small id="qrNetworkHint" style="font-size: 11px; color: #16a34a; font-weight: 600; display: block; margin-top: 4px;">
+                            ✅ Khuyên dùng: Quét được từ mọi điện thoại qua 4G hoặc khác mạng Wi-Fi.
+                        </small>
                     </div>
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -596,12 +606,12 @@
                 <!-- Cột phải: Live QR Code Preview -->
                 <div class="qr-preview-box">
                     <div class="qr-img-wrapper" id="qrImageWrapper">
-                        <img id="qrPreviewImg" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://boats-diet-demonstrated-lender.trycloudflare.com/?ticket=TOUR-PASS-DEMO-24H" alt="QR Code Tour Pass">
+                        <img id="qrPreviewImg" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=https%3A%2F%2Fhosting-extensions-fact-shot.trycloudflare.com%2F%3Fticket%3DTOUR-PASS-DEMO-24H" alt="QR Code Tour Pass">
                     </div>
                     <div class="qr-url-box">
                         <span style="display: block; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Liên kết truy cập</span>
                         <div class="qr-url-input-group">
-                            <input type="text" id="qrFullUrlPreview" readonly value="https://boats-diet-demonstrated-lender.trycloudflare.com/?ticket=TOUR-PASS-DEMO-24H">
+                            <input type="text" id="qrFullUrlPreview" readonly value="https://hosting-extensions-fact-shot.trycloudflare.com/?ticket=TOUR-PASS-DEMO-24H">
                             <button type="button" id="btnCopyQrUrl" title="Sao chép liên kết">
                                 <i class="fa-regular fa-copy"></i>
                             </button>
