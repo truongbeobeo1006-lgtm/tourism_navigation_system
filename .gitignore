@@ -37,3 +37,4 @@ build/
 
 .agents
 graphify-outcloudflared.exe
+graphify-out/
