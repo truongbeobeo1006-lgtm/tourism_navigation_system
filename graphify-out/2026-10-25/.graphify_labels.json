@@ -1,0 +1,20 @@
+{
+  "0": "POI API Controller",
+  "1": "Docker Infrastructure",
+  "2": "API Gateway Configuration",
+  "3": "Database & Cache Settings",
+  "5": "Core Domain & Requirements",
+  "6": "Global Exception Handling",
+  "7": "POI Domain Models",
+  "8": "Service Application Entrypoints",
+  "10": "Redis Template Configuration",
+  "13": "3-Tier System Architecture",
+  "14": "User Accounts Schema",
+  "15": "UI Localization Requirement",
+  "16": "Audio Language Requirement",
+  "17": "POI History Tracking",
+  "18": "API Gateway Maven Artifact",
+  "19": "POI Service Maven Artifact",
+  "20": "Parent Maven POM",
+  "21": "Project Readme"
+}
