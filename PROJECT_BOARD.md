@@ -6,7 +6,7 @@
 ## 👥 THÀNH VIÊN DỰ ÁN & PHÂN VAI TRÁCH NHIỆM
 
 | STT | Thành viên | Tài khoản GitHub | Vai trò chính | Trọng tâm phụ trách |
-| :---: | :--- | :--- | :--- | :--- |
+| :---: | :--- | :--- | :--- |
 | **1** | **Bảo Trương** *(Trưởng nhóm)* | `@truongbeobeo1006-lgtm` | **Team Lead & Core Backend / Fullstack** | Kiến trúc Microservices, API Gateway, POI Service, Admin CMS, Live Platform & Hạ tầng Cloudflare Tunnel |
 | **2** | **Nguyễn Anh Kiệt** | `@Nguoidepthichngu` | **Backend Logic Engine** | Tracking Service, Thuật toán Haversine Geofence 30m, Travel Route APIs & Data Validation |
 | **3** | **Hồng Xiêm** | `@hongxiem0301-stack` | **Frontend Map & Database Documentation** | Bản đồ tương tác Leaflet, GPS Tracking UI, Thiết kế CSDL (ERD 7 bảng), Sơ đồ quan hệ & Tối ưu UI/UX |
@@ -29,8 +29,8 @@
 
 ### 🟢 1. CỘT "DONE" — CÔNG VIỆC ĐÃ HOÀN THÀNH
 
-| Mã Task | Tên công việc chi tiết | Thành viên phụ trách | Phân hệ / Tệp liên quan | Use Case PRD | Trạng thái |
-| :--- | :--- | :--- | :--- | :---: | :---: |
+| Tên công việc chi tiết | Thành viên phụ trách | Phân hệ / Tệp liên quan | Use Case PRD | Trạng thái |
+| :--- | :--- | :--- | :---: | :---: |
 | **`TASK-CORE-01`** | Thiết kế kiến trúc tổng thể Microservices & Spring Cloud Gateway | **Bảo Trương** | `backend/api-gateway` | Kiến trúc | `DONE` |
 | **`TASK-CORE-02`** | Thiết kế kịch bản CSDL chuẩn 7 bảng PostgreSQL & Seed data 6 di tích Quận 1 | **Bảo Trương** | `sql/init.sql` | CSDL | `DONE` |
 | **`TASK-CORE-03`** | Xây dựng Spring Boot `poi-service` quản lý danh sách POI và kịch bản audio | **Bảo Trương** | `backend/poi-service` | UC01, UC03 | `DONE` |
@@ -60,8 +60,8 @@
 
 ### 🟡 2. CỘT "IN PROGRESS" — CÔNG VIỆC ĐANG TRIỂN KHAI
 
-| Mã Task | Tên công việc chi tiết | Thành viên phụ trách | Mục tiêu cụ thể | Dự kiến hoàn thành | Trạng thái |
-| :--- | :--- | :--- | :--- | :---: | :---: |
+| Tên công việc chi tiết | Thành viên phụ trách | Mục tiêu cụ thể | Dự kiến hoàn thành | Trạng thái |
+| :--- | :--- | :--- | :---: | :---: |
 | **`TASK-PROG-01`** | Chuẩn bị kịch bản báo cáo và slide thuyết trình đồ án cho giáo viên | **Bảo Trương** | Hoàn thiện slide thuyết trình và hướng dẫn demo 5 bước | 01/11/2026 | `IN PROGRESS` |
 | **`TASK-PROG-02`** | Kiểm thử chịu tải kết nối đồng thời từ nhiều thiết bị di động 4G qua Cloudflare | **Bảo Trương** | Đảm bảo 5-10 điện thoại quét vé cùng lúc không bị nghẽn | 02/11/2026 | `IN PROGRESS` |
 | **`TASK-PROG-03`** | Tối ưu thuật toán lọc nhiễu GPS (bỏ qua tọa độ khi `accuracy > 25m`) | **Nguyễn Anh Kiệt** | Tránh kích hoạt nhầm Geofence khi GPS trôi | 02/11/2026 | `IN PROGRESS` |
@@ -73,8 +73,8 @@
 
 ### 🔵 3. CỘT "TODO" — CÔNG VIỆC CHƯA LÀM (KẾ HOẠCH MỞ RỘNG VẬN HÀNH)
 
-| Mã Task | Tên công việc dự kiến | Thành viên phụ trách | Mô tả yêu cầu kỹ thuật | Giai đoạn | Trạng thái |
-| :--- | :--- | :--- | :--- | :---: | :---: |
+| Tên công việc dự kiến | Thành viên phụ trách | Mô tả yêu cầu kỹ thuật | Giai đoạn | Trạng thái |
+| :--- | :--- | :--- | :---: | :---: |
 | **`TASK-TODO-01`** | Xây dựng `auth-service` độc lập hoàn chỉnh | **Bảo Trương** | Đăng ký, đăng nhập tài khoản du khách, cấp phát JWT Token & phân quyền Role | Phase 2 | `TODO` |
 | **`TASK-TODO-02`** | Tích hợp Rate Limiting trên API Gateway | **Bảo Trương** | Cài đặt thuật toán Redis Token Bucket giới hạn 100 req/min chống DDoS | Phase 2 | `TODO` |
 | **`TASK-TODO-03`** | Đóng gói bộ Docker Compose chạy Full Microservices trên Cloud | **Bảo Trương** | Chạy đầy đủ PostgreSQL, Redis, MinIO, API Gateway, 3 Spring Boot Services | Phase 2 | `TODO` |

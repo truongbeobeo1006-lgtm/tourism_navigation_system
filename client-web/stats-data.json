@@ -1,152 +1,153 @@
 {
-  "totalAudience": 38,
+  "totalAudience": 74,
   "poiListens": {
-    "Dinh Độc Lập": 22,
-    "Bưu Điện Trung Tâm": 3,
-    "Chợ Bến Thành": 8,
-    "Nhà Hát Thành Phố": 5
+    "Dinh Độc Lập": 47,
+    "Bưu Điện Trung Tâm": 6,
+    "Chợ Bến Thành": 10,
+    "Nhà Hát Thành Phố": 9,
+    "Nhà Thờ Đức Bà": 2
   },
   "recentEvents": [
     {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "English",
-      "timestamp": 1793078142673
-    },
-    {
-      "poiName": "Chợ Bến Thành",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793077714266
-    },
-    {
-      "poiName": "Chợ Bến Thành",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793077704059
-    },
-    {
       "poiName": "Nhà Hát Thành Phố",
       "poiCode": "GPS-TRIGGER",
       "deviceInfo": "Trình duyệt Web",
       "language": "Tiếng Việt",
-      "timestamp": 1793077696851
+      "timestamp": 1793092707969
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1793092698938
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1793092376405
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1793092167401
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091888074
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091882472
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091868080
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091668544
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091610922
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091586538
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091583162
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091560072
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091545242
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793091239366
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793089779429
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793088917578
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Điện thoại di động (Mobile)",
+      "language": "Tiếng Việt",
+      "timestamp": 1793088549871
     },
     {
       "poiName": "Nhà Hát Thành Phố",
       "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
+      "deviceInfo": "Điện thoại di động (Mobile)",
       "language": "Tiếng Việt",
-      "timestamp": 1793077686317
+      "timestamp": 1793087973351
     },
     {
-      "poiName": "Nhà Hát Thành Phố",
+      "poiName": "Dinh Độc Lập",
       "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
+      "deviceInfo": "Điện thoại di động (Mobile)",
       "language": "Tiếng Việt",
-      "timestamp": 1793077669546
+      "timestamp": 1793087967666
     },
     {
       "poiName": "Dinh Độc Lập",
       "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "English",
-      "timestamp": 1793077635392
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "English",
-      "timestamp": 1793076696562
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
+      "deviceInfo": "Điện thoại di động (Mobile)",
       "language": "Tiếng Việt",
-      "timestamp": 1793076680767
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793076662996
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793076660628
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793076639964
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "English",
-      "timestamp": 1793076602761
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "English",
-      "timestamp": 1793076279513
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "English",
-      "timestamp": 1793076090161
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793076085370
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "English",
-      "timestamp": 1793076072424
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793076061800
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793075733721
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793075728668
+      "timestamp": 1793087950497
     }
   ],
-  "lastUpdated": "2026-10-27T05:15:42.673Z"
+  "lastUpdated": "2026-10-27T09:18:27.969Z"
 }
