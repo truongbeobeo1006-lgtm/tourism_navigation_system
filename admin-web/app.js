@@ -386,7 +386,6 @@ function renderPoiTable() {
 
     poiList.forEach(poi => {
         const tr = document.createElement("tr");
-        const langsHtml = poi.availableLanguages.map(l => `<span class="lang-tag">${l.toUpperCase()}</span>`).join(" ");
 
         tr.innerHTML = `
             <td><strong>${poi.code}</strong></td>
@@ -405,7 +404,6 @@ function renderPoiTable() {
             <td>
                 <span class="badge-geofence">🎯 ${poi.radiusM}m</span>
             </td>
-            <td><div class="lang-tags">${langsHtml}</div></td>
             <td>
                 <span class="status-badge ${poi.isActive ? 'active' : 'inactive'}">
                     ${poi.isActive ? 'Đang hoạt động' : 'Tạm dừng'}
