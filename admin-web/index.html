@@ -47,7 +47,7 @@
                     <i class="fa-solid fa-location-dot"></i>
                     <span>Quản Lý Điểm Đến (POI)</span>
                 </a>
-                <a href="#analytics" class="nav-item">
+                <a href="#analytics" class="nav-item" id="navAnalytics">
                     <i class="fa-solid fa-chart-simple"></i>
                     <span>Thống Kê & Phân Tích</span>
                 </a>
@@ -70,10 +70,6 @@
         <main class="main-content">
             <!-- TOP BAR -->
             <header class="topbar">
-                <div class="search-box">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="globalSearch" placeholder="Tìm kiếm điểm đến, lộ trình, vị trí tọa độ...">
-                </div>
 
                 <div class="topbar-actions">
                     <div class="lang-toggle">
@@ -199,89 +195,39 @@
                     </div>
                 </div>
 
-                <!-- ROW 2: BIỂU ĐỒ XU HƯỚNG & BẢN ĐỒ GEOFENCE HEATMAP -->
-                <div class="middle-grid">
-                    <!-- Biểu đồ Xu hướng (Trái) -->
-                    <div class="chart-panel card-box">
-                        <div class="panel-header">
-                            <div>
-                                <h3 class="panel-title">
-                                    <span class="blue-dot"></span> Xu Hướng Lượt Nghe Thuyết Minh Tự Động
-                                </h3>
-                                <p class="panel-subtitle">Phân bổ lưu lượng điều hướng tự động theo các khung giờ cao điểm</p>
-                            </div>
-                            <div class="chart-legend">
-                                <span class="legend-item"><span class="dot today-dot"></span> Hôm nay</span>
-                                <span class="legend-item"><span class="dot week-dot"></span> Trung bình tuần</span>
-                            </div>
+                <!-- ROW 2: BẢN ĐỒ MẬT ĐỘ GEOFENCE HEATMAP QUẬN 1 -->
+                <div class="map-panel card-box dashboard-map-card mb-4">
+                    <div class="panel-header">
+                        <div>
+                            <h3 class="panel-title">
+                                <i class="fa-regular fa-compass text-blue"></i> Bản Đồ Mật Độ & Điểm Nóng (Heatmap)
+                            </h3>
+                            <p class="panel-subtitle">Vùng địa giới Geofencing và tần suất kích hoạt âm thanh tự động tại Quận 1</p>
                         </div>
-
-                        <div class="chart-container">
-                            <canvas id="trendChart"></canvas>
-                        </div>
-
-                        <div class="chart-time-labels">
-                            <div class="time-slot">
-                                <strong>06:00 – 09:00</strong>
-                                <span>Buổi Sáng</span>
-                            </div>
-                            <div class="time-slot">
-                                <strong>10:00 – 13:00</strong>
-                                <span>Buổi Trưa</span>
-                            </div>
-                            <div class="time-slot highlight-slot">
-                                <strong>14:00 – 17:00</strong>
-                                <span class="tag-peak">Cao Điểm Chiều</span>
-                            </div>
-                            <div class="time-slot">
-                                <strong>18:00 – 21:00</strong>
-                                <span>Buổi Tối</span>
-                            </div>
-                        </div>
-
-                        <div class="alert-info-bar">
-                            <div class="alert-content">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span id="alertTrendText">Hệ thống đang trực tuyến và sẵn sàng ghi nhận lượt nghe tự động thời gian thực khi du khách di chuyển vào vùng Geofence 30m.</span>
-                            </div>
-                            <span class="status-tag" style="background: #e2e8f0; font-size: 11.5px;">Chờ dữ liệu</span>
-                        </div>
+                        <div class="area-badge">TP. Hồ Chí Minh - Quận 1</div>
                     </div>
 
-                    <!-- Bản đồ Mật độ Heatmap (Phải) -->
-                    <div class="map-panel card-box">
-                        <div class="panel-header">
-                            <div>
-                                <h3 class="panel-title">
-                                    <i class="fa-regular fa-compass text-blue"></i> Bản Đồ Mật Độ & Điểm Nóng (Heatmap)
-                                </h3>
-                                <p class="panel-subtitle">Vùng địa giới Geofencing và tần suất kích hoạt âm thanh</p>
-                            </div>
-                            <div class="area-badge">TP. Hồ Chí Minh - Quận 1</div>
+                    <!-- Khung Bản đồ Leaflet -->
+                    <div id="heatmapLeaflet" class="heatmap-map"></div>
+
+                    <div class="map-legend-bar">
+                        <span class="legend-badge red"><span class="dot"></span> Cao</span>
+                        <span class="legend-badge blue"><span class="dot"></span> Trung bình</span>
+                        <span class="legend-badge gray"><span class="dot"></span> Thấp</span>
+                    </div>
+
+                    <div class="map-quick-stats">
+                        <div class="mstat-item">
+                            <span class="mstat-label">Điểm Geofence</span>
+                            <strong class="mstat-val" id="mapGeofenceCount">6 điểm Q.1</strong>
                         </div>
-
-                        <!-- Khung Bản đồ Leaflet -->
-                        <div id="heatmapLeaflet" class="heatmap-map"></div>
-
-                        <div class="map-legend-bar">
-                            <span class="legend-badge red"><span class="dot"></span> Cao</span>
-                            <span class="legend-badge blue"><span class="dot"></span> Trung bình</span>
-                            <span class="legend-badge gray"><span class="dot"></span> Thấp</span>
+                        <div class="mstat-item">
+                            <span class="mstat-label">Bán kính quét</span>
+                            <strong class="mstat-val">30m – 50m</strong>
                         </div>
-
-                        <div class="map-quick-stats">
-                            <div class="mstat-item">
-                                <span class="mstat-label">Điểm Geofence</span>
-                                <strong class="mstat-val" id="mapGeofenceCount">6 điểm Q.1</strong>
-                            </div>
-                            <div class="mstat-item">
-                                <span class="mstat-label">Bán kính quét</span>
-                                <strong class="mstat-val">30m – 50m</strong>
-                            </div>
-                            <div class="mstat-item">
-                                <span class="mstat-label">Độ chuẩn xác</span>
-                                <strong class="mstat-val">±1.2m</strong>
-                            </div>
+                        <div class="mstat-item">
+                            <span class="mstat-label">Độ chuẩn xác</span>
+                            <strong class="mstat-val">±1.2m</strong>
                         </div>
                     </div>
                 </div>
@@ -401,10 +347,6 @@
                 <!-- POI Table Panel -->
                 <div class="card-box mt-4">
                     <div class="table-toolbar">
-                        <div class="search-input-box">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="poiSearchInput" placeholder="Tìm kiếm điểm đến, lộ trình, vị trí tọa độ...">
-                        </div>
                         <div class="pagination-info">
                             <span>Hiển thị <strong id="showingCount">1 - 6</strong> trong tổng số <strong id="totalPoiText">6</strong> điểm đến</span>
                         </div>
@@ -429,6 +371,178 @@
                     </div>
                 </div>
             </section>
+            <!-- SECTION 3: THỐNG KÊ & PHÂN TÍCH (ANALYTICS) -->
+            <section id="sectionAnalytics" class="page-section">
+                <div class="section-header">
+                    <div>
+                        <h1 class="page-title">
+                            <i class="fa-solid fa-chart-simple text-blue"></i> Thống Kê & Phân Tích Dữ Liệu Du Lịch
+                        </h1>
+                        <p class="subtitle">Phân tích xu hướng lượt nghe thuyết minh, lưu lượng GPS và tương tác điểm đến Quận 1.</p>
+                    </div>
+
+                    <div class="action-group">
+                        <div class="time-filter-group">
+                            <button class="btn-time active" data-range="today">Hôm nay</button>
+                            <button class="btn-time" data-range="week">7 ngày qua</button>
+                            <button class="btn-time" data-range="month">30 ngày qua</button>
+                        </div>
+                        <button class="btn btn-outline" id="btnExportAnalytics">
+                            <i class="fa-solid fa-download"></i> Xuất Báo Cáo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Thẻ chỉ số tổng quan phân tích -->
+                <div class="stat-cards-grid">
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">LƯỢT NGHE TỰ ĐỘNG (GEOFENCE)</span>
+                            <div class="card-icon blue-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+                        </div>
+                        <div class="card-value" id="analyticsAutoListens">0</div>
+                        <div class="card-footer">
+                            <span class="footer-note blue-text"><i class="fa-solid fa-bullseye"></i> Vào vùng Geofence 30m</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">LƯỢT NGHE CHỌN TRÊN BẢN ĐỒ</span>
+                            <div class="card-icon blue-icon"><i class="fa-solid fa-hand-pointer"></i></div>
+                        </div>
+                        <div class="card-value" id="analyticsManualListens">0</div>
+                        <div class="card-footer">
+                            <span class="footer-note"><span class="dot blue-dot"></span> Du khách chạm chọn điểm POI</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">TỔNG TẤT CẢ LƯỢT NGHE</span>
+                            <div class="card-icon green-icon"><i class="fa-solid fa-headphones"></i></div>
+                        </div>
+                        <div class="card-value" id="analyticsTotalListens">0</div>
+                        <div class="card-footer">
+                            <span class="footer-note"><span class="dot green-dot"></span> Dữ liệu thực tế thời gian thực</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="card-top">
+                            <span class="card-label">KHUNG GIỜ CAO ĐIỂM</span>
+                            <div class="card-icon blue-icon"><i class="fa-solid fa-fire"></i></div>
+                        </div>
+                        <div class="card-value">14h – 17h</div>
+                        <div class="card-footer">
+                            <span class="footer-note highlight-text">Chiếm 45% tổng lưu lượng</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KHỐI XU HƯỚNG LƯỢT NGHE THUYẾT MINH TỰ ĐỘNG (CHUYỂN TỪ BẢNG ĐIỀU KHIỂN QUA) -->
+                <div class="chart-panel card-box mt-4">
+                    <div class="panel-header">
+                        <div>
+                            <h3 class="panel-title">
+                                <span class="blue-dot"></span> Xu Hướng Lượt Nghe Thuyết Minh
+                            </h3>
+                            <p class="panel-subtitle">Tổng hợp mọi lượt nghe (tự động Geofence + chọn điểm trên bản đồ) theo khung giờ</p>
+                        </div>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="dot today-dot"></span> <span id="trendLegendMain">Hôm nay</span></span>
+                            <span class="legend-item"><span class="dot week-dot"></span> <span id="trendLegendCompare">Trung bình 7 ngày trước</span></span>
+                        </div>
+                    </div>
+
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+
+                    <div class="chart-time-labels">
+                        <div class="time-slot">
+                            <strong>06:00 – 09:00</strong>
+                            <span>Buổi Sáng</span>
+                        </div>
+                        <div class="time-slot">
+                            <strong>10:00 – 13:00</strong>
+                            <span>Buổi Trưa</span>
+                        </div>
+                        <div class="time-slot highlight-slot">
+                            <strong>14:00 – 17:00</strong>
+                            <span class="tag-peak">Cao Điểm Chiều</span>
+                        </div>
+                        <div class="time-slot">
+                            <strong>18:00 – 21:00</strong>
+                            <span>Buổi Tối</span>
+                        </div>
+                    </div>
+
+                    <div class="alert-info-bar">
+                        <div class="alert-content">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span id="alertTrendText">Biểu đồ cập nhật ngay khi có bất kỳ lượt nghe nào – tự động khi vào vùng Geofence 30m hoặc khi du khách chọn điểm trên bản đồ.</span>
+                        </div>
+                        <span class="status-tag" id="trendStatusTag" style="background: #e2e8f0; font-size: 11.5px;">Chờ dữ liệu</span>
+                    </div>
+                </div>
+
+                <!-- ROW PHÂN TÍCH CHUYÊN SÂU: 2 CỘT -->
+                <div class="analytics-grid-2col mt-4">
+                    <!-- Cột 1: Phân bổ theo điểm tham quan -->
+                    <div class="card-box">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">
+                                    <i class="fa-solid fa-map-location-dot text-blue"></i> Phân Bổ Lượt Nghe Theo Điểm Tham Quan
+                                </h3>
+                                <p class="panel-subtitle">Tỷ trọng tương tác âm thanh tại 6 địa điểm Quận 1</p>
+                            </div>
+                        </div>
+                        <div class="analytics-bars-container" id="analyticsPoiBars">
+                            <!-- Render bằng JS -->
+                        </div>
+                    </div>
+
+                    <!-- Cột 2: Phương thức kích hoạt (số liệu thực tế) -->
+                    <div class="card-box">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">
+                                    <i class="fa-solid fa-mobile-screen-button text-blue"></i> Phương Thức Kích Hoạt Thuyết Minh
+                                </h3>
+                                <p class="panel-subtitle">Tỷ trọng thực tế giữa nghe tự động và chọn trên bản đồ</p>
+                            </div>
+                        </div>
+
+                        <div class="device-breakdown">
+                            <div class="device-stat-row">
+                                <div class="device-info">
+                                    <i class="fa-solid fa-satellite-dish text-blue"></i>
+                                    <div>
+                                        <strong>Tự động kích hoạt GPS (Geofence)</strong>
+                                        <p>Du khách đi vào bán kính 30m của di tích</p>
+                                    </div>
+                                </div>
+                                <span class="device-pct badge-geofence" id="pctAutoTrigger">0%</span>
+                            </div>
+
+                            <div class="device-stat-row">
+                                <div class="device-info">
+                                    <i class="fa-solid fa-hand-pointer text-blue"></i>
+                                    <div>
+                                        <strong>Chọn điểm POI trên bản đồ</strong>
+                                        <p>Du khách chủ động chạm chọn và bấm nghe</p>
+                                    </div>
+                                </div>
+                                <span class="device-pct" id="pctManualTrigger">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
         </main>
     </div>
 

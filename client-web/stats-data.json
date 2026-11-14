@@ -1,153 +1,168 @@
 {
-  "totalAudience": 126,
+  "totalAudience": 150,
+  "autoListens": 93,
+  "manualListens": 57,
   "poiListens": {
-    "Dinh Độc Lập": 67,
-    "Bưu Điện Trung Tâm": 22,
+    "Dinh Độc Lập": 73,
+    "Bưu Điện Trung Tâm": 32,
     "Chợ Bến Thành": 12,
-    "Nhà Hát Thành Phố": 19,
+    "Nhà Hát Thành Phố": 27,
     "Nhà Thờ Đức Bà": 6
   },
   "recentEvents": [
     {
-      "poiName": "Nhà Hát Thành Phố",
+      "poiName": "Dinh Độc Lập",
       "poiCode": "GPS-TRIGGER",
       "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460239173
-    },
-    {
-      "poiName": "Nhà Hát Thành Phố",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460238992
-    },
-    {
-      "poiName": "Nhà Thờ Đức Bà",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460233752
-    },
-    {
-      "poiName": "Nhà Thờ Đức Bà",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460233592
-    },
-    {
-      "poiName": "Bưu Điện Trung Tâm",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460215959
-    },
-    {
-      "poiName": "Bưu Điện Trung Tâm",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460215769
-    },
-    {
-      "poiName": "Bưu Điện Trung Tâm",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460212316
-    },
-    {
-      "poiName": "Bưu Điện Trung Tâm",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460212131
-    },
-    {
-      "poiName": "Bưu Điện Trung Tâm",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460212020
-    },
-    {
-      "poiName": "Bưu Điện Trung Tâm",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Trình duyệt Web",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460211318
-    },
-    {
-      "poiName": "Nhà Hát Thành Phố",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460175163
-    },
-    {
-      "poiName": "Nhà Hát Thành Phố",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460174985
-    },
-    {
-      "poiName": "Nhà Thờ Đức Bà",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460158495
-    },
-    {
-      "poiName": "Nhà Thờ Đức Bà",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460158332
-    },
-    {
-      "poiName": "Bưu Điện Trung Tâm",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460153822
-    },
-    {
-      "poiName": "Bưu Điện Trung Tâm",
-      "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460153632
+      "language": "English",
+      "timestamp": 1794675923635
     },
     {
       "poiName": "Dinh Độc Lập",
       "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
-      "language": "Tiếng Việt",
-      "timestamp": 1793460143983
+      "deviceInfo": "Trình duyệt Web",
+      "language": "English",
+      "timestamp": 1794675923478
     },
     {
       "poiName": "Dinh Độc Lập",
       "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
+      "deviceInfo": "Trình duyệt Web",
       "language": "Tiếng Việt",
-      "timestamp": 1793460143800
+      "timestamp": 1794675669635
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675669441
     },
     {
       "poiName": "Bưu Điện Trung Tâm",
       "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
+      "deviceInfo": "Trình duyệt Web",
       "language": "Tiếng Việt",
-      "timestamp": 1793460125236
+      "timestamp": 1794675333975
     },
     {
       "poiName": "Bưu Điện Trung Tâm",
       "poiCode": "GPS-TRIGGER",
-      "deviceInfo": "Điện thoại di động (Mobile)",
+      "deviceInfo": "Trình duyệt Web",
       "language": "Tiếng Việt",
-      "timestamp": 1793460125063
+      "timestamp": 1794675333798
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675326080
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675325315
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675250789
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675250563
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675234119
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675233830
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675232532
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675232313
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675231140
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675230962
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675228684
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675228488
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675226750
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675226551
     }
   ],
-  "lastUpdated": "2026-10-31T15:23:59.173Z"
+  "hourlyByDay": {
+    "2026-11-15": [
+      7,
+      11,
+      17,
+      20,
+      32,
+      26,
+      17,
+      8,
+      12
+    ]
+  },
+  "lastUpdated": "2026-11-14T17:37:41.617Z"
 }

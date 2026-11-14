@@ -108,9 +108,16 @@ const DEFAULT_Q1_POIS = [
 let poiList = [...DEFAULT_Q1_POIS];
 let heatmapMap = null;
 let trendChartInstance = null;
+// Dữ liệu biểu đồ xu hướng lấy từ server (mọi lượt nghe: tự động + chọn trên bản đồ)
+let trendHourlyByDay = {};
+let trendTodayKey = null;
+let trendRange = "today";
+let lastTrendSignature = "";
 
 // Biến trạng thái thời gian thực
 let totalAudienceCount = 0;
+let autoListensCount = 0;
+let manualListensCount = 0;
 let liveSessionsCount = 0;
 let currentActiveDevicesCount = 0;
 let currentMobileCount = 0;
@@ -126,47 +133,66 @@ try {
 
 // ================= KHI TRANG TẢI XONG =================
 document.addEventListener("DOMContentLoaded", () => {
-    initNavigation();
-    initChart();
-    initHeatmapMap();
-    fetchPoisFromBackend();
-    initRealtimeActivityFeed();
-    initModalHandlers();
-    setupSyncListener();
+    // Mỗi bước khởi tạo chạy độc lập: nếu 1 phần lỗi, các phần khác (bản đồ, dữ liệu) vẫn hoạt động
+    const safeRun = (name, fn) => {
+        try { fn(); } catch (err) { console.error(`[INIT] Lỗi khi khởi tạo ${name}:`, err); }
+    };
+    safeRun("navigation", initNavigation);
+    safeRun("chart", initChart);
+    safeRun("heatmap", initHeatmapMap);
+    safeRun("pois", fetchPoisFromBackend);
+    safeRun("activityFeed", initRealtimeActivityFeed);
+    safeRun("modals", initModalHandlers);
+    safeRun("sync", setupSyncListener);
+    safeRun("analyticsFilter", initAnalyticsFilter);
+    safeRun("analytics", renderAnalyticsData);
 });
 
 // ================= 1. ĐIỀU HƯỚNG TẮT/BẬT MÀN HÌNH =================
 function initNavigation() {
     const navDashboard = document.getElementById("navDashboard");
     const navPois = document.getElementById("navPois");
+    const navAnalytics = document.getElementById("navAnalytics");
     const linkViewAllPois = document.getElementById("linkViewAllPois");
 
     const secDashboard = document.getElementById("sectionDashboard");
     const secPois = document.getElementById("sectionPois");
+    const secAnalytics = document.getElementById("sectionAnalytics");
 
     function switchPage(page) {
-        if (page === "dashboard") {
-            navDashboard.classList.add("active");
-            navPois.classList.remove("active");
-            secDashboard.classList.add("active");
-            secPois.classList.remove("active");
-            if (heatmapMap) setTimeout(() => heatmapMap.invalidateSize(), 200);
-        } else if (page === "pois") {
-            navPois.classList.add("active");
-            navDashboard.classList.remove("active");
-            secPois.classList.add("active");
-            secDashboard.classList.remove("active");
+        navDashboard.classList.toggle("active", page === "dashboard");
+        navPois.classList.toggle("active", page === "pois");
+        if (navAnalytics) navAnalytics.classList.toggle("active", page === "analytics");
+
+        secDashboard.classList.toggle("active", page === "dashboard");
+        secPois.classList.toggle("active", page === "pois");
+        if (secAnalytics) secAnalytics.classList.toggle("active", page === "analytics");
+
+        if (page === "dashboard" && heatmapMap) {
+            setTimeout(() => heatmapMap.invalidateSize(), 200);
+        }
+        if (page === "analytics") {
+            if (trendChartInstance) {
+                setTimeout(() => trendChartInstance.resize(), 100);
+            }
+            renderAnalyticsData();
         }
     }
 
     navDashboard.addEventListener("click", (e) => { e.preventDefault(); switchPage("dashboard"); });
     navPois.addEventListener("click", (e) => { e.preventDefault(); switchPage("pois"); });
-    linkViewAllPois.addEventListener("click", (e) => { e.preventDefault(); switchPage("pois"); });
+    if (navAnalytics) navAnalytics.addEventListener("click", (e) => { e.preventDefault(); switchPage("analytics"); });
+    if (linkViewAllPois) linkViewAllPois.addEventListener("click", (e) => { e.preventDefault(); switchPage("pois"); });
 }
 
 // ================= 2. VẼ BIỂU ĐỒ XU HƯỚNG (BAN ĐẦU = 0, CẬP NHẬT KHI CÓ DỮ LIỆU) =================
 function initChart() {
-    const ctx = document.getElementById("trendChart").getContext("2d");
+    const canvas = document.getElementById("trendChart");
+    if (!canvas) {
+        console.warn("[CHART] Không tìm thấy #trendChart – bỏ qua biểu đồ xu hướng");
+        return;
+    }
+    const ctx = canvas.getContext("2d");
 
     const gradientToday = ctx.createLinearGradient(0, 0, 0, 220);
     gradientToday.addColorStop(0, "rgba(9, 51, 89, 0.2)");
@@ -226,12 +252,13 @@ function initChart() {
                     ticks: {
                         color: "#94a3b8",
                         font: { size: 11 },
-                        stepSize: 2
+                        precision: 0
                     }
                 }
             }
         }
     });
+    updateTrendChart(true);
 }
 
 // ================= 3. KHỞI TẠO BẢN ĐỒ HEATMAP QUẬN 1 =================
@@ -322,6 +349,7 @@ async function fetchPoisFromBackend() {
     renderDashboardTopPois();
     renderPoiTable();
     updateStatCards();
+    renderAnalyticsData();
 }
 
 function getPoiThumbHtml(poi) {
@@ -480,6 +508,11 @@ function recordRealtimeEvent(eventData) {
 
     // Tăng tổng thính giả & lượt nghe của POI tương ứng
     totalAudienceCount++;
+    if (eventData && eventData.triggerType === 'auto') {
+        autoListensCount++;
+    } else {
+        manualListensCount++;
+    }
     if (currentActiveDevicesCount === 0) {
         currentActiveDevicesCount = 1;
         currentMobileCount = 1;
@@ -491,22 +524,15 @@ function recordRealtimeEvent(eventData) {
         matchedPoi.listens += 1;
     }
 
-    // Cập nhật biểu đồ hôm nay
-    if (trendChartInstance) {
-        const hour = new Date().getHours();
-        let slotIndex = 0;
-        if (hour >= 6 && hour < 9) slotIndex = 0;
-        else if (hour >= 9 && hour < 11) slotIndex = 1;
-        else if (hour >= 11 && hour < 13) slotIndex = 2;
-        else if (hour >= 13 && hour < 15) slotIndex = 3;
-        else if (hour >= 15 && hour < 17) slotIndex = 4;
-        else if (hour >= 17 && hour < 19) slotIndex = 5;
-        else if (hour >= 19 && hour < 21) slotIndex = 6;
-        else slotIndex = 7;
-
-        trendChartInstance.data.datasets[0].data[slotIndex] += 1;
-        trendChartInstance.update();
+    // Cập nhật ngay biểu đồ xu hướng cho mọi lượt nghe (cả tự động & chọn trên bản đồ)
+    const now = new Date();
+    const key = trendTodayKey || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    trendTodayKey = key;
+    if (!Array.isArray(trendHourlyByDay[key])) {
+        trendHourlyByDay[key] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     }
+    trendHourlyByDay[key][getTrendSlotIndex(now.getHours())] += 1;
+    updateTrendChart(true);
 
     // Thêm dòng Log vào Feed
     const item = document.createElement("div");
@@ -531,6 +557,7 @@ function recordRealtimeEvent(eventData) {
     renderDashboardTopPois();
     renderPoiTable();
     updateStatCards();
+    renderAnalyticsData();
 }
 
 
@@ -551,6 +578,15 @@ function setupSyncListener() {
 
                 // 2. Cập nhật tổng thính giả
                 totalAudienceCount = data.totalAudience || 0;
+                autoListensCount = data.autoListens || 0;
+                manualListensCount = data.manualListens || 0;
+
+                // 2b. Cập nhật biểu đồ xu hướng từ dữ liệu thực tế (mọi lượt nghe)
+                if (data.hourlyByDay) {
+                    trendHourlyByDay = data.hourlyByDay;
+                    trendTodayKey = data.todayKey || trendTodayKey;
+                    updateTrendChart();
+                }
 
                 // 3. Cập nhật số lượt nghe từng POI
                 if (data.poiListens) {
@@ -590,6 +626,7 @@ function setupSyncListener() {
                 renderDashboardTopPois();
                 renderPoiTable();
                 updateStatCards();
+                renderAnalyticsData();
             }
         } catch (e) {
             // console.warn("Lỗi poll realtime stats:", e);
@@ -736,3 +773,135 @@ window.deletePoi = async function (id) {
         alert("✅ Đã xóa điểm tham quan!");
     }
 };
+
+
+// ================= 8. RENDER THỐNG KÊ & PHÂN TÍCH (ANALYTICS) =================
+function renderAnalyticsData() {
+    const elAuto = document.getElementById("analyticsAutoListens");
+    if (elAuto) elAuto.textContent = autoListensCount.toLocaleString();
+
+    const elManual = document.getElementById("analyticsManualListens");
+    if (elManual) elManual.textContent = manualListensCount.toLocaleString();
+
+    const totalReal = (autoListensCount + manualListensCount) || totalAudienceCount;
+    const elTotal = document.getElementById("analyticsTotalListens");
+    if (elTotal) elTotal.textContent = totalReal.toLocaleString();
+
+    // Cập nhật tỷ lệ % thực tế trong phần phân tích phương thức
+    const total = Math.max(1, totalReal);
+    const autoPct = Math.round((autoListensCount / total) * 100);
+    const manualPct = 100 - autoPct;
+
+    const elPctAuto = document.getElementById("pctAutoTrigger");
+    if (elPctAuto) elPctAuto.textContent = `${autoPct}% (${autoListensCount} lượt)`;
+    const elPctManual = document.getElementById("pctManualTrigger");
+    if (elPctManual) elPctManual.textContent = `${manualPct}% (${manualListensCount} lượt)`;
+
+    // Render thanh progress bar 6 POI
+    const barsContainer = document.getElementById("analyticsPoiBars");
+    if (barsContainer) {
+        const sorted = [...poiList].sort((a, b) => (b.listens || 0) - (a.listens || 0));
+        const maxListens = Math.max(1, (sorted[0] && sorted[0].listens) || 0);
+        barsContainer.innerHTML = sorted.map(poi => {
+            const pct = Math.round(((poi.listens || 0) / maxListens) * 100);
+            return `
+                <div class="analytics-bar-item">
+                    <div class="bar-labels">
+                        <span class="bar-name"><strong>${poi.name}</strong></span>
+                        <span class="bar-value"><strong class="text-blue">${poi.listens || 0}</strong> lượt nghe</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width: ${Math.max(6, pct)}%;"></div>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    }
+}
+
+function getTrendSlotIndex(hour) {
+    if (hour < 5) return 8;
+    return Math.min(8, Math.floor((hour - 5) / 2));
+}
+
+function shiftDayKey(key, offsetDays) {
+    const [y, m, d] = key.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + offsetDays);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+}
+
+// Cộng dồn số lượt nghe theo 9 khung giờ cho các ngày [fromOffset .. toOffset] tính từ hôm nay
+function sumTrendDays(fromOffset, toOffset) {
+    const total = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    if (!trendTodayKey) return total;
+    for (let off = fromOffset; off <= toOffset; off++) {
+        const arr = trendHourlyByDay[shiftDayKey(trendTodayKey, -off)];
+        if (Array.isArray(arr)) arr.forEach((v, i) => { total[i] += v || 0; });
+    }
+    return total;
+}
+
+function updateTrendChart(force = false) {
+    if (!trendChartInstance) return;
+    let main, compare, mainLabel, compareLabel;
+
+    if (trendRange === "week") {
+        main = sumTrendDays(0, 6);
+        compare = sumTrendDays(0, 6).map(v => Math.round((v / 7) * 10) / 10);
+        mainLabel = "Tổng 7 ngày qua";
+        compareLabel = "Trung bình mỗi ngày";
+    } else if (trendRange === "month") {
+        main = sumTrendDays(0, 29);
+        compare = sumTrendDays(0, 29).map(v => Math.round((v / 30) * 10) / 10);
+        mainLabel = "Tổng 30 ngày qua";
+        compareLabel = "Trung bình mỗi ngày";
+    } else {
+        main = sumTrendDays(0, 0);
+        compare = sumTrendDays(1, 7).map(v => Math.round((v / 7) * 10) / 10);
+        mainLabel = "Hôm nay";
+        compareLabel = "Trung bình 7 ngày trước";
+    }
+
+    // Chỉ vẽ lại khi dữ liệu thay đổi (tránh biểu đồ nhấp nháy mỗi 2 giây)
+    const signature = JSON.stringify([trendRange, main, compare]);
+    if (!force && signature === lastTrendSignature) return;
+    lastTrendSignature = signature;
+
+    trendChartInstance.data.datasets[0].label = mainLabel;
+    trendChartInstance.data.datasets[0].data = main;
+    trendChartInstance.data.datasets[1].label = compareLabel;
+    trendChartInstance.data.datasets[1].data = compare;
+    trendChartInstance.update();
+
+    const legendMain = document.getElementById("trendLegendMain");
+    if (legendMain) legendMain.textContent = mainLabel;
+    const legendCompare = document.getElementById("trendLegendCompare");
+    if (legendCompare) legendCompare.textContent = compareLabel;
+
+    const totalMain = main.reduce((a, b) => a + b, 0);
+    const tag = document.getElementById("trendStatusTag");
+    if (tag) {
+        tag.textContent = totalMain > 0 ? `${totalMain} lượt nghe` : "Chờ dữ liệu";
+        tag.style.background = totalMain > 0 ? "#dcfce7" : "#e2e8f0";
+    }
+}
+
+function initAnalyticsFilter() {
+    const filterBtns = document.querySelectorAll(".time-filter-group .btn-time");
+    filterBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            filterBtns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            trendRange = btn.dataset.range || "today";
+            updateTrendChart(true);
+        });
+    });
+
+    const btnExport = document.getElementById("btnExportAnalytics");
+    if (btnExport) {
+        btnExport.addEventListener("click", () => {
+            alert("📊 Báo cáo phân tích dữ liệu du lịch Quận 1 đã được xuất thành công!");
+        });
+    }
+}

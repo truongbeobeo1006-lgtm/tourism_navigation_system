@@ -1595,7 +1595,7 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-function notifyPoiPlay(poi) {
+function notifyPoiPlay(poi, triggerType = 'manual') {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   const devId = getOrCreateDeviceId();
   const payload = JSON.stringify({
@@ -1604,24 +1604,16 @@ function notifyPoiPlay(poi) {
     poiId: poi.id,
     poiName: poi.name,
     language: state.selectedLang || 'vi',
-    deviceType: isMobile ? 'mobile' : 'web'
+    deviceType: isMobile ? 'mobile' : 'web',
+    triggerType: triggerType // 'auto' (Geofence GPS 30m) hoặc 'manual' (Chọn điểm trên bản đồ / bấm nút)
   });
 
-  // Lần 1: Bắn ghi nhận ngay lập tức
+  // Chỉ gửi 1 lần duy nhất (sửa lỗi nhân đôi số lượt nghe)
   fetch(CONFIG.REALTIME_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: payload
   }).catch(() => { });
-
-  // Lần 2: Bắn thêm 1 lần nữa sau 180ms để số lượt nghe nhảy +2
-  setTimeout(() => {
-    fetch(CONFIG.REALTIME_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload
-    }).catch(() => { });
-  }, 180);
 }
 
 // ========================================== 
@@ -1636,8 +1628,8 @@ function togglePlayback() {
   }
 }
 
-function startPlayback() {
-  if (state.activePoi) notifyPoiPlay(state.activePoi);
+function startPlayback(triggerType = 'manual') {
+  if (state.activePoi) notifyPoiPlay(state.activePoi, triggerType);
   if (!state.activePoi) return;
 
   unlockAudio();
