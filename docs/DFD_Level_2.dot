@@ -1,0 +1,104 @@
+// DFD Level 2 - Phân hệ Định vị Geofence (30m) & Thuyết minh Tự động
+digraph DFD2 {
+    graph [
+        charset="UTF-8",
+        label="DFD MỨC 2 – PHÂN HỆ ĐỊNH VỊ GEOFENCE (30m) & THUYẾT MINH TỰ ĐỘNG
+HỆ THỐNG DẪN ĐƯỜNG & THUYẾT MINH DU LỊCH TỰ ĐỘNG (QUẬN 1)
+ ",
+        labelloc=t,
+        labeljust=c,
+        fontname="Arial",
+        fontsize=22,
+        fontcolor="#203044",
+        rankdir=TB,
+        splines=spline,
+        nodesep=0.85,
+        ranksep=1.2,
+        bgcolor="white",
+        pad=0.6,
+        outputorder=edgesfirst
+    ];
+    node [fontname="Arial", fontsize=11];
+    edge [fontname="Arial", fontsize=9.5, color="#425466", arrowsize=0.75, penwidth=1.2];
+
+    // [THỰC THỂ NGOÀI: HÌNH CHỮ NHẬT XANH DƯƠNG]
+    Tourist [label="E1 · KHÁCH DU LỊCH
+(TOURIST)", shape=box, style=filled, fillcolor="#1687C1", fontcolor=white, margin="0.3,0.18", penwidth=0];
+
+    // [CHỨC NĂNG XỬ LÝ CON: HÌNH TRÒN CAM]
+    node [shape=circle, width=1.75, height=1.75, fixedsize=true, style=filled, fillcolor="#F5A623", fontcolor=white, penwidth=0];
+    p31 [label="3.1
+
+TIẾP NHẬN &
+CHUẨN HÓA
+GPS"];
+    p32 [label="3.2
+
+TÍNH TOÁN
+KHOẢNG CÁCH
+HAVERSINE"];
+    p33 [label="3.3
+
+SO KHỚP
+VÙNG 30m &
+COOLDOWN"];
+
+    p41 [label="4.1
+
+TRUY VẤN
+KỊCH BẢN
+ĐA NGỮ"];
+    p42 [label="4.2
+
+ĐIỀU PHỐI
+PHÁT ÂM
+TTS"];
+    p43 [label="4.3
+
+GHI NHẬN
+NHẬT KÝ
+LƯỢT NGHE"];
+
+    // [KHO DỮ LIỆU: NẰM GIỮA 2 GẠCH NGANG TRÊN VÀ DƯỚI]
+    node [shape=plain, fontcolor="#203044"];
+    d3 [label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+            <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D3</B> &nbsp;|&nbsp; <B>pois</B> (Tọa độ Lat/Lng &amp; Bán kính 30m)</TD></TR>
+        </TABLE>
+    >];
+
+    d4 [label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+            <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D4</B> &nbsp;|&nbsp; <B>poi_audio_contents</B> (Kịch bản TTS &amp; File Audio)</TD></TR>
+        </TABLE>
+    >];
+
+    d7 [label=<
+        <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+            <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D7</B> &nbsp;|&nbsp; <B>usage_history</B> (Lịch sử kích hoạt &amp; Lượt nghe)</TD></TR>
+        </TABLE>
+    >];
+
+    // Luồng xử lý phân hệ 3.0
+    Tourist -> p31 [label="F03 · Tọa độ GPS thời gian thực"];
+    p31 -> Tourist [label="F04 · Bản đồ số 6 di tích Quận 1"];
+    p31 -> p32 [label="Tọa độ hợp lệ (Lat, Lng)"];
+
+    d3 -> p32 [label="Tọa độ danh lam di tích Quận 1"];
+    p32 -> p33 [label="Khoảng cách thực tế (m)"];
+
+    d3 -> p33 [label="Bán kính di tích (radius_m = 30m)"];
+    p33 -> Tourist [label="F05 · Cảnh báo vào vùng Geofence (30m)"];
+    p33 -> p41 [label="Tín hiệu kích hoạt Geofence (POI ID)", color="#DC2626", fontcolor="#B91C1C", penwidth=1.8];
+
+    // Luồng xử lý phân hệ 4.0
+    Tourist -> p41 [label="F07 · Tùy chọn ngôn ngữ & giọng đọc"];
+    d4 -> p41 [label="Kịch bản thuyết minh theo (POI, Lang)"];
+    p41 -> p42 [label="Văn bản kịch bản TTS & Audio URL"];
+
+    Tourist -> p42 [label="F08 · Lệnh điều khiển audio (phát/dừng/tua)"];
+    p42 -> Tourist [label="F06 · Bài thuyết minh âm thanh / TTS"];
+    p42 -> p43 [label="Dữ liệu phiên nghe (POI, Lang, Duration)", color="#16A34A", fontcolor="#15803D", penwidth=1.6];
+
+    p43 -> d7 [label="Ghi nhận lịch sử (user_id, poi_id, trigger_type, listened_at)", color="#16A34A", fontcolor="#15803D"];
+}

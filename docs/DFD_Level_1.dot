@@ -1,0 +1,138 @@
+// DFD Level 1 - Hệ thống Dẫn đường & Thuyết minh Du lịch Tự động Quận 1
+digraph DFD1 {
+    graph [
+        charset="UTF-8",
+        label="DFD MỨC 1 – PHÂN RÃ HỆ THỐNG\nHỆ THỐNG DẪN ĐƯỜNG & THUYẾT MINH DU LỊCH TỰ ĐỘNG (QUẬN 1)\n ",
+        labelloc=t,
+        labeljust=c,
+        fontname="Arial",
+        fontsize=22,
+        fontcolor="#203044",
+        rankdir=LR,
+        splines=spline,
+        nodesep=1.1,
+        ranksep=2.6,
+        bgcolor="white",
+        pad=0.6,
+        outputorder=edgesfirst
+    ];
+    node [fontname="Arial", fontsize=11];
+    edge [fontname="Arial", fontsize=9.5, color="#425466", arrowsize=0.75, penwidth=1.2];
+
+    // [CỘT 1: THỰC THỂ NGOÀI - HÌNH CHỮ NHẬT XANH DƯƠNG]
+    subgraph cluster_entities {
+        style=invis;
+        node [shape=box, style=filled, fillcolor="#1687C1", fontcolor=white, margin="0.25,0.2", penwidth=0];
+        Tourist [label="E1 · KHÁCH DU LỊCH\n(TOURIST)"];
+        Admin   [label="E2 · QUẢN TRỊ VIÊN\n(ADMINISTRATOR)"];
+    }
+
+    // [CỘT 2: 5 CHỨC NĂNG XỬ LÝ - HÌNH TRÒN CAM]
+    subgraph cluster_processes {
+        style=invis;
+        node [shape=circle, width=1.9, height=1.9, fixedsize=true, style=filled, fillcolor="#F5A623", fontcolor=white, penwidth=0];
+        p1 [label="1.0\n\nXÁC THỰC &\nVÉ THAM QUAN"];
+        p2 [label="2.0\n\nQUẢN LÝ POI\n& TUYẾN TOUR"];
+        p3 [label="3.0\n\nĐỊNH VỊ &\nGIÁM SÁT\nGEOFENCE 30m"];
+        p4 [label="4.0\n\nTHUYẾT MINH\nÂM THANH\nTỰ ĐỘNG (TTS)"];
+        p5 [label="5.0\n\nGHI NHẬN &\nTHỐNG KÊ\nLƯỢT NGHE"];
+    }
+
+    // [CỘT 3: 7 KHO DỮ LIỆU - NẰM GIỮA 2 GẠCH NGANG TRÊN VÀ DƯỚI]
+    subgraph cluster_stores {
+        style=invis;
+        node [shape=plain, fontcolor="#203044"];
+        
+        d1 [label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+                <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D1</B> &nbsp;|&nbsp; <B>users</B> (Tài khoản &amp; Phân quyền)</TD></TR>
+            </TABLE>
+        >];
+
+        d2 [label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+                <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D2</B> &nbsp;|&nbsp; <B>access_tickets</B> (Vé tham quan QR 24h)</TD></TR>
+            </TABLE>
+        >];
+
+        d3 [label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+                <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D3</B> &nbsp;|&nbsp; <B>pois</B> (6 Di tích &amp; Bán kính 30m)</TD></TR>
+            </TABLE>
+        >];
+
+        d4 [label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+                <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D4</B> &nbsp;|&nbsp; <B>poi_audio_contents</B> (Kịch bản TTS đa ngữ)</TD></TR>
+            </TABLE>
+        >];
+
+        d5 [label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+                <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D5</B> &nbsp;|&nbsp; <B>tours</B> (Danh mục tuyến tour)</TD></TR>
+            </TABLE>
+        >];
+
+        d6 [label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+                <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D6</B> &nbsp;|&nbsp; <B>tour_pois</B> (Thứ tự trạm dừng di tích)</TD></TR>
+            </TABLE>
+        >];
+
+        d7 [label=<
+            <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6">
+                <TR><TD BORDER="2" SIDES="TB" BGCOLOR="#FEF3C7"><B>D7</B> &nbsp;|&nbsp; <B>usage_history</B> (Lịch sử nghe &amp; Kích hoạt)</TD></TR>
+            </TABLE>
+        >];
+    }
+
+    // --- Luồng E1: Khách du lịch -> Tiến trình ---
+    // Để không bị chồng chữ: Các luồng cùng hướng hoặc ngược hướng được gộp nhãn gọn gàng
+    Tourist -> p1 [label="F01 · Mã QR vé tham quan\nF11 · Nhịp tim thiết bị, online"];
+    p1 -> Tourist [label="F02 · Trạng thái kích hoạt vé 24h"];
+
+    Tourist -> p2 [label="F09 · Yêu cầu thông tin di tích & tour"];
+    p2 -> Tourist [label="F10 · Chi tiết di tích, tuyến tham quan gợi ý"];
+
+    Tourist -> p3 [label="F03 · Tọa độ GPS thời gian thực"];
+    p3 -> Tourist [label="F04 · Bản đồ số 6 di tích Quận 1\nF05 · Cảnh báo vào vùng Geofence (30m)"];
+
+    Tourist -> p4 [label="F07 · Tùy chọn ngôn ngữ & giọng đọc\nF08 · Lệnh điều khiển audio (phát/dừng)"];
+    p4 -> Tourist [label="F06 · Bài thuyết minh âm thanh / giọng đọc TTS"];
+
+    // --- Luồng E2: Quản trị viên -> Tiến trình ---
+    Admin -> p1 [label="F12 · Thông tin đăng nhập quản trị"];
+    p1 -> Admin [label="F13 · Token / trạng thái xác thực Admin"];
+
+    Admin -> p2 [label="F14 · Dữ liệu POI (tọa độ, bán kính, ảnh)\nF16 · Kịch bản thuyết minh đa ngữ & audio\nF18 · Dữ liệu tuyến tour & thứ tự trạm"];
+    p2 -> Admin [label="F15 · Kết quả cập nhật di tích POI\nF17 · Kết quả cập nhật kịch bản âm thanh"];
+
+    Admin -> p5 [label="F19 · Yêu cầu thống kê lượt nghe & thiết bị"];
+    p5 -> Admin [label="F20 · Báo cáo Dashboard, online, tổng lượt nghe"];
+
+    // --- Luồng liên tiến trình (Nổi bật màu sắc) ---
+    p3 -> p4 [label="Tín hiệu vào vùng 30m\n(Geofence Trigger)", color="#DC2626", fontcolor="#B91C1C", penwidth=1.8];
+    p4 -> p5 [label="Ghi nhận sự kiện nghe POI", color="#16A34A", fontcolor="#15803D", penwidth=1.6];
+
+    // --- Luồng tương tác 7 Kho dữ liệu ---
+    p1 -> d1 [label="Xác thực Admin"];
+    d1 -> p1 [label="Thông tin user"];
+
+    p1 -> d2 [label="Kích hoạt vé 24h"];
+    d2 -> p1 [label="Kiểm tra mã QR"];
+
+    p2 -> d3 [label="Lưu POI (Lat, Lng, R=30m)"];
+    d3 -> p2 [label="Đọc danh mục POI"];
+    d3 -> p3 [label="Tọa độ 6 di tích"];
+
+    p2 -> d4 [label="Lưu bài thuyết minh"];
+    d4 -> p4 [label="Đọc kịch bản TTS (lang, script)"];
+
+    p2 -> d5 [label="Lưu thông tin tour"];
+    p2 -> d6 [label="Lưu trạm dừng tour"];
+    d5 -> p2 [label="Đọc danh mục tour"];
+    d6 -> p2 [label="Đọc trạm dừng"];
+
+    p5 -> d7 [label="Ghi nhận lịch sử nghe (POI, Time, Lang)", color="#16A34A", fontcolor="#15803D", penwidth=1.4];
+    d7 -> p5 [label="Tổng hợp số lượt nghe"];
+}
