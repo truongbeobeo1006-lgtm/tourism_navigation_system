@@ -3,7 +3,8 @@
  * Dữ liệu thời gian thực - Bắt đầu từ 0 và chỉ cập nhật khi có du khách sử dụng thực tế
  */
 
-const API_BASE = "http://localhost:8080/api/v1/pois";
+const API_BASE = (window.location.protocol.startsWith("http") ? "" : "http://127.0.0.1:3000") + "/api/v1/pois";
+const SPRING_API_BASE = "http://localhost:8080/api/v1/pois";
 
 // Dữ liệu 6 điểm POI Quận 1 - KHÔNG BỊA SỐ LIỆU (Tất cả lượt nghe và đánh giá ban đầu = 0)
 const DEFAULT_Q1_POIS = [
@@ -107,6 +108,8 @@ const DEFAULT_Q1_POIS = [
 
 let poiList = [...DEFAULT_Q1_POIS];
 let heatmapMap = null;
+let heatmapLayers = [];
+let currentPoisVersion = 0;
 let trendChartInstance = null;
 // Dữ liệu biểu đồ xu hướng lấy từ server (mọi lượt nghe: tự động + chọn trên bản đồ)
 let trendHourlyByDay = {};
@@ -261,59 +264,83 @@ function initChart() {
     updateTrendChart(true);
 }
 
-// ================= 3. KHỞI TẠO BẢN ĐỒ HEATMAP QUẬN 1 =================
+// ================= 3. KHỞI TẠO BẢN ĐỒ QUẬN 1 (DÙNG GOOGLE MAPS TILE & MARKER GIỐNG CLIENT) =================
 function initHeatmapMap() {
-    heatmapMap = L.map("heatmapLeaflet", {
-        zoomControl: false,
-        attributionControl: false
-    }).setView([10.7769, 106.6990], 15);
+    const mapContainer = document.getElementById("heatmapLeaflet");
+    if (!mapContainer || typeof L === "undefined") return;
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(heatmapMap);
+    heatmapMap = L.map("heatmapLeaflet", {
+        zoomControl: true,
+        attributionControl: false
+    }).setView([10.77692, 106.69850], 15);
+
+    // Sử dụng Google Maps Tile Layer giống hệt bên Client Web (hiển thị sắc nét, không bị chặn tile)
+    L.tileLayer("https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        subdomains: ["mt0", "mt1", "mt2", "mt3"]
+    }).addTo(heatmapMap);
 
     renderHeatmapMarkers();
+    setTimeout(() => {
+        if (heatmapMap) heatmapMap.invalidateSize();
+    }, 200);
 }
 
 function renderHeatmapMarkers() {
     if (!heatmapMap) return;
 
-    poiList.forEach(poi => {
-        let color = "#0284c7"; // Mặc định trung hòa
-        let densityText = "Chưa phát sinh kích hoạt";
+    // Xóa các vòng tròn và marker cũ trước khi vẽ lại
+    heatmapLayers.forEach(layer => {
+        try { heatmapMap.removeLayer(layer); } catch (e) {}
+    });
+    heatmapLayers = [];
 
-        if (poi.listens > 50) {
-            color = "#ef4444"; // Rất cao
-            densityText = `Rất cao (${poi.listens} lượt)`;
-        } else if (poi.listens > 10) {
-            color = "#0284c7";
-            densityText = `Trung bình (${poi.listens} lượt)`;
-        } else if (poi.listens > 0) {
-            color = "#10b981";
-            densityText = `Mới kích hoạt (${poi.listens} lượt)`;
-        }
+    const activePois = poiList.filter(p => p.isActive !== false);
+    const elGeoCount = document.getElementById("mapGeofenceCount");
+    if (elGeoCount) elGeoCount.textContent = `${activePois.length} điểm Q.1`;
+    const elActiveCard = document.getElementById("cardActiveCount");
+    if (elActiveCard) elActiveCard.textContent = activePois.length;
 
-        // Vòng tròn Geofence 30m
-        L.circle([poi.lat, poi.lng], {
-            color: color,
-            fillColor: color,
-            fillOpacity: 0.18,
-            radius: poi.radiusM || 30
-        }).addTo(heatmapMap);
+    activePois.forEach(poi => {
+        let pinBg = "#ef4444"; // Pin đỏ giống Client Web
+        let densityText = `${poi.listens || 0} lượt nghe • Bán kính ${poi.radiusM || 30}m`;
 
-        // Marker điểm POI
-        const marker = L.circleMarker([poi.lat, poi.lng], {
-            radius: 8,
-            color: "#ffffff",
-            weight: 2,
-            fillColor: color,
-            fillOpacity: 1
-        }).addTo(heatmapMap);
+        // Icon Marker giống hệt bên Client Web (Icon ngôi đền tròn đỏ + nhãn tên bên dưới)
+        const poiIcon = L.divIcon({
+            className: "poi-marker-wrapper",
+            html: `
+                <div class="poi-landmark-marker" id="admin-marker-${poi.id}">
+                    <div class="poi-icon-circle" style="background-color: ${pinBg};">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M4 10v7h3v-7H4zm6 0v7h4v-7h-4zm7 0v7h3v-7h-3zM2 22h20v-3H2v3zm10-20L2 6v2h20V6l-10-4z"></path>
+                        </svg>
+                    </div>
+                    <div class="poi-label-pill">${poi.name}</div>
+                </div>
+            `,
+            iconSize: [80, 56],
+            iconAnchor: [40, 26]
+        });
 
+        const marker = L.marker([poi.lat, poi.lng], { icon: poiIcon, zIndexOffset: 1000 }).addTo(heatmapMap);
         marker.bindTooltip(`
             <div style="font-family: inherit; font-size: 12px; font-weight: 700;">
                 <strong>${poi.name}</strong><br>
-                <span style="color: ${color};">● ${densityText}</span>
+                <span style="color: #0284c7;">● ${densityText}</span>
             </div>
-        `, { direction: "top" });
+        `, { direction: "top", offset: [0, -16] });
+        heatmapLayers.push(marker);
+
+        // Vòng tròn bán kính Geofence 30m nét đứt giống hệt Client Web
+        const circle = L.circle([poi.lat, poi.lng], {
+            radius: poi.radiusM || 30,
+            color: "#0284c7",
+            fillColor: "#38bdf8",
+            fillOpacity: 0.18,
+            weight: 1.5,
+            dashArray: "5, 5"
+        }).addTo(heatmapMap);
+        heatmapLayers.push(circle);
     });
 }
 
@@ -324,17 +351,19 @@ async function fetchPoisFromBackend() {
         if (response.ok) {
             const data = await response.json();
             if (Array.isArray(data) && data.length > 0) {
+                const oldListensMap = {};
+                poiList.forEach(p => { oldListensMap[p.name] = p.listens || 0; });
                 poiList = data.map((item, index) => ({
                     id: item.id,
                     code: `Q1-POI-000${index + 1}`,
                     name: item.name,
-                    category: "Di Tích Lịch Sử",
+                    category: item.category || "Di Tích Lịch Sử",
                     location: "TP. Hồ Chí Minh / Quận 1",
-                    lat: item.lat,
-                    lng: item.lng,
-                    radiusM: item.radiusM || 30,
-                    listens: 0, // Bắt đầu bằng 0
-                    rating: 0,  // Bắt đầu bằng 0 (chưa có đánh giá)
+                    lat: Number(item.lat),
+                    lng: Number(item.lng),
+                    radiusM: Number(item.radiusM) || 30,
+                    listens: oldListensMap[item.name] || 0,
+                    rating: 0,
                     density: "neutral",
                     isActive: item.isActive !== false,
                     availableLanguages: item.availableLanguages && item.availableLanguages.length > 0 ? item.availableLanguages : ["vi", "en"],
@@ -343,11 +372,12 @@ async function fetchPoisFromBackend() {
             }
         }
     } catch (e) {
-        console.warn("Chưa kết nối Backend Gateway, hiển thị danh sách 6 điểm Quận 1:", e.message);
+        console.warn("Chưa kết nối Backend, hiển thị danh sách mặc định Quận 1:", e.message);
     }
 
     renderDashboardTopPois();
     renderPoiTable();
+    renderHeatmapMarkers();
     updateStatCards();
     renderAnalyticsData();
 }
@@ -588,13 +618,26 @@ function setupSyncListener() {
                     updateTrendChart();
                 }
 
+                // 2c. Kiểm tra nếu danh sách POI có thay đổi từ tab khác
+                if (data.poisVersion) {
+                    if (currentPoisVersion && currentPoisVersion !== data.poisVersion) {
+                        await fetchPoisFromBackend();
+                    }
+                    currentPoisVersion = data.poisVersion;
+                }
+
                 // 3. Cập nhật số lượt nghe từng POI
+                let listensChanged = false;
                 if (data.poiListens) {
                     poiList.forEach(poi => {
-                        if (data.poiListens[poi.name] !== undefined) {
+                        if (data.poiListens[poi.name] !== undefined && poi.listens !== data.poiListens[poi.name]) {
                             poi.listens = data.poiListens[poi.name];
+                            listensChanged = true;
                         }
                     });
+                }
+                if (listensChanged) {
+                    renderHeatmapMarkers();
                 }
 
                 // 4. Cập nhật Feed sự kiện mới nhất
@@ -664,27 +707,42 @@ function initModalHandlers() {
         e.preventDefault();
         const id = document.getElementById("formPoiId").value;
         const payload = {
-            name: document.getElementById("formName").value,
+            name: document.getElementById("formName").value.trim(),
             lat: parseFloat(document.getElementById("formLat").value),
             lng: parseFloat(document.getElementById("formLng").value),
-            radiusM: parseInt(document.getElementById("formRadius").value),
+            radiusM: parseInt(document.getElementById("formRadius").value) || 30,
             isActive: document.getElementById("formIsActive").value === "true",
-            imageUrl: document.getElementById("formImageUrl").value
+            imageUrl: document.getElementById("formImageUrl").value.trim()
         };
 
+        let serverPoi = null;
         try {
             if (id) {
-                await fetch(`${API_BASE}/${id}`, {
+                const res = await fetch(`${API_BASE}/${encodeURIComponent(id)}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
+                if (res.ok) serverPoi = await res.json();
+                // Đồng bộ song song sang Spring Boot (:8080) nếu đang bật Docker
+                fetch(`${SPRING_API_BASE}/${encodeURIComponent(id)}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                }).catch(() => {});
             } else {
-                await fetch(API_BASE, {
+                const res = await fetch(API_BASE, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
+                if (res.ok) serverPoi = await res.json();
+                // Đồng bộ song song sang Spring Boot (:8080) nếu đang bật Docker
+                fetch(SPRING_API_BASE, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                }).catch(() => {});
             }
         } catch (err) {
             console.warn("Lưu qua API lỗi, cập nhật tạm trên bộ nhớ:", err);
@@ -694,10 +752,10 @@ function initModalHandlers() {
             const index = poiList.findIndex(p => p.id === id);
             if (index !== -1) Object.assign(poiList[index], payload);
         } else {
-            poiList.unshift({
-                id: "poi-" + Date.now(),
+            poiList.push({
+                id: (serverPoi && serverPoi.id) ? serverPoi.id : ("q1-poi-" + Date.now()),
                 code: `Q1-POI-000${poiList.length + 1}`,
-                category: "Điểm Mới",
+                category: "Di Tích Lịch Sử",
                 location: "TP. Hồ Chí Minh / Quận 1",
                 listens: 0,
                 rating: 0,
@@ -710,7 +768,16 @@ function initModalHandlers() {
         poiModal.classList.add("hide");
         renderPoiTable();
         renderDashboardTopPois();
-        alert("✅ Đã lưu thông tin điểm tham quan thành công!");
+        renderHeatmapMarkers();
+        updateStatCards();
+        renderAnalyticsData();
+        if (heatmapMap) {
+            heatmapMap.panTo([payload.lat, payload.lng]);
+        }
+        if (syncChannel) {
+            try { syncChannel.postMessage({ type: "POIS_UPDATED", timestamp: Date.now() }); } catch (e) {}
+        }
+        alert("✅ Đã lưu thông tin điểm tham quan và đồng bộ lên Bản đồ!");
     });
 
     // Lưu Form Audio
@@ -721,19 +788,27 @@ function initModalHandlers() {
             langCode: document.getElementById("audioLangCode").value,
             audioUrl: document.getElementById("audioUrlInput").value,
             ttsScript: document.getElementById("audioScriptInput").value,
-            durationSec: parseInt(document.getElementById("audioDurationInput").value)
+            durationSec: parseInt(document.getElementById("audioDurationInput").value) || 30
         };
 
         try {
-            await fetch(`${API_BASE}/${poiId}/audio`, {
+            await fetch(`${API_BASE}/${encodeURIComponent(poiId)}/audio`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
+            fetch(`${SPRING_API_BASE}/${encodeURIComponent(poiId)}/audio`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
         } catch (err) {
             console.warn("Lưu audio API lỗi:", err);
         }
 
+        if (syncChannel) {
+            try { syncChannel.postMessage({ type: "POIS_UPDATED", timestamp: Date.now() }); } catch (e) {}
+        }
         audioModal.classList.add("hide");
         alert("✅ Đã cập nhật bài thuyết minh âm thanh thành công!");
     });
@@ -763,14 +838,22 @@ window.openAudioModal = function (id) {
 window.deletePoi = async function (id) {
     if (confirm("Bạn có chắc chắn muốn xóa điểm di tích này không?")) {
         try {
-            await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+            await fetch(`${API_BASE}/${encodeURIComponent(id)}`, { method: "DELETE" });
+            fetch(`${SPRING_API_BASE}/${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => {});
         } catch (e) {
             console.warn("Xóa qua API lỗi:", e);
         }
         poiList = poiList.filter(p => p.id !== id);
+        poiList.forEach((p, idx) => { p.code = `Q1-POI-000${idx + 1}`; });
         renderPoiTable();
         renderDashboardTopPois();
-        alert("✅ Đã xóa điểm tham quan!");
+        renderHeatmapMarkers();
+        updateStatCards();
+        renderAnalyticsData();
+        if (syncChannel) {
+            try { syncChannel.postMessage({ type: "POIS_UPDATED", timestamp: Date.now() }); } catch (e) {}
+        }
+        alert("✅ Đã xóa điểm tham quan khỏi hệ thống và bản đồ!");
     }
 };
 

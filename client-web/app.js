@@ -780,18 +780,28 @@ function findPoiMultilang(poi) {
 function getLocalizedPoi(poi, lang) {
   if (!poi) return poi;
   const l = lang || state.selectedLang || 'vi';
+  const customScript = poi.customScripts && poi.customScripts[l];
+  const customAudio = poi.customAudioUrls && poi.customAudioUrls[l];
   const multilang = findPoiMultilang(poi);
-  if (!multilang) return poi;
+  if (!multilang) {
+    return {
+      ...poi,
+      address: poi.address || 'Quận 1, TP. Hồ Chí Minh',
+      ttsScript: customScript || poi.ttsScript || ('Chào mừng bạn đến ' + poi.name + '.'),
+      audioUrl: customAudio || poi.audioUrl || null
+    };
+  }
 
   const locName = (multilang.name && multilang.name[l]) ? multilang.name[l] : poi.name;
   const locAddr = (multilang.address && multilang.address[l]) ? multilang.address[l] : (poi.address || poi.category || 'TP. Hồ Chí Minh');
-  const locScript = (multilang.script && multilang.script[l]) ? multilang.script[l] : (poi.ttsScript || locName);
+  const locScript = customScript || ((multilang.script && multilang.script[l]) ? multilang.script[l] : (poi.ttsScript || locName));
 
   return {
     ...poi,
     name: locName,
     address: locAddr,
-    ttsScript: locScript
+    ttsScript: locScript,
+    audioUrl: customAudio || poi.audioUrl || null
   };
 }
 
@@ -1259,37 +1269,65 @@ function renderPoiMarkers() {
 // 3. API INTEGRATION & DATA
 // ==========================================
 async function fetchPois() {
+  let loaded = null;
   try {
-    const url = `${CONFIG.API_GATEWAY_URL}/api/v1/pois?lat=${state.currentLat}&lng=${state.currentLng}&radius=3000&lang=${state.selectedLang}`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      // Deduplicate by name
-      const map = new Map();
-      data.forEach(p => {
-        if (!map.has(p.name)) {
-          // Merge with static address
-          const fallback = FALLBACK_POIS.find(f => f.name === p.name);
-          p.address = fallback ? fallback.address : 'Quận 1, TP. Hồ Chí Minh';
-          p.durationSec = p.durationSec || 135;
-          map.set(p.name, p);
-        }
-      });
-      state.pois = Array.from(map.values());
-    } else {
-      state.pois = FALLBACK_POIS;
+    const liveBase = window.location.protocol.startsWith('http') ? '' : 'http://127.0.0.1:3000';
+    const liveRes = await fetch(`${liveBase}/api/v1/pois?lang=${state.selectedLang}`, { headers: { 'Accept': 'application/json' } });
+    if (liveRes.ok) {
+      const liveData = await liveRes.json();
+      if (Array.isArray(liveData)) loaded = liveData;
     }
-  } catch (err) {
-    console.info('API Gateway offline. Using District 1 verified POIs:', err.message);
+  } catch (e) {}
+
+  if (!loaded) {
+    try {
+      const url = `${CONFIG.API_GATEWAY_URL}/api/v1/pois?lat=${state.currentLat}&lng=${state.currentLng}&radius=3000&lang=${state.selectedLang}`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const gwData = await res.json();
+        if (Array.isArray(gwData) && gwData.length > 0) loaded = gwData;
+      }
+    } catch (err) {
+      console.info('API Gateway offline. Using District 1 verified POIs:', err.message);
+    }
+  }
+
+  if (Array.isArray(loaded) && loaded.length > 0) {
+    const map = new Map();
+    loaded.filter(p => p.isActive !== false).forEach(p => {
+      const key = p.id || p.name;
+      if (!map.has(key)) {
+        const fallback = FALLBACK_POIS.find(f => f.name === p.name);
+        p.address = p.address || (fallback ? fallback.address : 'Quận 1, TP. Hồ Chí Minh');
+        p.durationSec = p.durationSec || (fallback ? fallback.durationSec : 135);
+        map.set(key, p);
+      }
+    });
+    state.pois = Array.from(map.values());
+  } else if (!Array.isArray(loaded)) {
     state.pois = FALLBACK_POIS;
+  } else {
+    state.pois = [];
   }
 
   renderPoiMarkers();
 
-  // Default active POI: Dinh Độc Lập
-  const defaultPoi = state.pois.find(p => p.name.includes('Dinh Độc Lập')) || state.pois[0];
-  selectPoi(defaultPoi, false);
+  // Giữ điểm POI đang chọn nếu vẫn còn trong danh sách, hoặc chọn Dinh Độc Lập mặc định
+  if (state.pois.length > 0) {
+    const currentStillExists = state.activePoi && state.pois.find(p => p.id === state.activePoi.id || p.name === state.activePoi.name);
+    if (currentStillExists) {
+      state.activePoi = currentStillExists;
+      const l = state.selectedLang || 'vi';
+      const locPoi = getLocalizedPoi(currentStillExists, l);
+      dom.poiName.innerText = locPoi.name;
+      if (dom.sheetPoiName) dom.sheetPoiName.innerText = locPoi.name;
+      dom.poiAddress.innerText = locPoi.address || 'Quận 1, TP. Hồ Chí Minh';
+      dom.poiScriptText.innerText = locPoi.ttsScript || locPoi.name;
+    } else {
+      const defaultPoi = state.pois.find(p => p.name.includes('Dinh Độc Lập')) || state.pois[0];
+      selectPoi(defaultPoi, false);
+    }
+  }
   checkGeofenceAndDistances();
 }
 
@@ -1566,8 +1604,27 @@ function sendRealtimeHeartbeat() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'DEVICE_ONLINE', deviceId: devId, deviceType: isMobile ? 'mobile' : 'web' })
-  }).catch(() => { });
+  })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (data && data.poisVersion) {
+        if (state.poisVersion && state.poisVersion !== data.poisVersion) {
+          fetchPois();
+        }
+        state.poisVersion = data.poisVersion;
+      }
+    })
+    .catch(() => { });
 }
+
+try {
+  const poiSyncChannel = new BroadcastChannel('poitour_sync_channel');
+  poiSyncChannel.onmessage = (ev) => {
+    if (ev.data && ev.data.type === 'POIS_UPDATED') {
+      fetchPois();
+    }
+  };
+} catch (e) {}
 
 function sendDeviceOffline() {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
