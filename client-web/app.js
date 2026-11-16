@@ -48,7 +48,7 @@ const UI_LOCALES = {
     tour3Title: 'Tuyến Công viên & Không gian Xanh',
     tour3Desc: 'Thư giãn qua mảng xanh Công viên Tao Đàn, Thảo Cầm Viên và Quảng trường đi bộ.',
     settingsTitle: 'Cài đặt hệ thống',
-    settingsSubtitle: 'Tùy biến ngôn ngữ, định vị và chế độ thử nghiệm',
+    settingsSubtitle: 'Tùy biến ngôn ngữ và âm thanh thuyết minh',
     groupAudio: 'ÂM THANH & THUYẾT MINH',
     langLabel: 'Ngôn ngữ thuyết minh',
     langSub: 'Chọn ngôn ngữ giao diện & giọng đọc kịch bản',
@@ -1930,6 +1930,6 @@ function switchTab(tabId, activeBtn) {
   } else if (tabId === 'tabTours') {
     dom.screenTitle.innerText = 'Lộ trình Tổng quan';
   } else if (tabId === 'tabSettings') {
-    dom.screenTitle.innerText = 'Cài đặt & Thử nghiệm';
+    dom.screenTitle.innerText = 'Cài đặt hệ thống';
   }
 }
