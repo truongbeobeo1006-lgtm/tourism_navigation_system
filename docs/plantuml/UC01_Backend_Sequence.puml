@@ -1,0 +1,64 @@
+@startuml UC01_Backend_Sequence
+!theme plain
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F0F9FF
+skinparam ParticipantBorderColor #0284C7
+
+title Lược đồ Tuần tự (Sequence Diagram) - UC01 (Backend): Kiến trúc 3 Lớp trong POI Service & API Gateway
+
+participant "Client Web App\n(client-web/app.js)" as Client
+participant "API Gateway\n(Spring Cloud :8080)" as Gateway
+participant "PoiController\n(Controller Layer :8082)" as Controller
+participant "PoiService\n(Service Layer)" as Service
+participant "PoiRepository\n(Repository Layer)" as Repo
+database "PostgreSQL 15\n(Bảng pois & poi_audio_contents)" as Postgres
+database "Redis 7 GEO\n(Key: pois_geo)" as Redis
+
+== Khởi động Dịch vụ: Đồng bộ Cache Không gian (@PostConstruct) ==
+activate Service
+Service -> Repo : 1. initRedisGeoCache() -> findByIsActiveTrue()
+activate Repo
+Repo -> Postgres : 2. SELECT * FROM pois WHERE is_active = true
+activate Postgres
+Postgres --> Repo : 3. Danh sách 6 di tích Quận 1
+deactivate Postgres
+Repo --> Service : 4. List<Poi>
+deactivate Repo
+Service -> Redis : 5. GEOADD pois_geo lng lat poiId
+activate Redis
+Redis --> Service : 6. Đã nạp vào RAM (< 20ms truy xuất)
+deactivate Redis
+deactivate Service
+
+== Truy vấn Danh sách Điểm Tham quan Lân cận (UC01) ==
+Client -> Gateway : 7. GET /api/v1/pois?lat=10.7769&lng=106.6953&radius=3000&lang=en
+activate Gateway
+Gateway -> Controller : 8. Chuyển tiếp route poi-service-route (:8082)
+activate Controller
+
+Controller -> Service : 9. findNearby(lat, lng, radius, lang)
+activate Service
+
+Service -> Repo : 10. findNearbyPois(lat, lng, radiusM)
+activate Repo
+Repo -> Postgres : 11. Thực thi SQL công thức cầu Haversine\n(WHERE is_active = true AND distance <= radiusM ORDER BY distance ASC)
+activate Postgres
+Postgres --> Repo : 12. Trả về các bản ghi Poi + audioContents
+deactivate Postgres
+Repo --> Service : 13. List<Poi>
+deactivate Repo
+
+loop Duyệt từng Poi trong danh sách
+    Service -> Service : 14. calculateDistance(lat, lng, poi.lat, poi.lng)\nmapToResponse(poi, lang, distance)\n(Tìm audio theo lang, nếu thiếu tự động Fallback về 'vi')
+end
+
+Service --> Controller : 15. List<PoiResponse>
+deactivate Service
+
+Controller --> Gateway : 16. ResponseEntity.ok(pois) (HTTP 200 OK)
+deactivate Controller
+Gateway --> Client : 17. Trả về mảng JSON các điểm di tích Quận 1
+deactivate Gateway
+@enduml

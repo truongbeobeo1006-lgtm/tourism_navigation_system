@@ -1,0 +1,35 @@
+@startuml UC03_Activity
+!theme plain
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #0284C7
+skinparam ActivityDiamondBackgroundColor #E0F2FE
+skinparam ActivityDiamondBorderColor #0369A1
+skinparam ArrowColor #0F172A
+
+title Lược đồ Hoạt động (Activity Diagram) - UC03: Tùy chọn ngôn ngữ hiển thị giao diện
+
+|Du khách (Tourist)|
+start
+:Mở tab "Cài đặt" (tabSettings)\ntrên ứng dụng Client Web;
+:Chọn ngôn ngữ mong muốn trong hộp chọn\n(#settingLang: vi, en, zh, ja, ko, fr, ru, de, es, th);
+
+|Hệ thống Client Web (client-web/app.js)|
+:Cập nhật biến trạng thái state.selectedLang;
+:Dừng phiên đọc thuyết minh hiện tại\n(stopPlayback());
+:Gọi hàm applyUiTranslations(selectedLang)\ntra cứu từ điển UI_LOCALES[lang];
+:Dịch toàn bộ tiêu đề, nhãn khoảng cách,\ntrạng thái vùng Geofence, nút bấm và thanh tab;
+
+if (Đang có điểm POI được chọn?) then (Có)
+  :Gọi getLocalizedPoi(activePoi, selectedLang)\ntra cứu POI_MULTILANG_SCRIPTS & customScripts;
+  :Cập nhật tên địa danh, địa chỉ và\nkịch bản thuyết minh theo ngôn ngữ mới;
+else (Không)
+endif
+
+:Gọi renderPoiMarkers() cập nhật nhãn tên\ncác địa danh trên bản đồ Google Maps;
+:Gọi checkGeofenceAndDistances() cập nhật\nthông báo khoảng cách theo ngôn ngữ mới;
+
+|Du khách (Tourist)|
+:Quan sát giao diện và bản đồ\nhiển thị bằng ngôn ngữ đã chọn;
+stop
+@enduml

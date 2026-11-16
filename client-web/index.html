@@ -181,8 +181,27 @@
             <h2>Tuyến tham quan gợi ý</h2>
             <p>Danh sách các vùng di tích tiêu biểu tại TP. Hồ Chí Minh</p>
           </div>
+          <div class="create-route-actions" style="margin-bottom: 12px;">
+            <button type="button" id="btnCreateRoute" class="primary-cta-btn" style="margin-top: 0;">+ Tạo tuyến đường</button>
+          </div>
 
-          <div class="tours-list">
+          <div id="createRouteForm" class="create-route-form" style="display: none; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; margin-bottom: 14px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 15px;">Tạo tuyến đường mới</h3>
+            <label for="routeName" style="display:block; font-size:12px; font-weight:700; margin-bottom:4px;">Tên tuyến đường</label>
+            <input type="text" id="routeName" placeholder="Nhập tên tuyến đường" style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px; box-sizing:border-box;">
+            <label style="display:block; font-size:12px; font-weight:700; margin-bottom:6px;">Chọn địa điểm muốn ghé thăm</label>
+            <div id="routePoiList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;"></div>
+            <div id="routeInfo" class="route-info" style="background:#f8fafc; padding:8px 10px; border-radius:8px; font-size:12.5px; margin-bottom:10px;">
+              <p style="margin:2px 0;">Khoảng cách: <strong id="routeDistanceDisplay">Chưa có</strong></p>
+              <p style="margin:2px 0;">Thời gian dự kiến: <strong id="routeDurationDisplay">Chưa có</strong></p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" id="btnSaveRoute" class="primary-cta-btn" style="flex:1; margin-top:0;">Lưu tuyến đường</button>
+              <button type="button" id="btnCancelRoute" style="padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-weight:600;">Hủy</button>
+            </div>
+          </div>
+
+          <div class="tours-list" id="toursList">
             
             <!-- Card 1 (Active Tour) -->
             <div class="tour-card active" data-tour="1">
@@ -266,7 +285,7 @@
         <section id="tabSettings" class="tab-page">
           <div class="settings-header">
             <h2>Cài đặt hệ thống</h2>
-            <p>Tùy biến ngôn ngữ, định vị và chế độ thử nghiệm</p>
+            <p>Tùy biến ngôn ngữ và âm thanh thuyết minh</p>
           </div>
 
           <div class="settings-content">
@@ -313,7 +332,7 @@
             </div>
 
             <!-- Section 2: CÔNG CỤ KIỂM THỬ & GIẢ LẬP GPS -->
-            <div class="settings-group">
+            <div class="settings-group" style="display: none;">
               <h3 class="group-title">CÔNG CỤ KIỂM THỬ & GIẢ LẬP GPS</h3>
               <p class="tool-desc">
                 <span class="flask-icon">🧪</span> Dùng để test tính năng thuyết minh trực tiếp trên máy tính mà không cần ra hiện trường:

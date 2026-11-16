@@ -1,0 +1,79 @@
+// DFD Level 0 (Context) - Hệ thống Dẫn đường & Thuyết minh Du lịch Tự động Quận 1
+// Render: dot -Tpng -Gdpi=180 DFD_Level_0.dot -o DFD_Level_0.png
+// 20 luồng dữ liệu F01 - F20 chuẩn xác cho đồ án
+digraph DFD0 {
+    graph [
+        charset="UTF-8",
+        label="DFD MỨC 0 – SƠ ĐỒ NGỮ CẢNH\nHỆ THỐNG DẪN ĐƯỜNG & THUYẾT MINH DU LỊCH TỰ ĐỘNG (QUẬN 1)",
+        labelloc=t,
+        labeljust=c,
+        fontname="Arial",
+        fontsize=20,
+        fontcolor="#203044",
+        rankdir=LR,
+        splines=polyline,
+        nodesep=1.2,
+        ranksep=3.4,
+        bgcolor="white",
+        pad=0.5,
+        outputorder=edgesfirst
+    ];
+    node [fontname="Arial", fontsize=15];
+    edge [fontname="Arial", fontsize=10, color="#425466", arrowsize=0.7];
+
+    // [E1: KHÁCH DU LỊCH]
+    Tourist [
+        label="E1 · KHÁCH DU LỊCH",
+        shape=box,
+        style=filled,
+        fillcolor="#1687C1",
+        fontcolor=white,
+        margin="0.3,0.3"
+    ];
+
+    // [TIẾN TRÌNH TRUNG TÂM 0]
+    P0 [
+        label="0\n\nHỆ THỐNG DẪN ĐƯỜNG\n& THUYẾT MINH DU LỊCH\nTỰ ĐỘNG (QUẬN 1)",
+        shape=circle,
+        style=filled,
+        fillcolor="#F5A623",
+        fontcolor=white,
+        width=3.4,
+        height=3.4,
+        fixedsize=true
+    ];
+
+    // [E2: QUẢN TRỊ VIÊN]
+    Admin [
+        label="E2 · QUẢN TRỊ VIÊN",
+        shape=box,
+        style=filled,
+        fillcolor="#1687C1",
+        fontcolor=white,
+        margin="0.3,0.3"
+    ];
+
+    // --- CÁC LUỒNG DỮ LIỆU VỚI E1 (KHÁCH DU LỊCH) ---
+    Tourist -> P0 [label="F01 · Mã QR vé tham quan (Tour Pass)"];
+    P0 -> Tourist [label="F02 · Trạng thái kích hoạt vé 24h"];
+    Tourist -> P0 [label="F03 · Tọa độ GPS thời gian thực"];
+    P0 -> Tourist [label="F04 · Bản đồ số 6 di tích Quận 1"];
+    P0 -> Tourist [label="F05 · Cảnh báo vào vùng Geofence (30m)"];
+    P0 -> Tourist [label="F06 · Bài thuyết minh âm thanh / giọng đọc TTS"];
+    Tourist -> P0 [label="F07 · Tùy chọn ngôn ngữ (vi, en,...) & giọng đọc"];
+    Tourist -> P0 [label="F08 · Lệnh điều khiển audio (phát/dừng/tua/tốc độ)"];
+    Tourist -> P0 [label="F09 · Yêu cầu thông tin di tích & lộ trình tour"];
+    P0 -> Tourist [label="F10 · Chi tiết di tích, tuyến tham quan gợi ý"];
+    Tourist -> P0 [label="F11 · Nhịp tim thiết bị (heartbeat), phiên online"];
+
+    // --- CÁC LUỒNG DỮ LIỆU VỚI E2 (QUẢN TRỊ VIÊN) ---
+    Admin -> P0 [label="F12 · Thông tin đăng nhập quản trị"];
+    P0 -> Admin [label="F13 · Token / trạng thái xác thực Admin"];
+    Admin -> P0 [label="F14 · Dữ liệu di tích POI (tọa độ, bán kính 30m, ảnh)"];
+    P0 -> Admin [label="F15 · Kết quả cập nhật di tích POI"];
+    Admin -> P0 [label="F16 · Kịch bản thuyết minh đa ngữ & file âm thanh"];
+    P0 -> Admin [label="F17 · Kết quả cập nhật kịch bản âm thanh"];
+    Admin -> P0 [label="F18 · Dữ liệu tuyến tour & thứ tự trạm dừng"];
+    Admin -> P0 [label="F19 · Yêu cầu thống kê lượt nghe & thiết bị"];
+    P0 -> Admin [label="F20 · Báo cáo Dashboard, số thiết bị online, tổng lượt nghe"];
+}

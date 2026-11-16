@@ -2,6 +2,139 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+let pgPool = null;
+let pgGuestUserId = null;
+try {
+  const { Pool } = require('pg');
+  pgPool = new Pool({
+    host: process.env.PGHOST || '127.0.0.1',
+    port: Number(process.env.PGPORT || 5433),
+    database: process.env.PGDATABASE || 'poitour',
+    user: process.env.PGUSER || 'poitour',
+    password: process.env.PGPASSWORD || 'poitour123',
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000
+  });
+  pgPool.on('error', (err) => {
+    console.warn('[POSTGRES] Pool warning:', err.message);
+  });
+} catch (e) {
+  console.warn('[POSTGRES] Chưa cài pg, dùng JSON fallback:', e.message);
+}
+
+async function getPgGuestUserId() {
+  if (!pgPool) return null;
+  if (pgGuestUserId) return pgGuestUserId;
+  const r = await pgPool.query("SELECT id FROM users WHERE email = 'guest@poitour.com' LIMIT 1");
+  if (r.rows.length > 0) {
+    pgGuestUserId = r.rows[0].id;
+    return pgGuestUserId;
+  }
+  const ins = await pgPool.query(
+    "INSERT INTO users (email, password_hash, role, lang_preference) VALUES ('guest@poitour.com', 'guest-qr-session', 'TOURIST', 'vi') RETURNING id"
+  );
+  pgGuestUserId = ins.rows[0].id;
+  return pgGuestUserId;
+}
+
+async function recordListenToPostgres(poiName, langCode, isAuto, timestampMs) {
+  if (!pgPool) return;
+  try {
+    const userId = await getPgGuestUserId();
+    if (!userId) return;
+    let poiRes = await pgPool.query('SELECT id FROM pois WHERE name = $1 LIMIT 1', [poiName]);
+    if (poiRes.rows.length === 0) {
+      const m = managedPois.find(x => x.name === poiName);
+      poiRes = await pgPool.query(
+        'INSERT INTO pois (name, lat, lng, radius_m, is_active) VALUES ($1, $2, $3, $4, TRUE) RETURNING id',
+        [poiName, m ? m.lat : 10.77692, m ? m.lng : 106.69531, m ? (m.radiusM || 30) : 30]
+      );
+    }
+    const poiId = poiRes.rows[0].id;
+    const triggerType = isAuto ? 'GPS_GEOFENCE' : 'MANUAL';
+    await pgPool.query(
+      'INSERT INTO usage_history (user_id, poi_id, lang_code, trigger_type, listened_at) VALUES ($1, $2, $3, $4, $5)',
+      [userId, poiId, (langCode || 'vi').slice(0, 10), triggerType, new Date(timestampMs || Date.now())]
+    );
+  } catch (err) {
+    console.warn('[POSTGRES] Lỗi ghi usage_history:', err.message);
+  }
+}
+
+async function queryRealtimeStatsFromPostgres() {
+  if (!pgPool) return null;
+  try {
+    const countsRes = await pgPool.query(`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE trigger_type = 'GPS_GEOFENCE')::int AS auto_cnt,
+        COUNT(*) FILTER (WHERE trigger_type <> 'GPS_GEOFENCE')::int AS manual_cnt
+      FROM usage_history
+    `);
+    const row = countsRes.rows[0] || { total: 0, auto_cnt: 0, manual_cnt: 0 };
+
+    const byPoiRes = await pgPool.query(`
+      SELECT p.name, COUNT(h.id)::int AS cnt
+      FROM usage_history h
+      JOIN pois p ON p.id = h.poi_id
+      GROUP BY p.name
+    `);
+    const listensObj = {};
+    byPoiRes.rows.forEach(r => { listensObj[r.name] = r.cnt; });
+
+    const hourlyRes = await pgPool.query(`
+      SELECT
+        TO_CHAR(listened_at, 'YYYY-MM-DD') AS dkey,
+        EXTRACT(HOUR FROM listened_at)::int AS hr,
+        COUNT(*)::int AS cnt
+      FROM usage_history
+      GROUP BY dkey, hr
+      ORDER BY dkey ASC
+    `);
+    const pgHourly = {};
+    hourlyRes.rows.forEach(r => {
+      if (!pgHourly[r.dkey]) pgHourly[r.dkey] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      pgHourly[r.dkey][trendSlotIndex(r.hr)] += r.cnt;
+    });
+
+    const recentRes = await pgPool.query(`
+      SELECT
+        p.name AS poi_name,
+        h.lang_code,
+        h.trigger_type,
+        EXTRACT(EPOCH FROM h.listened_at) * 1000 AS ts_ms
+      FROM usage_history h
+      JOIN pois p ON p.id = h.poi_id
+      ORDER BY h.listened_at DESC
+      LIMIT 20
+    `);
+    const pgRecent = recentRes.rows.map(r => {
+      const isAuto = r.trigger_type === 'GPS_GEOFENCE';
+      return {
+        poiName: r.poi_name,
+        poiCode: isAuto ? 'GPS-AUTO' : 'MAP-MANUAL',
+        deviceInfo: isAuto ? 'Thiết bị du khách • Tự động Geofence' : 'Thiết bị du khách • Chọn trên bản đồ',
+        language: r.lang_code === 'en' ? 'English' : 'Tiếng Việt',
+        triggerType: isAuto ? 'auto' : 'manual',
+        timestamp: Math.round(Number(r.ts_ms))
+      };
+    });
+
+    return {
+      totalAudience: row.total,
+      autoListens: row.auto_cnt,
+      manualListens: row.manual_cnt,
+      poiListens: listensObj,
+      hourlyByDay: pgHourly,
+      recentEvents: pgRecent
+    };
+  } catch (err) {
+    console.warn('[POSTGRES] Lỗi đọc usage_history:', err.message);
+    return null;
+  }
+}
+
 const CLIENT_DIR = path.join(__dirname); // C:\...\client-web
 const ROOT_DIR = path.dirname(__dirname); // C:\...\tourism_navigation_system
 const ADMIN_DIR = path.join(ROOT_DIR, 'admin-web');
@@ -292,6 +425,64 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ================= 0A. TRANG HIỂN THỊ MÃ QR TRỰC TIẾP (/qr) =================
+  if (rawUrl === '/qr' && req.method === 'GET') {
+    let tunnelUrl = '';
+    const tunnelFile = path.join(ROOT_DIR, 'tunnel-url.txt');
+    try {
+      if (fs.existsSync(tunnelFile)) {
+        const content = fs.readFileSync(tunnelFile, 'utf8').trim();
+        if (content.startsWith('http')) tunnelUrl = content;
+      }
+    } catch (e) {}
+
+    if (!tunnelUrl) {
+      try {
+        const logFile = path.join(ROOT_DIR, 'tunnel.log');
+        if (fs.existsSync(logFile)) {
+          const logText = fs.readFileSync(logFile, 'utf8');
+          const matches = logText.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/g);
+          if (matches && matches.length > 0) tunnelUrl = matches[matches.length - 1];
+        }
+      } catch (e) {}
+    }
+
+    const targetUrl = (tunnelUrl || `http://localhost:${PORT}`) + '/?ticket=TOUR-PASS-DEMO-24H';
+    const qrImgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=420x420&margin=15&data=' + encodeURIComponent(targetUrl);
+
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(`<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mã QR Vé Tham Quan Quận 1</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f172a; font-family: system-ui, -apple-system, sans-serif; color: #0f172a; }
+    .card { background: #ffffff; border-radius: 24px; padding: 32px; text-align: center; max-width: 440px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
+    h1 { font-size: 20px; margin: 0 0 8px; color: #093359; }
+    p { font-size: 13.5px; color: #475569; margin: 0 0 20px; }
+    .qr-box { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 16px; display: inline-block; }
+    img { display: block; width: 280px; height: 280px; }
+    .url { margin-top: 16px; font-size: 12px; word-break: break-all; background: #f1f5f9; padding: 10px 12px; border-radius: 10px; color: #0369a1; font-family: monospace; }
+    .btn { margin-top: 14px; display: inline-block; padding: 10px 18px; background: #0284c7; color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Quét Mã QR Để Mở App Du Lịch</h1>
+    <p>Mở Camera hoặc Zalo trên điện thoại để quét mã bên dưới (hỗ trợ 4G)</p>
+    <div class="qr-box">
+      <img src="${qrImgUrl}" alt="QR Code Tour Pass 24H">
+    </div>
+    <div class="url">${targetUrl}</div>
+    <a class="btn" href="${targetUrl}" target="_blank">Mở thử trên trình duyệt</a>
+  </div>
+</body>
+</html>`);
+    return;
+  }
+
 
   // ================= 0B. API QUẢN LÝ & ĐỒNG BỘ POI (ADMIN <-> CLIENT) =================
   if (rawUrl === '/api/v1/pois/all' && req.method === 'GET') {
@@ -493,6 +684,7 @@ const server = http.createServer((req, res) => {
           });
           if (recentEvents.length > 20) recentEvents.pop();
           savePersistentStats();
+          recordListenToPostgres(pName, event.language || 'vi', isAuto, now);
           console.log(`[REALTIME] POI Play: ${pName} - Total Audience: ${totalAudience} - Active Devices: ${activeDevices.size}`);
         } else {
           console.log(`[REALTIME] Heartbeat from ${devId} (${devType}) - Active Devices: ${activeDevices.size}`);
@@ -510,7 +702,6 @@ const server = http.createServer((req, res) => {
 
   if (rawUrl === '/api/realtime-stats' && req.method === 'GET') {
     const now = Date.now();
-    // Giữ thiết bị online trong 10 giây nếu không có nhịp tim
     for (const [id, dev] of activeDevices.entries()) {
       if (now - dev.lastSeen > 10000) {
         activeDevices.delete(id);
@@ -524,30 +715,54 @@ const server = http.createServer((req, res) => {
       else webCount++;
     }
 
-    const listensObj = {};
-    for (const [k, v] of poiListens.entries()) {
-      listensObj[k] = v;
-    }
+    queryRealtimeStatsFromPostgres().then((pgStats) => {
+      const listensObj = {};
+      for (const [k, v] of poiListens.entries()) {
+        listensObj[k] = v;
+      }
 
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({
-      activeDevicesCount: activeDevices.size,
-      mobileCount,
-      webCount,
-      totalAudience,
-      autoListens,
-      manualListens,
-      poiListens: listensObj,
-      recentEvents,
-      hourlyByDay,
-      todayKey: dayKey(),
-      poisVersion
-    }));
+      const payload = pgStats ? {
+        activeDevicesCount: activeDevices.size,
+        mobileCount,
+        webCount,
+        totalAudience: pgStats.totalAudience,
+        autoListens: pgStats.autoListens,
+        manualListens: pgStats.manualListens,
+        poiListens: pgStats.poiListens,
+        recentEvents: pgStats.recentEvents,
+        hourlyByDay: pgStats.hourlyByDay,
+        todayKey: dayKey(),
+        poisVersion,
+        storageSource: 'postgresql'
+      } : {
+        activeDevicesCount: activeDevices.size,
+        mobileCount,
+        webCount,
+        totalAudience,
+        autoListens,
+        manualListens,
+        poiListens: listensObj,
+        recentEvents,
+        hourlyByDay,
+        todayKey: dayKey(),
+        poisVersion,
+        storageSource: 'json'
+      };
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(payload));
+    });
     return;
   }
 
   // ================= 2. PHỤC VỤ FILE TĨNH =================
   let filePath = '';
+
+  if (rawUrl === '/admin') {
+    res.writeHead(302, { 'Location': '/admin/' });
+    res.end();
+    return;
+  }
 
   if (rawUrl.startsWith('/admin')) {
     let sub = rawUrl.substring(6);

@@ -1,0 +1,52 @@
+@startuml UC07_Sequence
+!theme plain
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F0F9FF
+skinparam ParticipantBorderColor #0284C7
+skinparam ActorBorderColor #0284C7
+
+title Lược đồ Tuần tự (Sequence Diagram) - UC07: Phát Thuyết minh TTS, Điều chỉnh Tốc độ & Cập nhật Biểu đồ
+
+actor "Du khách\n(Tourist)" as Tourist
+participant "Trình điều khiển Audio\n(client-web/app.js)" as ClientJS
+participant "Web Speech API\n(window.speechSynthesis)" as SpeechAPI
+participant "Live Backend Server\n(client-web/server.js :3000)" as Server
+database "File Thống kê\n(stats-data.json)" as StatsFile
+
+Tourist -> ClientJS : 1. Bấm nút Nghe thuyết minh ("manual")\nhoặc bước vào vùng 30m ("auto")
+activate ClientJS
+
+ClientJS -> ClientJS : 2. startPlayback(triggerType)\nplayNotificationChime()
+
+ClientJS -> Server : 3. notifyPoiPlay() -> POST /api/event\n{ type: "POI_PLAY", poiName, language, triggerType }
+activate Server
+Server -> Server : 4. totalAudience += 1\nNếu triggerType == "auto" -> autoListens += 1\nNgược lại -> manualListens += 1\npoiListens[poiName] += 1\nrecordHourlyListen() (Cộng +1 vào khung giờ biểu đồ)
+Server -> StatsFile : 5. savePersistentStats() (Ghi xuống ổ cứng)
+activate StatsFile
+StatsFile --> Server : 6. Đã lưu bền vững
+deactivate StatsFile
+Server --> ClientJS : 7. 200 OK { totalAudience, activeCount }
+deactivate Server
+
+ClientJS -> ClientJS : 8. playViaTTS()\nLấy kịch bản theo ngôn ngữ getLocalizedPoi(activePoi, selectedLang)
+ClientJS -> SpeechAPI : 9. Tạo SpeechSynthesisUtterance(textToSpeak)\nGán lang = LANG_MAP[selectedLang].tag & rate = playbackSpeed\nspeechSynthesis.speak(utterance)
+activate SpeechAPI
+SpeechAPI --> Tourist : 10. Phát giọng đọc thuyết minh tự nhiên
+
+alt Du khách bấm nút Đổi tốc độ (#speedBtn)
+    Tourist -> ClientJS : 11. Bấm nút Tốc độ (cycleSpeed)
+    ClientJS -> ClientJS : 12. Đổi playbackSpeed (1.0x -> 1.25x -> 1.5x -> 0.75x)
+    ClientJS -> SpeechAPI : 13. cancel() & speak(utterance) với rate mới
+    SpeechAPI --> Tourist : 14. Đọc tiếp ở tốc độ mới
+else Du khách bấm nút Lùi 10 giây (#rewindBtn)
+    Tourist -> ClientJS : 15. Bấm nút Lùi 10s (rewind10s)
+    ClientJS -> ClientJS : 16. audioCurrentTime = Math.max(0, audioCurrentTime - 10)\nupdateProgressUI()
+end
+
+SpeechAPI --> ClientJS : 17. Sự kiện utterance.onend (Hoàn tất bài đọc)
+deactivate SpeechAPI
+ClientJS -> ClientJS : 18. stopPlayback() (Đặt lại nút Play & thanh tiến trình)
+deactivate ClientJS
+@enduml

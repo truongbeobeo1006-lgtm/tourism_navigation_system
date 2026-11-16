@@ -1,0 +1,41 @@
+@startuml UC01_Backend_Activity
+!theme plain
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #0284C7
+skinparam ActivityDiamondBackgroundColor #E0F2FE
+skinparam ActivityDiamondBorderColor #0369A1
+
+title Lược đồ Hoạt động (Activity Diagram) - UC01 (Backend): Truy vấn POI Lân cận & Đa ngôn ngữ Fallback
+
+|Client Web / Mobile App|
+start
+:Gửi yêu cầu lấy danh sách điểm tham quan lân cận\nGET /api/v1/pois?lat=10.7769&lng=106.6953&radius=500&lang=vi;
+
+|API Gateway (Cổng 8080)|
+:Kiểm tra cấu hình Global CORS và khớp định tuyến\nPath=/api/v1/pois/** -> Chuyển tiếp sang poi-service (cổng 8082);
+
+|POI Service - Controller (PoiController.java)|
+:Hàm getNearbyPois(lat, lng, radius, lang)\ntiếp nhận tham số và gán mặc định nếu thiếu;
+
+|POI Service - Service (PoiService.java)|
+:Gọi hàm findNearby(lat, lng, radiusM, lang);
+
+|POI Service - Repository (PoiRepository.java)|
+:Thực thi câu truy vấn SQL Haversine trên bảng pois\n(Lọc is_active = true và khoảng cách cầu <= radiusM,\nsắp xếp tăng dần theo khoảng cách);
+
+|POI Service - Service (PoiService.java)|
+:Duyệt qua từng điểm POI trả về:\n- Tính khoảng cách chính xác (calculateDistance)\n- Gọi mapToResponse(poi, lang, distance);
+
+if (Có bản thuyết minh trùng mã ngôn ngữ lang?) then (Có)
+  :Lấy bản ghi PoiAudioContent đúng ngôn ngữ khách chọn;
+else (Không có - Fallback)
+  :Tự động lùi về lấy bản Tiếng Việt (lang_code = "vi")\nđể đảm bảo du khách luôn có nội dung nghe;
+endif
+
+:Đóng gói đối tượng DTO PoiResponse\n(id, name, lat, lng, radiusM, distanceMeters, ttsScript, audioUrl...);
+
+|Client Web / Mobile App|
+:Nhận danh sách JSON (HTTP 200 OK)\nvà vẽ Marker đỏ + vòng tròn 30m lên bản đồ;
+stop
+@enduml

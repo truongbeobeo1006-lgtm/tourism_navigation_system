@@ -1,0 +1,51 @@
+@startuml UC04_Activity
+!theme plain
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #0284C7
+skinparam ActivityDiamondBackgroundColor #E0F2FE
+skinparam ActivityDiamondBorderColor #0369A1
+
+title Lược đồ Hoạt động (Activity Diagram) - UC04: Quét mã QR Vé truy cập & Đồng bộ Thiết bị
+
+|Du khách (Tourist)|
+start
+:Dùng camera điện thoại quét mã QR\n(URL Cloudflare: /?ticket=TOUR-PASS-DEMO-24H);
+
+|Live Backend Server (client-web/server.js)|
+:Tiếp nhận request qua Cloudflare Tunnel (cổng 3000)\nvà trả về giao diện ứng dụng (client-web/index.html);
+
+|Hệ thống Client Web (client-web/app.js)|
+:Gọi getOrCreateDeviceId() kiểm tra localStorage;
+if (Đã có mã định danh devId?) then (Có)
+  :Giữ nguyên mã devId của thiết bị;
+else (Chưa có)
+  :Sinh mã devId mới theo kích thước màn hình\nvà lưu vào localStorage / sessionStorage;
+endif
+
+:Gọi sendRealtimeHeartbeat() gửi POST /api/event\n({ type: "DEVICE_ONLINE", deviceId, deviceType }) định kỳ mỗi 3 giây;
+:Gọi GET /api/v1/pois tải danh sách điểm tham quan Quận 1;
+
+|Live Backend Server (client-web/server.js)|
+:Lưu thiết bị vào bộ nhớ activeDevices Map\nkèm mốc thời gian lastSeen = Date.now();
+:Tự động lọc bỏ các thiết bị quá 10 giây không gửi tín hiệu;
+:Phản hồi { status: "ok", activeCount, totalAudience, poisVersion };
+
+|Trang Quản trị (admin-web/app.js)|
+:Hàm pollRealtimeStats() (mỗi 2 giây) nhận số liệu mới\nvà tăng thẻ "Thiết Bị Đang Truy Cập Hiện Tại" (+1);
+
+|Du khách (Tourist)|
+:Sử dụng bản đồ và nghe thuyết minh;
+if (Đóng trình duyệt hoặc ẩn ứng dụng?) then (Có)
+  |Hệ thống Client Web (client-web/app.js)|
+  :Sự kiện pagehide / visibilitychange kích hoạt sendDeviceOffline()\ngửi gói tin navigator.sendBeacon (type: "DEVICE_OFFLINE");
+  |Live Backend Server (client-web/server.js)|
+  :Xóa ngay devId khỏi activeDevices Map;
+  |Trang Quản trị (admin-web/app.js)|
+  :Cập nhật giảm số lượng thiết bị đang truy cập (-1);
+  stop
+else (Không)
+  :Tiếp tục duy trì nhịp tim Heartbeat mỗi 3 giây;
+  stop
+endif
+@enduml

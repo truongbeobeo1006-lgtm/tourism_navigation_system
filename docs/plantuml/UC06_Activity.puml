@@ -1,0 +1,58 @@
+@startuml UC06_Activity
+!theme plain
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #0284C7
+skinparam ActivityDiamondBackgroundColor #E0F2FE
+skinparam ActivityDiamondBorderColor #0369A1
+
+title Lược đồ Hoạt động (Activity Diagram) - UC06: Quản lý Điểm tham quan (POI CMS) & Đồng bộ Bản đồ
+
+|Quản trị viên (Admin)|
+start
+:Mở màn hình "Quản Lý Điểm Đến (POI)" (#sectionPois);
+
+|Trang Quản trị (admin-web/app.js)|
+:Hiển thị bảng danh sách POI (renderPoiTable())\ngồm: Mã POI, Tên, Tọa độ GPS, Bán kính Geofence, Trạng thái, Thao tác;
+
+|Quản trị viên (Admin)|
+switch (Chọn thao tác quản trị?)
+case (Thêm POI mới)
+  :Bấm nút "+ Thêm Điểm Đến Mới" (#btnOpenAddModal)\nvà nhập Tên, Vĩ độ, Kinh độ, Bán kính, Trạng thái, Ảnh;
+  |Trang Quản trị (admin-web/app.js)|
+  :Gửi POST /api/v1/pois;
+  |Backend (server.js & poi-service)|
+  :Tạo POI mới, lưu vào stats-data.json\n(và bảng pois PostgreSQL + Redis GEO pois_geo);
+case (Sửa thông tin POI)
+  |Quản trị viên (Admin)|
+  :Bấm nút "Sửa" (openEditModal) và chỉnh sửa thông tin;
+  |Trang Quản trị (admin-web/app.js)|
+  :Gửi PUT /api/v1/pois/{id};
+  |Backend (server.js & poi-service)|
+  :Cập nhật thông tin POI trong stats-data.json,\nPostgreSQL và cập nhật tọa độ trong Redis GEO;
+case (Cập nhật Kịch bản Audio)
+  |Quản trị viên (Admin)|
+  :Bấm nút "Quản lý âm thanh" (openAudioModal),\nchọn ngôn ngữ (10 thứ tiếng) và nhập kịch bản TTS / URL MP3;
+  |Trang Quản trị (admin-web/app.js)|
+  :Gửi POST /api/v1/pois/{id}/audio;
+  |Backend (server.js & poi-service)|
+  :Lưu kịch bản theo mã ngôn ngữ (Upsert poi_audio_contents\n& customScripts trong stats-data.json);
+case (Xóa điểm POI)
+  |Quản trị viên (Admin)|
+  :Bấm nút "Xóa" (deletePoi) và xác nhận hộp thoại confirm;
+  |Trang Quản trị (admin-web/app.js)|
+  :Gửi DELETE /api/v1/pois/{id};
+  |Backend (server.js & poi-service)|
+  :Xóa POI khỏi stats-data.json, xóa khỏi PostgreSQL\n(ON DELETE CASCADE) và xóa khỏi Redis GEO;
+endswitch
+
+|Backend (server.js & poi-service)|
+:Cập nhật mốc phiên bản mới poisVersion = Date.now();
+
+|Trang Quản trị (admin-web/app.js)|
+:Vẽ lại bảng POI (renderPoiTable()),\nvẽ lại Marker trên Bản đồ Admin (renderHeatmapMarkers())\nvà phát tín hiệu POIS_UPDATED qua BroadcastChannel;
+
+|Hệ thống Client Web (client-web/app.js)|
+:Nhận tín hiệu POIS_UPDATED hoặc phát hiện poisVersion mới\nqua Heartbeat -> Tự động gọi fetchPois() và renderPoiMarkers()\ncập nhật ngay Marker đỏ & vòng 30m trên Bản đồ Du khách;
+stop
+@enduml

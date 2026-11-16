@@ -1,0 +1,86 @@
+@startuml UC06_Sequence
+!theme plain
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F0F9FF
+skinparam ParticipantBorderColor #0284C7
+skinparam ActorBorderColor #0284C7
+
+title Lược đồ Tuần tự (Sequence Diagram) - UC06: Quản lý Điểm tham quan (CRUD POI & Audio)
+
+actor "Quản trị viên\n(Admin)" as Admin
+participant "Admin Web CMS\n(admin-web/app.js)" as AdminJS
+participant "Live Server / Gateway\n(server.js :3000 & :8080)" as Backend
+database "PostgreSQL & JSON\n(pois / stats-data.json)" as DB
+database "Redis GEO Cache\n(key: pois_geo)" as Redis
+participant "Client Web Map\n(client-web/app.js)" as ClientJS
+
+== 1. Thêm mới hoặc Cập nhật Điểm tham quan (Create / Update POI) ==
+Admin -> AdminJS : Nhập thông tin trên #poiModal và bấm "Lưu Thông Tin"
+activate AdminJS
+AdminJS -> Backend : POST /api/v1/pois (hoặc PUT /api/v1/pois/{id})\n{ name, lat, lng, radiusM, isActive, imageUrl }
+activate Backend
+
+Backend -> DB : Lưu bản ghi POI mới / cập nhật\n(savePersistentStats & poiRepository.save)
+activate DB
+DB --> Backend : Trả về đối tượng POI đã lưu
+deactivate DB
+
+Backend -> Redis : GEOADD pois_geo lng lat poiId\n(Hoặc ZREM nếu isActive = false)
+activate Redis
+Redis --> Backend : OK
+deactivate Redis
+
+Backend -> Backend : Cập nhật poisVersion = Date.now()
+Backend --> AdminJS : 201 Created / 200 OK (POI JSON)
+deactivate Backend
+
+AdminJS -> AdminJS : renderPoiTable()\nrenderHeatmapMarkers() (Cập nhật bản đồ Admin)
+AdminJS -> ClientJS : BroadcastChannel("poitour_sync_channel")\n{ type: "POIS_UPDATED" }
+deactivate AdminJS
+
+== 2. Cập nhật Kịch bản Thuyết minh Đa ngôn ngữ (Save Audio / TTS Script) ==
+Admin -> AdminJS : Mở #audioModal, chọn ngôn ngữ & lưu kịch bản
+activate AdminJS
+AdminJS -> Backend : POST /api/v1/pois/{id}/audio\n{ langCode, audioUrl, ttsScript, durationSec }
+activate Backend
+Backend -> DB : Kiểm tra UNIQUE(poi_id, lang_code)\nUpsert vào poi_audio_contents & customScripts
+activate DB
+DB --> Backend : OK
+deactivate DB
+Backend -> Backend : Cập nhật poisVersion = Date.now()
+Backend --> AdminJS : 200 OK
+deactivate Backend
+AdminJS -> ClientJS : BroadcastChannel { type: "POIS_UPDATED" }
+deactivate AdminJS
+
+== 3. Xóa Điểm tham quan (Delete POI) ==
+Admin -> AdminJS : Bấm nút Xóa (deletePoi) & xác nhận
+activate AdminJS
+AdminJS -> Backend : DELETE /api/v1/pois/{id}
+activate Backend
+Backend -> DB : DELETE FROM pois WHERE id = ...\n(ON DELETE CASCADE tự xóa audio & lịch sử liên quan)
+activate DB
+DB --> Backend : OK
+deactivate DB
+Backend -> Redis : ZREM pois_geo poiId
+activate Redis
+Redis --> Backend : OK
+deactivate Redis
+Backend -> Backend : Cập nhật poisVersion = Date.now()
+Backend --> AdminJS : 204 No Content
+deactivate Backend
+AdminJS -> AdminJS : Xóa khỏi bảng & xóa Marker trên bản đồ Admin\n(renderPoiTable & renderHeatmapMarkers)
+AdminJS -> ClientJS : BroadcastChannel { type: "POIS_UPDATED" }
+deactivate AdminJS
+
+== 4. Bản đồ Du khách Tự động Đồng bộ Thời gian thực ==
+activate ClientJS
+ClientJS -> Backend : GET /api/v1/pois?lang=vi (Khi nhận Broadcast hoặc Heartbeat có poisVersion mới)
+activate Backend
+Backend --> ClientJS : Danh sách POI đang hoạt động mới nhất
+deactivate Backend
+ClientJS -> ClientJS : renderPoiMarkers()\nCập nhật ngay Marker đỏ & vòng Geofence 30m trên bản đồ
+deactivate ClientJS
+@enduml

@@ -208,25 +208,15 @@ function initChart() {
             labels: ["06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"],
             datasets: [
                 {
-                    label: "Hôm nay",
+                    label: "Tổng lượt nghe theo khung giờ",
                     data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
                     borderColor: "#093359",
                     backgroundColor: gradientToday,
                     borderWidth: 3,
                     fill: true,
                     tension: 0.45,
-                    pointRadius: 3,
+                    pointRadius: 4,
                     pointBackgroundColor: "#093359"
-                },
-                {
-                    label: "Trung bình tuần",
-                    data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-                    borderColor: "#94a3b8",
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    fill: false,
-                    tension: 0.45,
-                    pointRadius: 0
                 }
             ]
         },
@@ -907,60 +897,36 @@ function getTrendSlotIndex(hour) {
     return Math.min(8, Math.floor((hour - 5) / 2));
 }
 
-function shiftDayKey(key, offsetDays) {
-    const [y, m, d] = key.split("-").map(Number);
-    const dt = new Date(y, m - 1, d);
-    dt.setDate(dt.getDate() + offsetDays);
-    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
-}
-
-// Cộng dồn số lượt nghe theo 9 khung giờ cho các ngày [fromOffset .. toOffset] tính từ hôm nay
-function sumTrendDays(fromOffset, toOffset) {
+// Gộp toàn bộ số lượt nghe theo 9 khung giờ (từ tất cả các ngày trong hourlyByDay)
+function sumAllTrendSlots() {
     const total = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    if (!trendTodayKey) return total;
-    for (let off = fromOffset; off <= toOffset; off++) {
-        const arr = trendHourlyByDay[shiftDayKey(trendTodayKey, -off)];
-        if (Array.isArray(arr)) arr.forEach((v, i) => { total[i] += v || 0; });
-    }
+    if (!trendHourlyByDay || typeof trendHourlyByDay !== "object") return total;
+    Object.values(trendHourlyByDay).forEach(arr => {
+        if (Array.isArray(arr)) {
+            arr.forEach((v, i) => {
+                if (i >= 0 && i < 9) total[i] += Number(v) || 0;
+            });
+        }
+    });
     return total;
 }
 
 function updateTrendChart(force = false) {
     if (!trendChartInstance) return;
-    let main, compare, mainLabel, compareLabel;
-
-    if (trendRange === "week") {
-        main = sumTrendDays(0, 6);
-        compare = sumTrendDays(0, 6).map(v => Math.round((v / 7) * 10) / 10);
-        mainLabel = "Tổng 7 ngày qua";
-        compareLabel = "Trung bình mỗi ngày";
-    } else if (trendRange === "month") {
-        main = sumTrendDays(0, 29);
-        compare = sumTrendDays(0, 29).map(v => Math.round((v / 30) * 10) / 10);
-        mainLabel = "Tổng 30 ngày qua";
-        compareLabel = "Trung bình mỗi ngày";
-    } else {
-        main = sumTrendDays(0, 0);
-        compare = sumTrendDays(1, 7).map(v => Math.round((v / 7) * 10) / 10);
-        mainLabel = "Hôm nay";
-        compareLabel = "Trung bình 7 ngày trước";
-    }
+    const main = sumAllTrendSlots();
+    const mainLabel = "Tổng lượt nghe theo khung giờ";
 
     // Chỉ vẽ lại khi dữ liệu thay đổi (tránh biểu đồ nhấp nháy mỗi 2 giây)
-    const signature = JSON.stringify([trendRange, main, compare]);
+    const signature = JSON.stringify(main);
     if (!force && signature === lastTrendSignature) return;
     lastTrendSignature = signature;
 
     trendChartInstance.data.datasets[0].label = mainLabel;
     trendChartInstance.data.datasets[0].data = main;
-    trendChartInstance.data.datasets[1].label = compareLabel;
-    trendChartInstance.data.datasets[1].data = compare;
     trendChartInstance.update();
 
     const legendMain = document.getElementById("trendLegendMain");
     if (legendMain) legendMain.textContent = mainLabel;
-    const legendCompare = document.getElementById("trendLegendCompare");
-    if (legendCompare) legendCompare.textContent = compareLabel;
 
     const totalMain = main.reduce((a, b) => a + b, 0);
     const tag = document.getElementById("trendStatusTag");
@@ -971,16 +937,6 @@ function updateTrendChart(force = false) {
 }
 
 function initAnalyticsFilter() {
-    const filterBtns = document.querySelectorAll(".time-filter-group .btn-time");
-    filterBtns.forEach(btn => {
-        btn.addEventListener("click", () => {
-            filterBtns.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            trendRange = btn.dataset.range || "today";
-            updateTrendChart(true);
-        });
-    });
-
     const btnExport = document.getElementById("btnExportAnalytics");
     if (btnExport) {
         btnExport.addEventListener("click", () => {

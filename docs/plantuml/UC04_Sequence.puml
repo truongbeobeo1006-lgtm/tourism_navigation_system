@@ -1,0 +1,62 @@
+@startuml UC04_Sequence
+!theme plain
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F0F9FF
+skinparam ParticipantBorderColor #0284C7
+skinparam ActorBorderColor #0284C7
+
+title Lược đồ Tuần tự (Sequence Diagram) - UC04: Quét QR Vé Tour Pass 24h & Giám sát Thiết bị Online
+
+actor "Du khách\n(Tourist)" as Tourist
+participant "Client Web App\n(client-web/app.js)" as ClientApp
+participant "Live Backend Server\n(client-web/server.js :3000)" as Server
+participant "Admin Dashboard\n(admin-web/app.js)" as AdminWeb
+
+Tourist -> Server : 1. Quét mã QR mở URL\nGET /?ticket=TOUR-PASS-DEMO-24H (qua Cloudflare 4G)
+activate Server
+Server --> ClientApp : 2. Trả về trang index.html, style.css, app.js
+deactivate Server
+
+activate ClientApp
+ClientApp -> ClientApp : 3. getOrCreateDeviceId()\n(Đọc hoặc tạo mới devId trong localStorage)
+ClientApp -> Server : 4. GET /api/v1/pois?lang=vi
+activate Server
+Server --> ClientApp : 5. Trả về danh sách các điểm di tích Quận 1
+deactivate Server
+
+loop Định kỳ mỗi 3 giây (Heartbeat Online)
+    ClientApp -> Server : 6. POST /api/event\n{ type: "DEVICE_ONLINE", deviceId, deviceType: "mobile" }
+    activate Server
+    Server -> Server : 7. Dọn thiết bị > 10s không phản hồi\nactiveDevices.set(devId, { type, lastSeen, ip })
+    Server --> ClientApp : 8. 200 OK { activeCount, totalAudience, poisVersion }
+    deactivate Server
+end
+
+loop Định kỳ mỗi 2 giây (Đồng bộ Admin)
+    AdminWeb -> Server : 9. GET /api/realtime-stats
+    activate AdminWeb
+    activate Server
+    Server --> AdminWeb : 10. Trả về { activeDevicesCount, mobileCount, webCount, ... }
+    deactivate Server
+    AdminWeb -> AdminWeb : 11. updateStatCards()\nHiển thị số thiết bị Online (+1) & thanh tỷ lệ Mobile/Web
+    deactivate AdminWeb
+end
+
+Tourist -> ClientApp : 12. Đóng tab hoặc thoát ứng dụng (pagehide / beforeunload)
+ClientApp -> Server : 13. navigator.sendBeacon POST /api/event\n{ type: "DEVICE_OFFLINE", deviceId }
+activate Server
+Server -> Server : 14. activeDevices.delete(devId)
+Server --> ClientApp : 15. 200 OK
+deactivate Server
+deactivate ClientApp
+
+AdminWeb -> Server : 16. GET /api/realtime-stats
+activate AdminWeb
+activate Server
+Server --> AdminWeb : 17. Trả về activeDevicesCount đã giảm (-1)
+deactivate Server
+AdminWeb -> AdminWeb : 18. Cập nhật giảm số thiết bị trực tuyến tức thì
+deactivate AdminWeb
+@enduml

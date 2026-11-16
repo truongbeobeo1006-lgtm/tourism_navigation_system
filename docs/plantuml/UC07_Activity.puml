@@ -1,0 +1,57 @@
+@startuml UC07_Activity
+!theme plain
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #0284C7
+skinparam ActivityDiamondBackgroundColor #E0F2FE
+skinparam ActivityDiamondBorderColor #0369A1
+
+title Lược đồ Hoạt động (Activity Diagram) - UC07: Phát thuyết minh Đa ngôn ngữ, Tốc độ đọc & Ghi nhận Lượt nghe
+
+|Du khách (Tourist)|
+start
+if (Phương thức kích hoạt thuyết minh?) then (Đi vào vùng Geofence <= 30m)
+  |Hệ thống Client Web (client-web/app.js)|
+  :Hàm checkGeofenceAndDistances() kích hoạt\nstartPlayback("auto");
+else (Chạm chọn POI trên bản đồ / Bấm nút Play)
+  |Hệ thống Client Web (client-web/app.js)|
+  :Kích hoạt startPlayback("manual");
+endif
+
+:Gọi hàm notifyPoiPlay(activePoi, triggerType)\ngửi POST /api/event ({ type: "POI_PLAY", triggerType });
+
+|Live Backend Server (client-web/server.js)|
+:Cộng tổng lượt nghe: totalAudience += 1;
+if (triggerType === "auto"?) then (Đúng - Tự động)
+  :Cộng lượt nghe tự động: autoListens += 1;
+else (Sai - Thủ công)
+  :Cộng lượt nghe chọn trên bản đồ: manualListens += 1;
+endif
+:Cộng lượt nghe cho địa điểm: poiListens[poiName] += 1;
+:Gọi recordHourlyListen() cộng +1 vào khung giờ hiện tại\ntrong mảng hourlyByDay[today] (cập nhật biểu đồ xu hướng);
+:Lưu ngay toàn bộ số liệu xuống file stats-data.json;
+
+|Hệ thống Client Web (client-web/app.js)|
+:Phát âm báo hiệu (playNotificationChime());
+if (Điểm POI có file MP3 (audioUrl)?) then (Có)
+  :Phát âm thanh qua thẻ HTML5 Audio (dom.realAudio.play());
+else (Không - Dùng Web Speech API TTS)
+  :Gọi playViaTTS() lấy kịch bản đã dịch theo state.selectedLang;
+  :Khởi tạo SpeechSynthesisUtterance(textToSpeak)\ngắn mã giọng vùng miền (vi-VN, en-US, ja-JP, ko-KR...);
+  :Đọc bài thuyết minh với tốc độ state.playbackSpeed;
+endif
+
+|Du khách (Tourist)|
+if (Thao tác điều khiển khi đang nghe?) then (Bấm nút Tốc độ đọc #speedBtn)
+  |Hệ thống Client Web (client-web/app.js)|
+  :Gọi cycleSpeed() chuyển vòng tốc độ:\n1.0x -> 1.25x -> 1.5x -> 0.75x;
+  :Khởi động lại giọng đọc TTS ở tốc độ mới;
+elseif (Bấm nút Lùi 10 giây #rewindBtn) then
+  |Hệ thống Client Web (client-web/app.js)|
+  :Gọi rewind10s() lùi state.audioCurrentTime về trước 10 giây\nvà cập nhật thanh tiến trình;
+else (Nghe đến khi kết thúc / Bấm Tạm dừng)
+  |Hệ thống Client Web (client-web/app.js)|
+  :Gọi stopPlayback() dừng âm thanh và đặt lại giao diện;
+endif
+stop
+@enduml
