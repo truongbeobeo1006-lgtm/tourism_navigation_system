@@ -33,3 +33,8 @@ build/
 
 ### Others ###
 *.log
+
+
+.agents
+graphify-outcloudflared.exe
+graphify-out/

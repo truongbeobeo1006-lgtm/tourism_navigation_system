@@ -1,0 +1,285 @@
+{
+  "totalAudience": 150,
+  "autoListens": 93,
+  "manualListens": 57,
+  "poiListens": {
+    "Dinh Độc Lập": 73,
+    "Bưu Điện Trung Tâm": 32,
+    "Chợ Bến Thành": 12,
+    "Nhà Hát Thành Phố": 27,
+    "Nhà Thờ Đức Bà": 6
+  },
+  "recentEvents": [
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "English",
+      "timestamp": 1794675923635
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "English",
+      "timestamp": 1794675923478
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675669635
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675669441
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675333975
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675333798
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675326080
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675325315
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675250789
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675250563
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675234119
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675233830
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675232532
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675232313
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675231140
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675230962
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675228684
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675228488
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675226750
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "GPS-TRIGGER",
+      "deviceInfo": "Trình duyệt Web",
+      "language": "Tiếng Việt",
+      "timestamp": 1794675226551
+    }
+  ],
+  "hourlyByDay": {
+    "2026-11-15": [
+      7,
+      11,
+      17,
+      20,
+      32,
+      26,
+      17,
+      8,
+      12
+    ]
+  },
+  "managedPois": [
+    {
+      "id": "q1-poi-0001",
+      "name": "Dinh Độc Lập",
+      "address": "135 Nam Kỳ Khởi Nghĩa, Phường Bến Thành, Quận 1",
+      "lat": 10.77692,
+      "lng": 106.69531,
+      "radiusM": 30,
+      "isActive": true,
+      "imageUrl": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=300&auto=format&fit=crop&q=80",
+      "ttsScript": "Chào mừng bạn đến Dinh Độc Lập, còn gọi là Dinh Thống Nhất. Đây là công trình lịch sử mang tính biểu tượng của Sài Gòn, chứng kiến thời khắc lịch sử ngày 30 tháng 4 năm 1975.",
+      "durationSec": 135,
+      "audioUrl": null,
+      "availableLanguages": [
+        "vi",
+        "en"
+      ],
+      "customScripts": {},
+      "customAudioUrls": {}
+    },
+    {
+      "id": "q1-poi-0002",
+      "name": "Bưu Điện Trung Tâm",
+      "address": "02 Công xã Paris, Phường Bến Nghé, Quận 1",
+      "lat": 10.77957,
+      "lng": 106.6993,
+      "radiusM": 30,
+      "isActive": true,
+      "imageUrl": "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=300&auto=format&fit=crop&q=80",
+      "ttsScript": "Bưu Điện Trung Tâm Sài Gòn là một trong những công trình kiến trúc thời Pháp đẹp nhất tại Quận 1, kết hợp hài hòa giữa phong cách Phục Hưng phương Tây và họa tiết phương Đông.",
+      "durationSec": 110,
+      "audioUrl": null,
+      "availableLanguages": [
+        "vi",
+        "en"
+      ],
+      "customScripts": {},
+      "customAudioUrls": {}
+    },
+    {
+      "id": "q1-poi-0003",
+      "name": "Nhà Thờ Đức Bà",
+      "address": "01 Công xã Paris, Phường Bến Nghé, Quận 1",
+      "lat": 10.77972,
+      "lng": 106.69904,
+      "radiusM": 30,
+      "isActive": true,
+      "imageUrl": "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=300&auto=format&fit=crop&q=80",
+      "ttsScript": "Bạn đang đứng trước Nhà Thờ Đức Bà Sài Gòn, kiệt tác kiến trúc Gothic cổ kính được xây dựng từ năm 1877 với toàn bộ gạch ngói nhập khẩu từ Marseille, Pháp.",
+      "durationSec": 120,
+      "audioUrl": null,
+      "availableLanguages": [
+        "vi",
+        "en"
+      ],
+      "customScripts": {},
+      "customAudioUrls": {}
+    },
+    {
+      "id": "q1-poi-0004",
+      "name": "Nhà Hát Thành Phố",
+      "address": "07 Công Trường Lam Sơn, Phường Bến Nghé, Quận 1",
+      "lat": 10.77665,
+      "lng": 106.70318,
+      "radiusM": 30,
+      "isActive": true,
+      "imageUrl": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300&auto=format&fit=crop&q=80",
+      "ttsScript": "Nhà Hát Lớn Thành Phố khánh thành năm 1900 mang đậm phong cách kiến trúc Flamboyant Pháp, là trung tâm biểu diễn nghệ thuật danh giá hàng đầu.",
+      "durationSec": 130,
+      "audioUrl": null,
+      "availableLanguages": [
+        "vi",
+        "en"
+      ],
+      "customScripts": {},
+      "customAudioUrls": {}
+    },
+    {
+      "id": "q1-poi-0005",
+      "name": "Chợ Bến Thành",
+      "address": "Đường Lê Lợi, Phường Bến Thành, Quận 1",
+      "lat": 10.77253,
+      "lng": 106.69803,
+      "radiusM": 30,
+      "isActive": true,
+      "imageUrl": "https://images.unsplash.com/photo-1528127269322-539801943592?w=300&auto=format&fit=crop&q=80",
+      "ttsScript": "Chợ Bến Thành với tháp đồng hồ bốn mặt nổi tiếng là trái tim thương mại sôi động của Quận 1, nơi du khách thỏa sức khám phá ẩm thực đường phố và văn hóa bản địa đặc sắc.",
+      "durationSec": 140,
+      "audioUrl": null,
+      "availableLanguages": [
+        "vi",
+        "en"
+      ],
+      "customScripts": {},
+      "customAudioUrls": {}
+    },
+    {
+      "id": "q1-poi-0006",
+      "name": "Phố Đi Bộ Nguyễn Huệ",
+      "address": "Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1",
+      "lat": 10.77362,
+      "lng": 106.70408,
+      "radiusM": 40,
+      "isActive": true,
+      "imageUrl": "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=300&auto=format&fit=crop&q=80",
+      "ttsScript": "Phố Đi Bộ Nguyễn Huệ là quảng trường đi bộ hiện đại bậc nhất, trải dài từ trụ sở Ủy ban Nhân dân Thành phố đến bờ sông Sài Gòn, rực rỡ sắc màu về đêm.",
+      "durationSec": 125,
+      "audioUrl": null,
+      "availableLanguages": [
+        "vi",
+        "en"
+      ],
+      "customScripts": {},
+      "customAudioUrls": {}
+    }
+  ],
+  "poisVersion": 1794756861442,
+  "lastUpdated": "2026-11-15T15:34:21.442Z"
+}

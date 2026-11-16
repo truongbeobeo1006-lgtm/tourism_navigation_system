@@ -1,6 +1,7 @@
 package com.poitour.poi.dto;
 
 import lombok.*;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -21,4 +22,6 @@ public class PoiResponse {
     private String ttsScript;
     private Integer durationSec;
     private String langCode;
+    private Boolean isActive;
+    private List<String> availableLanguages;
 }

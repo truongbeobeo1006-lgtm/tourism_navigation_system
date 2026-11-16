@@ -2,6 +2,8 @@ package com.poitour.poi.controller;
 
 import com.poitour.poi.dto.CreatePoiRequest;
 import com.poitour.poi.dto.PoiResponse;
+import com.poitour.poi.dto.SaveAudioRequest;
+import com.poitour.poi.dto.UpdatePoiRequest;
 import com.poitour.poi.service.PoiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +17,21 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/pois")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Hỗ trợ gọi từ App Android và Web Admin
+// CORS do API Gateway quản lý tập trung
 public class PoiController {
 
     private final PoiService poiService;
+
+    /**
+     * Admin: Lấy toàn bộ danh sách POI (không lọc theo bán kính)
+     * GET /api/v1/pois/all?lang=vi
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<PoiResponse>> getAllPois(
+            @RequestParam(required = false, defaultValue = "vi") String lang) {
+        List<PoiResponse> pois = poiService.getAllPois(lang);
+        return ResponseEntity.ok(pois);
+    }
 
     /**
      * UC01: Xem bản đồ - Lấy danh sách POI gần vị trí du khách
@@ -68,5 +81,39 @@ public class PoiController {
     public ResponseEntity<PoiResponse> createPoi(@Valid @RequestBody CreatePoiRequest request) {
         PoiResponse created = poiService.createPoi(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    /**
+     * Admin: Cập nhật thông tin POI
+     * PUT /api/v1/pois/{id}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<PoiResponse> updatePoi(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdatePoiRequest request) {
+        PoiResponse updated = poiService.updatePoi(id, request);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * Admin: Xóa POI
+     * DELETE /api/v1/pois/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePoi(@PathVariable UUID id) {
+        poiService.deletePoi(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Admin: Thêm / Cập nhật bài thuyết minh âm thanh theo ngôn ngữ
+     * POST /api/v1/pois/{id}/audio
+     */
+    @PostMapping("/{id}/audio")
+    public ResponseEntity<PoiResponse> saveAudio(
+            @PathVariable UUID id,
+            @Valid @RequestBody SaveAudioRequest request) {
+        PoiResponse updated = poiService.saveAudioContent(id, request);
+        return ResponseEntity.ok(updated);
     }
 }

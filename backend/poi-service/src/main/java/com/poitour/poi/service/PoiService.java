@@ -2,8 +2,11 @@ package com.poitour.poi.service;
 
 import com.poitour.poi.dto.CreatePoiRequest;
 import com.poitour.poi.dto.PoiResponse;
+import com.poitour.poi.dto.SaveAudioRequest;
+import com.poitour.poi.dto.UpdatePoiRequest;
 import com.poitour.poi.model.Poi;
 import com.poitour.poi.model.PoiAudioContent;
+import com.poitour.poi.repository.PoiAudioContentRepository;
 import com.poitour.poi.repository.PoiRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 public class PoiService {
 
     private final PoiRepository poiRepository;
+    private final PoiAudioContentRepository poiAudioContentRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
     private static final String REDIS_GEO_KEY = "pois_geo";
@@ -107,6 +111,101 @@ public class PoiService {
     }
 
     /**
+     * Admin: Lấy toàn bộ danh sách POI (phục vụ bảng quản trị CMS)
+     */
+    @Transactional(readOnly = true)
+    public List<PoiResponse> getAllPois(String lang) {
+        String finalLang = (lang != null && !lang.isBlank()) ? lang : "vi";
+        List<Poi> allPois = poiRepository.findAll();
+        return allPois.stream()
+                .map(poi -> mapToResponse(poi, finalLang, null))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Admin: Cập nhật thông tin điểm POI
+     */
+    @Transactional
+    public PoiResponse updatePoi(UUID id, UpdatePoiRequest request) {
+        Poi poi = poiRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy điểm tham quan ID: " + id));
+
+        poi.setName(request.getName());
+        poi.setLat(request.getLat());
+        poi.setLng(request.getLng());
+        poi.setRadiusM(request.getRadiusM());
+        poi.setImageUrl(request.getImageUrl());
+        if (request.getIsActive() != null) {
+            poi.setIsActive(request.getIsActive());
+        }
+
+        Poi updated = poiRepository.save(poi);
+
+        // Cập nhật lại vị trí trong Redis GEO
+        try {
+            if (Boolean.TRUE.equals(updated.getIsActive())) {
+                redisTemplate.opsForGeo().add(REDIS_GEO_KEY,
+                        new Point(updated.getLng(), updated.getLat()),
+                        updated.getId().toString());
+            } else {
+                redisTemplate.opsForGeo().remove(REDIS_GEO_KEY, updated.getId().toString());
+            }
+        } catch (Exception e) {
+            log.error("Lỗi khi đồng bộ Redis GEO lúc cập nhật POI: {}", e.getMessage());
+        }
+
+        return mapToResponse(updated, "vi", null);
+    }
+
+    /**
+     * Admin: Xóa điểm POI
+     */
+    @Transactional
+    public void deletePoi(UUID id) {
+        Poi poi = poiRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy điểm tham quan ID: " + id));
+
+        poiRepository.delete(poi);
+
+        // Xóa khỏi Redis GEO
+        try {
+            redisTemplate.opsForGeo().remove(REDIS_GEO_KEY, id.toString());
+        } catch (Exception e) {
+            log.error("Lỗi khi xóa khỏi Redis GEO: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Admin: Thêm hoặc Cập nhật nội dung bài thuyết minh theo ngôn ngữ
+     */
+    @Transactional
+    public PoiResponse saveAudioContent(UUID poiId, SaveAudioRequest request) {
+        Poi poi = poiRepository.findById(poiId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy điểm tham quan ID: " + poiId));
+
+        PoiAudioContent audioContent = poiAudioContentRepository
+                .findByPoiIdAndLangCode(poiId, request.getLangCode().toLowerCase())
+                .orElse(PoiAudioContent.builder()
+                        .poi(poi)
+                        .langCode(request.getLangCode().toLowerCase())
+                        .build());
+
+        if (request.getAudioUrl() != null && !request.getAudioUrl().isBlank()) {
+            audioContent.setAudioUrl(request.getAudioUrl());
+        }
+        if (request.getTtsScript() != null && !request.getTtsScript().isBlank()) {
+            audioContent.setTtsScript(request.getTtsScript());
+        }
+        if (request.getDurationSec() != null) {
+            audioContent.setDurationSec(request.getDurationSec());
+        }
+
+        poiAudioContentRepository.save(audioContent);
+
+        return mapToResponse(poi, request.getLangCode().toLowerCase(), null);
+    }
+
+    /**
      * Chuyển Entity sang DTO kèm nội dung audio theo đúng ngôn ngữ đã chọn (UC03)
      */
     private PoiResponse mapToResponse(Poi poi, String lang, Double distance) {
@@ -123,6 +222,11 @@ public class PoiService {
                     .orElse(poi.getAudioContents().get(0));
         }
 
+        List<String> availableLangs = poi.getAudioContents().stream()
+                .map(PoiAudioContent::getLangCode)
+                .distinct()
+                .collect(Collectors.toList());
+
         return PoiResponse.builder()
                 .id(poi.getId())
                 .name(poi.getName())
@@ -130,6 +234,8 @@ public class PoiService {
                 .lng(poi.getLng())
                 .radiusM(poi.getRadiusM())
                 .imageUrl(poi.getImageUrl())
+                .isActive(poi.getIsActive())
+                .availableLanguages(availableLangs)
                 .distanceMeters(distance != null ? Math.round(distance * 10.0) / 10.0 : null)
                 .langCode(matchedAudio != null ? matchedAudio.getLangCode() : lang)
                 .audioUrl(matchedAudio != null ? matchedAudio.getAudioUrl() : null)

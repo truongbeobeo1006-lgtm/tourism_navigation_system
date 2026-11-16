@@ -1,8 +1,9 @@
 services:
 
   # ─────────────────────────────────────────────
-  # PostgreSQL — Cơ sở dữ liệu chính
-  # Đổi port máy thật sang 5433 để tránh đụng độ Postgres có sẵn trên máy
+  # 1. PostgreSQL — Cơ sở dữ liệu chính
+  # Port máy thật: 5433 (tránh đụng độ PostgreSQL local)
+  # Port nội bộ container: 5432
   # ─────────────────────────────────────────────
   postgres:
     image: postgres:15
@@ -22,9 +23,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - poitour-net
 
   # ─────────────────────────────────────────────
-  # Redis — Cache GEO + Cooldown
+  # 2. Redis — Cache GEO không gian + Cooldown
   # ─────────────────────────────────────────────
   redis:
     image: redis:7-alpine
@@ -38,6 +41,72 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - poitour-net
+
+  # ─────────────────────────────────────────────
+  # 3. POI Service — Quản lý điểm tham quan,
+  #    Geofencing & Audio thuyết minh đa ngôn ngữ
+  # ─────────────────────────────────────────────
+  poi-service:
+    build:
+      context: ./backend/poi-service
+      dockerfile: Dockerfile
+    container_name: poitour-poi-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/poitour?options=-c%20timezone=Asia/Ho_Chi_Minh
+      SPRING_DATASOURCE_USERNAME: poitour
+      SPRING_DATASOURCE_PASSWORD: poitour123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - poitour-net
+
+  # ─────────────────────────────────────────────
+  # 4. API Gateway — Cổng tiếp nhận & định tuyến
+  # ─────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: poitour-api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      POI_SERVICE_URI: http://poi-service:8082
+    depends_on:
+      - poi-service
+    networks:
+      - poitour-net
+
+  # ─────────────────────────────────────────────
+  # 5. Client Web — Giao diện bản đồ & định vị du khách
+  # ─────────────────────────────────────────────
+  client-web:
+    image: nginx:alpine
+    container_name: poitour-client-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    volumes:
+      - ./client-web:/usr/share/nginx/html:ro
+    depends_on:
+      - api-gateway
+    networks:
+      - poitour-net
 
 volumes:
   postgres_data:
+
+networks:
+  poitour-net:
+    driver: bridge
