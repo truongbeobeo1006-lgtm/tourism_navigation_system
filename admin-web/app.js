@@ -870,6 +870,8 @@ function renderAnalyticsData() {
     const elPctManual = document.getElementById("pctManualTrigger");
     if (elPctManual) elPctManual.textContent = `${manualPct}% (${manualListensCount} lượt)`;
 
+    updatePeakHourStats(sumAllTrendSlots());
+
     // Render thanh progress bar 6 POI
     const barsContainer = document.getElementById("analyticsPoiBars");
     if (barsContainer) {
@@ -895,6 +897,61 @@ function renderAnalyticsData() {
 function getTrendSlotIndex(hour) {
     if (hour < 5) return 8;
     return Math.min(8, Math.floor((hour - 5) / 2));
+}
+
+function updatePeakHourStats(slots) {
+    const SLOT_RANGES = [
+        "05h – 07h",
+        "07h – 09h",
+        "09h – 11h",
+        "11h – 13h",
+        "13h – 15h",
+        "15h – 17h",
+        "17h – 19h",
+        "19h – 21h",
+        "21h – 05h"
+    ];
+    const total = Array.isArray(slots) ? slots.reduce((a, b) => a + (Number(b) || 0), 0) : 0;
+    const elHour = document.getElementById("analyticsPeakHour");
+    const elNote = document.getElementById("analyticsPeakNote");
+
+    if (total === 0) {
+        if (elHour) elHour.textContent = "--";
+        if (elNote) elNote.textContent = "Chưa có dữ liệu";
+    } else {
+        let peakIdx = 0;
+        let maxVal = -1;
+        slots.forEach((v, idx) => {
+            const num = Number(v) || 0;
+            if (num > maxVal) {
+                maxVal = num;
+                peakIdx = idx;
+            }
+        });
+        const pct = Math.round((maxVal / total) * 100);
+        if (elHour) elHour.textContent = SLOT_RANGES[peakIdx] || "--";
+        if (elNote) elNote.textContent = `Chiếm ${pct}% (${maxVal}/${total} lượt)`;
+    }
+
+    const labelsBox = document.getElementById("chartTimeLabels");
+    if (labelsBox && Array.isArray(slots)) {
+        const periods = [
+            { range: "05:00 – 09:00", name: "Buổi Sáng", count: (slots[0] || 0) + (slots[1] || 0) },
+            { range: "09:00 – 13:00", name: "Buổi Trưa", count: (slots[2] || 0) + (slots[3] || 0) },
+            { range: "13:00 – 17:00", name: "Buổi Chiều", count: (slots[4] || 0) + (slots[5] || 0) },
+            { range: "17:00 – 05:00", name: "Buổi Tối & Đêm", count: (slots[6] || 0) + (slots[7] || 0) + (slots[8] || 0) }
+        ];
+        const maxPeriod = Math.max(...periods.map(p => p.count));
+        labelsBox.innerHTML = periods.map(p => {
+            const isPeak = total > 0 && p.count === maxPeriod && p.count > 0;
+            return `
+                <div class="time-slot ${isPeak ? 'highlight-slot' : ''}">
+                    <strong>${p.range}</strong>
+                    <span class="${isPeak ? 'tag-peak' : ''}">${p.name} (${p.count} lượt)${isPeak ? ' • Cao Điểm' : ''}</span>
+                </div>
+            `;
+        }).join("");
+    }
 }
 
 // Gộp toàn bộ số lượt nghe theo 9 khung giờ (từ tất cả các ngày trong hourlyByDay)
@@ -928,6 +985,7 @@ function updateTrendChart(force = false) {
     const legendMain = document.getElementById("trendLegendMain");
     if (legendMain) legendMain.textContent = mainLabel;
 
+    updatePeakHourStats(main);
     const totalMain = main.reduce((a, b) => a + b, 0);
     const tag = document.getElementById("trendStatusTag");
     if (tag) {

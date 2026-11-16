@@ -424,9 +424,9 @@
                             <span class="card-label">KHUNG GIỜ CAO ĐIỂM</span>
                             <div class="card-icon blue-icon"><i class="fa-solid fa-fire"></i></div>
                         </div>
-                        <div class="card-value">14h – 17h</div>
+                        <div class="card-value" id="analyticsPeakHour">--</div>
                         <div class="card-footer">
-                            <span class="footer-note highlight-text">Chiếm 45% tổng lưu lượng</span>
+                            <span class="footer-note highlight-text" id="analyticsPeakNote">Chưa có dữ liệu</span>
                         </div>
                     </div>
                 </div>
@@ -449,7 +449,7 @@
                         <canvas id="trendChart"></canvas>
                     </div>
 
-                    <div class="chart-time-labels">
+                    <div class="chart-time-labels" id="chartTimeLabels">
                         <div class="time-slot">
                             <strong>06:00 – 09:00</strong>
                             <span>Buổi Sáng</span>

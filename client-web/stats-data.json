@@ -1,12 +1,127 @@
 {
-  "totalAudience": 16,
-  "autoListens": 0,
-  "manualListens": 16,
+  "totalAudience": 30,
+  "autoListens": 3,
+  "manualListens": 27,
   "poiListens": {
-    "Dinh Độc Lập": 15,
-    "Chợ Bến Thành": 1
+    "Dinh Độc Lập": 17,
+    "Chợ Bến Thành": 8,
+    "Phố Đi Bộ Nguyễn Huệ": 2,
+    "Bưu Điện Trung Tâm": 2,
+    "Nhà Hát Thành Phố": 1
   },
   "recentEvents": [
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794856274657
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Điện thoại di động (Mobile) • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855969070
+    },
+    {
+      "poiName": "Nhà Hát Thành Phố",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Điện thoại di động (Mobile) • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855962708
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Điện thoại di động (Mobile) • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855959175
+    },
+    {
+      "poiName": "Dinh Độc Lập",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Điện thoại di động (Mobile) • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855956045
+    },
+    {
+      "poiName": "Phố Đi Bộ Nguyễn Huệ",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855919370
+    },
+    {
+      "poiName": "Phố Đi Bộ Nguyễn Huệ",
+      "poiCode": "GPS-AUTO",
+      "deviceInfo": "Trình duyệt Web • Tự động Geofence",
+      "language": "Tiếng Việt",
+      "triggerType": "auto",
+      "timestamp": 1794855910217
+    },
+    {
+      "poiName": "Chợ Bến Thành",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855902974
+    },
+    {
+      "poiName": "Chợ Bến Thành",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855902020
+    },
+    {
+      "poiName": "Chợ Bến Thành",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855899533
+    },
+    {
+      "poiName": "Chợ Bến Thành",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855893680
+    },
+    {
+      "poiName": "Chợ Bến Thành",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794855890707
+    },
+    {
+      "poiName": "Chợ Bến Thành",
+      "poiCode": "GPS-AUTO",
+      "deviceInfo": "Trình duyệt Web • Tự động Geofence",
+      "language": "Tiếng Việt",
+      "triggerType": "auto",
+      "timestamp": 1794855887110
+    },
+    {
+      "poiName": "Chợ Bến Thành",
+      "poiCode": "GPS-AUTO",
+      "deviceInfo": "Trình duyệt Web • Tự động Geofence",
+      "language": "Tiếng Việt",
+      "triggerType": "auto",
+      "timestamp": 1794854898440
+    },
     {
       "poiName": "Dinh Độc Lập",
       "poiCode": "MAP-MANUAL",
@@ -54,86 +169,6 @@
       "language": "Tiếng Việt",
       "triggerType": "manual",
       "timestamp": 1794853911632
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794853910743
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794853905447
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794853904632
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794853903877
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794853902959
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794853902235
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794853900087
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794853890705
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794852598549
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794852596929
     }
   ],
   "hourlyByDay": {
@@ -146,7 +181,7 @@
       0,
       0,
       0,
-      16
+      30
     ]
   },
   "managedPois": [
@@ -266,5 +301,5 @@
     }
   ],
   "poisVersion": 1794852558899,
-  "lastUpdated": "2026-11-16T18:43:29.490Z"
+  "lastUpdated": "2026-11-16T19:11:14.657Z"
 }
