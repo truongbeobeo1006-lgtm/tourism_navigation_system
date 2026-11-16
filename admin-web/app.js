@@ -616,12 +616,13 @@ function setupSyncListener() {
                     currentPoisVersion = data.poisVersion;
                 }
 
-                // 3. Cập nhật số lượt nghe từng POI
+                // 3. Cập nhật số lượt nghe từng POI (đưa về 0 nếu không còn lượt nghe trong DB)
                 let listensChanged = false;
                 if (data.poiListens) {
                     poiList.forEach(poi => {
-                        if (data.poiListens[poi.name] !== undefined && poi.listens !== data.poiListens[poi.name]) {
-                            poi.listens = data.poiListens[poi.name];
+                        const nextVal = data.poiListens[poi.name] !== undefined ? data.poiListens[poi.name] : 0;
+                        if (poi.listens !== nextVal) {
+                            poi.listens = nextVal;
                             listensChanged = true;
                         }
                     });
@@ -654,6 +655,10 @@ function setupSyncListener() {
                             </div>
                         `;
                     }).join("");
+                } else if (Array.isArray(data.recentEvents) && data.recentEvents.length === 0) {
+                    if (!document.getElementById("emptyFeedState")) {
+                        initRealtimeActivityFeed();
+                    }
                 }
 
                 renderDashboardTopPois();
@@ -995,10 +1000,5 @@ function updateTrendChart(force = false) {
 }
 
 function initAnalyticsFilter() {
-    const btnExport = document.getElementById("btnExportAnalytics");
-    if (btnExport) {
-        btnExport.addEventListener("click", () => {
-            alert("📊 Báo cáo phân tích dữ liệu du lịch Quận 1 đã được xuất thành công!");
-        });
-    }
+    // Bộ lọc & xuất báo cáo đã được lược bỏ để giao diện gọn gàng
 }

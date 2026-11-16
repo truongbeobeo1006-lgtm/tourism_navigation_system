@@ -1,15 +1,23 @@
 {
-  "totalAudience": 30,
+  "totalAudience": 31,
   "autoListens": 3,
-  "manualListens": 27,
+  "manualListens": 28,
   "poiListens": {
     "Dinh Độc Lập": 17,
     "Chợ Bến Thành": 8,
     "Phố Đi Bộ Nguyễn Huệ": 2,
-    "Bưu Điện Trung Tâm": 2,
+    "Bưu Điện Trung Tâm": 3,
     "Nhà Hát Thành Phố": 1
   },
   "recentEvents": [
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794856550107
+    },
     {
       "poiName": "Bưu Điện Trung Tâm",
       "poiCode": "MAP-MANUAL",
@@ -161,14 +169,6 @@
       "language": "Tiếng Việt",
       "triggerType": "manual",
       "timestamp": 1794853912709
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794853911632
     }
   ],
   "hourlyByDay": {
@@ -181,7 +181,7 @@
       0,
       0,
       0,
-      30
+      31
     ]
   },
   "managedPois": [
@@ -301,5 +301,5 @@
     }
   ],
   "poisVersion": 1794852558899,
-  "lastUpdated": "2026-11-16T19:11:14.657Z"
+  "lastUpdated": "2026-11-16T19:15:50.107Z"
 }
