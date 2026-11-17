@@ -72,7 +72,8 @@
                 <line x1="19" y1="12" x2="22" y2="12"></line>
               </svg>
             </button>
-            
+
+
             <!-- Map Overlay Status Bar (Bottom of Map) -->
             <div class="map-overlay-bar">
               <div class="overlay-col left-col">
@@ -180,28 +181,7 @@
             <h2>Tuyến tham quan gợi ý</h2>
             <p>Danh sách các vùng di tích tiêu biểu tại TP. Hồ Chí Minh</p>
           </div>
-          <div class="create-route-actions">
-            <button type="button" id="btnCreateRoute">+ Tạo tuyến đường</button>
-          </div>
 
-<div id="createRouteForm" class="create-route-form" style="display: none;">
-  <h3>Tạo tuyến đường mới</h3>
-
-  <label for="routeName">Tên tuyến đường</label>
-  <input type="text" id="routeName" placeholder="Nhập tên tuyến đường">
-
-  <label>Chọn địa điểm muốn ghé thăm</label>
-  <div id="routePoiList"></div>
-
-  <!-- Thông tin lộ trình -->
-  <div id="routeInfo" class="route-info">
-    <p>Khoảng cách: <strong id="routeDistanceDisplay">Chưa có</strong></p>
-    <p>Thời gian dự kiến: <strong id="routeDurationDisplay">Chưa có</strong></p>
-  </div>
-
-  <button type="button" id="btnSaveRoute">Lưu tuyến đường</button>
-  <button type="button" id="btnCancelRoute">Hủy</button>
-</div>
           <div class="tours-list">
             
             <!-- Card 1 (Active Tour) -->
@@ -426,5 +406,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <!-- Main App Script -->
   <script src="app.js"></script>
+  <script src="tracking-ui.js"></script>
+  <script src="gps-navigation.js"></script>
+  <script src="gps-route.js"></script>
 </body>
 </html>
