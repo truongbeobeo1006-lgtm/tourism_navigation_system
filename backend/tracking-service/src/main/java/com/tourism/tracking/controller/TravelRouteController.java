@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/routes")
+@CrossOrigin(origins = "*")
 public class TravelRouteController {
 
     private final TravelRouteService routeService;
@@ -61,7 +62,7 @@ public class TravelRouteController {
     @PutMapping("/{id}/stops")
     public ResponseEntity<TravelRoute> updateRouteStops(
             @PathVariable Long id,
-            @RequestBody List<Long> poiIds) {
+            @RequestBody List<String> poiIds) {
         TravelRoute route =
                 routeService.updateRouteStops(id, poiIds);
 

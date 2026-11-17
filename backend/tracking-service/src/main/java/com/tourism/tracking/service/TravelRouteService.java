@@ -51,7 +51,7 @@ public class TravelRouteService {
         return repository.save(existingRoute);
     }
 
-    public TravelRoute updateRouteStops(Long id, List<Long> poiIds) {
+    public TravelRoute updateRouteStops(Long id, List<String> poiIds) {
         TravelRoute route = repository.findById(id).orElse(null);
 
         if (route == null) {

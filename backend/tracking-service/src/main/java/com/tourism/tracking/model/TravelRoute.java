@@ -35,12 +35,12 @@ public class TravelRoute {
     )
     @OrderColumn(name = "stop_order")
     @Column(name = "poi_id", nullable = false)
-    private List<Long> poiIds = new ArrayList<>();
+    private List<String> poiIds = new ArrayList<>();
 
     public TravelRoute() {
     }
 
-    public TravelRoute(Long id, String name, List<Long> poiIds) {
+    public TravelRoute(Long id, String name, List<String> poiIds) {
         this.id = id;
         this.name = name;
         this.poiIds = poiIds;
@@ -62,11 +62,11 @@ public class TravelRoute {
         this.name = name;
     }
 
-    public List<Long> getPoiIds() {
+    public List<String> getPoiIds() {
         return poiIds;
     }
 
-    public void setPoiIds(List<Long> poiIds) {
+    public void setPoiIds(List<String> poiIds) {
         this.poiIds = poiIds;
     }
 }

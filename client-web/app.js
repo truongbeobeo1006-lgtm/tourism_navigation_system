@@ -2044,10 +2044,12 @@ function setupEventListeners() {
 
 
   // Simulation Tool 3: Real Device GPS
-  dom.realGpsBtn.addEventListener('click', () => {
-    startGpsTracking();
-    switchTab('tabMap', document.getElementById('btnTabMap'));
-  });
+  if (dom.realGpsBtn) {
+    dom.realGpsBtn.addEventListener('click', () => {
+      startGpsTracking();
+      switchTab('tabMap', document.getElementById('btnTabMap'));
+    });
+  }
 
   // Create Route Form
   console.log('Danh sách POI:', state.pois);

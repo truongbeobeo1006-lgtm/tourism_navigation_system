@@ -71,6 +71,31 @@ services:
       - poitour-net
 
   # ─────────────────────────────────────────────
+  # 3b. Tracking Service — Lưu & tải tuyến đường (8083)
+  # ─────────────────────────────────────────────
+  tracking-service:
+    build:
+      context: ./backend/tracking-service
+      dockerfile: Dockerfile
+    container_name: poitour-tracking-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/poitour?options=-c%20timezone=Asia/Ho_Chi_Minh
+      SPRING_DATASOURCE_USERNAME: poitour
+      SPRING_DATASOURCE_PASSWORD: poitour123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - poitour-net
+
+  # ─────────────────────────────────────────────
   # 4. API Gateway — Cổng tiếp nhận & định tuyến
   # ─────────────────────────────────────────────
   api-gateway:
