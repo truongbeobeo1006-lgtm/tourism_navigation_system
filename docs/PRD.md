@@ -24,11 +24,11 @@
 ## 3. Danh sách 8 Use Cases cốt lõi (Core Use Cases)
 - **UC01: Định vị vị trí GPS và Bản đồ du lịch số:** Hiển thị bản đồ Quận 1 với 6 danh thắng biểu tượng, theo dõi vị trí thực tế của du khách (`watchPosition`) kèm chế độ giả lập kiểm thử.
 - **UC02: Tự động phát thuyết minh theo Geofencing:** Khi du khách bước vào bán kính 30m của di tích, hệ thống phát chuông thông báo, hiển thị banner và tự động phát bài thuyết minh tương ứng.
-- **UC03: Tùy chọn ngôn ngữ hiển thị giao diện:** Hỗ trợ chuyển đổi giao diện song ngữ Tiếng Việt và Tiếng Anh.
+- **UC03: Tùy chọn ngôn ngữ hiển thị giao diện:** Hỗ trợ chuyển đổi giao diện 10 ngôn ngữ quốc tế (Tiếng Việt, Tiếng Anh, Tiếng Trung, Tiếng Nhật, Tiếng Hàn, Tiếng Pháp, Tiếng Nga, Tiếng Đức, Tiếng Tây Ban Nha, Tiếng Thái).
 - **UC04: Quét mã QR Vé truy cập (Tour Pass Onboarding):** Du khách quét mã QR để nhận vé tham quan 24h và tự động truy cập ngay vào hệ thống trên điện thoại mà không cần tải ứng dụng từ App Store/CH Play.
 - **UC05: Bảng điều khiển Quản trị & Phân tích Thời gian thực (Dashboard):** Hiển thị tổng lượt nghe thuyết minh (lưu trữ bền vững), số thiết bị đang online theo thời gian thực (tự động tăng/giảm khi vào/thoát app), biểu đồ phân bổ khung giờ và bản đồ nhiệt Heatmap.
 - **UC06: Quản lý danh mục điểm tham quan (POI CMS):** Quản trị viên thêm, sửa, xóa thông tin di tích, tọa độ GPS, bán kính kích hoạt và cập nhật tệp âm thanh kịch bản.
-- **UC07: Tùy chọn ngôn ngữ thuyết minh âm thanh:** Hỗ trợ kịch bản thuyết minh song ngữ (Tiếng Việt và English) với các tùy chọn tốc độ phát (0.75x, 1.0x, 1.25x, 1.5x).
+- **UC07: Tùy chọn ngôn ngữ thuyết minh âm thanh:** Hỗ trợ kịch bản thuyết minh 10 ngôn ngữ quốc tế (kèm bộ nhận diện giọng đọc TTS bản địa tương ứng: vi-VN, en-US, zh-CN, ja-JP, ko-KR...) với các tùy chọn tốc độ phát (0.75x, 1.0x, 1.25x, 1.5x).
 - **UC08: Quản lý Tuyến đường & Lộ trình tham quan (Travel Route Planning):** Quản lý danh sách các tuyến tour tham quan gợi ý và thứ tự ghé thăm các trạm dừng di tích.
 
 ---

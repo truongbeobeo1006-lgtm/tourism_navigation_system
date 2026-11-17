@@ -90,7 +90,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     A([Bắt đầu]) --> B[Du khách mở menu Cài đặt]
-    B --> C[Chọn ngôn ngữ hiển thị Tiếng Việt hoặc Tiếng Anh]
+    B --> C[Chọn ngôn ngữ hiển thị (1 trong 10 ngôn ngữ quốc tế)]
     C --> D[Hệ thống chuyển đổi từ ngữ trên toàn bộ giao diện]
     D --> E[Lưu thiết lập ngôn ngữ vào bộ nhớ máy]
     E --> F[Giao diện hiển thị theo ngôn ngữ đã chọn]
@@ -101,7 +101,7 @@ flowchart TD
 
 | Bước trong Lược đồ | File mã nguồn | Dòng code | Tên hàm / Thành phần | Giải thích kỹ thuật |
 | :--- | :--- | :--- | :--- | :--- |
-| **1. Menu cài đặt ngôn ngữ** | [client-web/index.html](file:///C:/Users/huykh/tourism_navigation_system/client-web/index.html#L256-L267) | `256 - 267` | `<select id="settingLang">` | Hộp chọn ngôn ngữ: Tiếng Việt (`vi`) / English (`en`) |
+| **1. Menu cài đặt ngôn ngữ** | [client-web/index.html](file:///C:/Users/huykh/tourism_navigation_system/client-web/index.html#L256-L267) | `256 - 267` | `<select id="settingLang">` | Hộp chọn 10 ngôn ngữ: Tiếng Việt (vi), English (en), Trung (zh), Nhật (ja), Hàn (ko), Pháp (fr), Nga (ru), Đức (de), TBN (es), Thái (th) |
 | **2. Bắt sự kiện đổi ngôn ngữ** | [client-web/app.js](file:///C:/Users/huykh/tourism_navigation_system/client-web/app.js#L691-L695) | `691 - 695` | `settingLang.addEventListener` | Lắng nghe khi du khách chọn ngôn ngữ khác |
 | **3. Cập nhật các chuỗi giao diện** | [client-web/app.js](file:///C:/Users/huykh/tourism_navigation_system/client-web/app.js#L295-L318) | `295 - 318` | `state.currentLang` | Thay đổi nhãn hiển thị, tiêu đề và tải lại danh sách POI tương ứng |
 | **4. Lưu thiết lập vào localStorage** | [client-web/app.js](file:///C:/Users/huykh/tourism_navigation_system/client-web/app.js#L693) | `693` | `localStorage.setItem('lang')` | Giúp ứng dụng ghi nhớ ngôn ngữ cho các lần truy cập sau |
@@ -218,7 +218,7 @@ flowchart TD
 flowchart TD
     A([Bắt đầu]) --> B[Đang phát bài thuyết minh tại di tích]
     B --> C{Thao tác trên thanh điều khiển?}
-    C -- Đổi ngôn ngữ giọng đọc --> D1[Chọn Tiếng Việt hoặc English]
+    C -- Đổi ngôn ngữ giọng đọc --> D1[Chọn ngôn ngữ thuyết minh (1 trong 10 ngôn ngữ)]
     D1 --> D2[Đổi giọng đọc và phát theo ngôn ngữ mới]
     C -- Đổi tốc độ --> E1[Bấm đổi tốc độ 1.0x -> 1.25x -> 1.5x -> 0.75x]
     E1 --> E2[Áp dụng tốc độ đọc mới ngay lập tức]
@@ -235,7 +235,7 @@ flowchart TD
 | Bước trong Lược đồ | File mã nguồn | Dòng code | Tên hàm / Thành phần | Giải thích kỹ thuật |
 | :--- | :--- | :--- | :--- | :--- |
 | **1. Khung điều khiển Audio Player** | [client-web/index.html](file:///C:/Users/huykh/tourism_navigation_system/client-web/index.html#L112-L155) | `112 - 155` | `#audioSheet` | Thanh phát âm thanh nổi: Nút Play, Tua lùi, Chỉnh tốc độ |
-| **2. Đổi ngôn ngữ giọng đọc TTS** | [client-web/app.js](file:///C:/Users/huykh/tourism_navigation_system/client-web/app.js#L540-L555) | `540 - 555` | `utterance.lang` | Chuyển giữa giọng đọc tiếng Việt (`vi-VN`) và tiếng Anh (`en-US`) |
+| **2. Đổi ngôn ngữ giọng đọc TTS** | [client-web/app.js](file:///C:/Users/huykh/tourism_navigation_system/client-web/app.js#L540-L555) | `540 - 555` | `utterance.lang` | Chuyển đổi giữa 10 giọng đọc bản địa (vi-VN, en-US, zh-CN, ja-JP, ko-KR...) |
 | **3. Chuyển đổi tốc độ phát** | [client-web/app.js](file:///C:/Users/huykh/tourism_navigation_system/client-web/app.js#L599-L609) | `599 - 609` | [`cycleSpeed()`](file:///C:/Users/huykh/tourism_navigation_system/client-web/app.js#L599-L609) | Vòng lặp tốc độ: `[1, 1.25, 1.5, 0.75]`, gán `utterance.rate` |
 | **4. Tua lùi 10 giây** | [client-web/app.js](file:///C:/Users/huykh/tourism_navigation_system/client-web/app.js#L594-L597) | `594 - 597` | [`rewind10s()`](file:///C:/Users/huykh/tourism_navigation_system/client-web/app.js#L594-L597) | Trừ lùi mốc thời gian phát âm thanh 10 giây |
 
