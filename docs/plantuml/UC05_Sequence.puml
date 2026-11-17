@@ -1,0 +1,58 @@
+@startuml UC05_Sequence
+!theme plain
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F0F9FF
+skinparam ParticipantBorderColor #0284C7
+skinparam ActorBorderColor #0284C7
+
+title Lược đồ Tuần tự (Sequence Diagram) - UC05: Bảng điều khiển & Thống kê Phân tích Thời gian thực
+
+actor "Quản trị viên\n(Admin)" as Admin
+participant "Giao diện Admin\n(admin-web/index.html)" as AdminUI
+participant "Bộ điều khiển Admin\n(admin-web/app.js)" as AdminJS
+participant "Live Backend Server\n(client-web/server.js :3000)" as Server
+database "Lưu trữ Bền vững\n(client-web/stats-data.json)" as StatsFile
+
+Admin -> AdminUI : 1. Mở trang Quản trị (/admin)
+activate AdminUI
+AdminUI -> AdminJS : 2. DOMContentLoaded -> safeRun(...)
+activate AdminJS
+
+AdminJS -> AdminJS : 3. initHeatmapMap() (Nạp Google Maps & Marker)\ninitChart() (Khởi tạo Chart.js 9 khung giờ)
+
+AdminJS -> Server : 4. GET /api/v1/pois/all?lang=vi
+activate Server
+Server -> StatsFile : 5. Đọc managedPois đã lưu
+activate StatsFile
+StatsFile --> Server : 6. Danh sách POI Quận 1
+deactivate StatsFile
+Server --> AdminJS : 7. Trả về JSON danh sách POI
+deactivate Server
+
+AdminJS -> AdminUI : 8. renderHeatmapMarkers(), renderDashboardTopPois(), renderPoiTable()
+
+loop Đồng bộ Thời gian thực mỗi 2 giây (pollRealtimeStats)
+    AdminJS -> Server : 9. GET /api/realtime-stats
+    activate Server
+    Server -> StatsFile : 10. Đọc số liệu tích lũy (loadPersistentStats)
+    activate StatsFile
+    StatsFile --> Server : 11. { totalAudience, autoListens, manualListens,\npoiListens, recentEvents, hourlyByDay }
+    deactivate StatsFile
+    Server --> AdminJS : 12. Trả về gói JSON thống kê thời gian thực
+    deactivate Server
+
+    AdminJS -> AdminUI : 13. updateStatCards()\n(Cập nhật 4 thẻ Dashboard & thiết bị Online)
+    AdminJS -> AdminUI : 14. Cập nhật Live Activity Feed (#activityFeed)
+    AdminJS -> AdminUI : 15. renderAnalyticsData()\n(Cập nhật Lượt nghe tự động, Chọn trên bản đồ, % tỷ trọng & thanh POI)
+    AdminJS -> AdminUI : 16. updateTrendChart()\n(Vẽ biểu đồ Xu hướng lượt nghe theo 9 khung giờ)
+end
+
+Admin -> AdminUI : 17. Chuyển sang tab "Thống Kê & Phân Tích"\nvà bấm lọc "7 ngày qua" / "30 ngày qua"
+AdminUI -> AdminJS : 18. click(.btn-time[data-range])
+AdminJS -> AdminJS : 19. sumTrendDays(fromOffset, toOffset)\nTính tổng & trung bình mỗi ngày từ trendHourlyByDay
+AdminJS -> AdminUI : 20. updateTrendChart(true)\nCập nhật 2 đường biểu đồ & nhãn chú giải
+deactivate AdminJS
+deactivate AdminUI
+@enduml

@@ -51,10 +51,6 @@
                     <i class="fa-solid fa-chart-simple"></i>
                     <span>Thống Kê & Phân Tích</span>
                 </a>
-                <a href="#settings" class="nav-item">
-                    <i class="fa-solid fa-gear"></i>
-                    <span>Cài Đặt Hệ Thống</span>
-                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -72,20 +68,10 @@
             <header class="topbar">
 
                 <div class="topbar-actions">
-                    <div class="lang-toggle">
-                        <button class="lang-btn active">VIE</button>
-                        <button class="lang-btn">ENG</button>
-                    </div>
-
-                    <button class="icon-btn notification-btn" title="Thông báo">
-                        <i class="fa-regular fa-bell"></i>
-                        <span class="badge-dot"></span>
-                    </button>
-
                     <div class="user-profile">
                         <div class="user-info">
-                            <span class="user-name">Nguyễn Văn An</span>
-                            <span class="user-role">Quản trị viên cấp cao</span>
+                            <span class="user-name">Admin</span>
+                            <span class="user-role">Quản trị viên hệ thống</span>
                         </div>
                         <div class="user-avatar">
                             <i class="fa-solid fa-user"></i>
@@ -105,19 +91,6 @@
                         </div>
                         <h1 class="main-title">Bảng Điều Khiển & Phân Tích Hệ Thống</h1>
                         <p class="subtitle">Theo dõi tổng lượt nghe thuyết minh, điểm tham quan phổ biến và phiên nghe thời gian thực.</p>
-                    </div>
-
-                    <div class="action-group">
-                        <div class="date-filter">
-                            <button class="filter-btn active">Hôm nay</button>
-                            <button class="filter-btn">7 ngày qua</button>
-                            <button class="filter-btn">Tháng này</button>
-                            <button class="filter-btn">Tùy chỉnh <i class="fa-regular fa-calendar"></i></button>
-                        </div>
-
-                        <button class="btn btn-export">
-                            <i class="fa-solid fa-download"></i> Xuất báo cáo PDF/Excel
-                        </button>
                     </div>
                 </div>
 
@@ -300,9 +273,6 @@
                     </div>
 
                     <div class="action-group">
-                        <button class="btn btn-outline" id="btnExportData">
-                            <i class="fa-solid fa-download"></i> Xuất Dữ Liệu
-                        </button>
                         <button class="btn btn-primary" id="btnOpenAddModal">
                             <i class="fa-solid fa-plus"></i> Thêm Điểm Đến Mới
                         </button>
@@ -380,17 +350,6 @@
                         </h1>
                         <p class="subtitle">Phân tích xu hướng lượt nghe thuyết minh, lưu lượng GPS và tương tác điểm đến Quận 1.</p>
                     </div>
-
-                    <div class="action-group">
-                        <div class="time-filter-group">
-                            <button class="btn-time active" data-range="today">Hôm nay</button>
-                            <button class="btn-time" data-range="week">7 ngày qua</button>
-                            <button class="btn-time" data-range="month">30 ngày qua</button>
-                        </div>
-                        <button class="btn btn-outline" id="btnExportAnalytics">
-                            <i class="fa-solid fa-download"></i> Xuất Báo Cáo
-                        </button>
-                    </div>
                 </div>
 
                 <!-- 4 Thẻ chỉ số tổng quan phân tích -->
@@ -433,9 +392,9 @@
                             <span class="card-label">KHUNG GIỜ CAO ĐIỂM</span>
                             <div class="card-icon blue-icon"><i class="fa-solid fa-fire"></i></div>
                         </div>
-                        <div class="card-value">14h – 17h</div>
+                        <div class="card-value" id="analyticsPeakHour">--</div>
                         <div class="card-footer">
-                            <span class="footer-note highlight-text">Chiếm 45% tổng lưu lượng</span>
+                            <span class="footer-note highlight-text" id="analyticsPeakNote">Chưa có dữ liệu</span>
                         </div>
                     </div>
                 </div>
@@ -450,8 +409,7 @@
                             <p class="panel-subtitle">Tổng hợp mọi lượt nghe (tự động Geofence + chọn điểm trên bản đồ) theo khung giờ</p>
                         </div>
                         <div class="chart-legend">
-                            <span class="legend-item"><span class="dot today-dot"></span> <span id="trendLegendMain">Hôm nay</span></span>
-                            <span class="legend-item"><span class="dot week-dot"></span> <span id="trendLegendCompare">Trung bình 7 ngày trước</span></span>
+                            <span class="legend-item"><span class="dot today-dot"></span> <span id="trendLegendMain">Tổng lượt nghe theo khung giờ</span></span>
                         </div>
                     </div>
 
@@ -459,7 +417,7 @@
                         <canvas id="trendChart"></canvas>
                     </div>
 
-                    <div class="chart-time-labels">
+                    <div class="chart-time-labels" id="chartTimeLabels">
                         <div class="time-slot">
                             <strong>06:00 – 09:00</strong>
                             <span>Buổi Sáng</span>

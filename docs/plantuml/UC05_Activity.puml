@@ -1,0 +1,48 @@
+@startuml UC05_Activity
+!theme plain
+skinparam shadowing false
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityBorderColor #0284C7
+skinparam ActivityDiamondBackgroundColor #E0F2FE
+skinparam ActivityDiamondBorderColor #0369A1
+
+title Lược đồ Hoạt động (Activity Diagram) - UC05: Bảng điều khiển & Thống kê Phân tích Thời gian thực
+
+|Quản trị viên (Admin)|
+start
+:Truy cập trang Quản trị (http://localhost:3000/admin);
+
+|Trang Quản trị (admin-web/app.js)|
+:Khởi tạo độc lập từng phân hệ qua hàm safeRun():\n- initNavigation()\n- initChart()\n- initHeatmapMap()\n- fetchPoisFromBackend()\n- setupSyncListener()\n- initAnalyticsFilter();
+
+|Live Backend Server (client-web/server.js)|
+:Đọc dữ liệu tích lũy bền vững từ ổ cứng (stats-data.json)\ngồm: totalAudience, autoListens, manualListens,\npoiListens, recentEvents, hourlyByDay, managedPois;
+:Trả gói JSON qua API GET /api/realtime-stats (mỗi 2 giây);
+
+|Trang Quản trị (admin-web/app.js)|
+fork
+  :Cập nhật Màn hình "Bảng Điều Khiển" (#sectionDashboard):
+  - 4 thẻ KPI (Tổng lượt nghe, Điểm phổ biến nhất, Thiết bị Online, Phiên trực tiếp)
+  - Bản đồ Quận 1 (#heatmapLeaflet) với Marker đỏ & vòng Geofence
+  - Bảng Top 5 Điểm Tham Quan & Luồng Hoạt Động GPS Mới Nhất (#activityFeed);
+fork again
+  :Cập nhật Màn hình "Thống Kê & Phân Tích" (#sectionAnalytics):
+  - Thẻ Lượt nghe tự động Geofence (#analyticsAutoListens)
+  - Thẻ Lượt nghe chọn trên bản đồ (#analyticsManualListens)
+  - Thẻ Tổng tất cả lượt nghe (#analyticsTotalListens)
+  - Biểu đồ Xu hướng lượt nghe theo 9 khung giờ (#trendChart)
+  - Thanh tỷ trọng lượt nghe theo từng điểm (#analyticsPoiBars)
+  - Tỷ lệ % Tự động GPS vs Chọn trên bản đồ (#pctAutoTrigger, #pctManualTrigger);
+end fork
+
+|Quản trị viên (Admin)|
+if (Chọn bộ lọc thời gian biểu đồ?) then (Hôm nay / 7 ngày / 30 ngày)
+  |Trang Quản trị (admin-web/app.js)|
+  :Gọi sumTrendDays(fromOffset, toOffset)\ncộng dồn dữ liệu từ trendHourlyByDay;
+  :Gọi updateTrendChart(true) vẽ lại đường chính\nvà đường trung bình so sánh trên Chart.js;
+else (Không đổi)
+endif
+
+:Tiếp tục tự động làm mới dữ liệu mỗi 2 giây;
+stop
+@enduml

@@ -1,0 +1,49 @@
+@startuml UC03_Sequence
+!theme plain
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F0F9FF
+skinparam ParticipantBorderColor #0284C7
+skinparam ActorBorderColor #0284C7
+
+title Lược đồ Tuần tự (Sequence Diagram) - UC03: Tùy chọn ngôn ngữ hiển thị giao diện
+
+actor "Du khách\n(Tourist)" as Tourist
+participant "Giao diện Cài đặt\n(client-web/index.html)" as UI
+participant "Bộ xử lý Đa ngôn ngữ\n(client-web/app.js)" as AppJS
+participant "Từ điển 10 Ngôn ngữ\n(UI_LOCALES & POI_MULTILANG_SCRIPTS)" as Dict
+participant "Bản đồ Leaflet\n(Google Maps Layer)" as Map
+
+Tourist -> UI : Chọn ngôn ngữ mới trên #settingLang\n(vi / en / zh / ja / ko / fr / ru / de / es / th)
+activate UI
+
+UI -> AppJS : Sự kiện change(e.target.value)
+activate AppJS
+
+AppJS -> AppJS : state.selectedLang = e.target.value\nstopPlayback()
+AppJS -> Dict : applyUiTranslations(selectedLang)
+activate Dict
+Dict --> AppJS : Trả về bộ nhãn giao diện UI_LOCALES[lang]
+deactivate Dict
+
+AppJS -> UI : Cập nhật tiêu đề, nhãn nút bấm, tab điều hướng
+
+alt Đang có điểm tham quan activePoi
+    AppJS -> Dict : getLocalizedPoi(activePoi, selectedLang)
+    activate Dict
+    Dict --> AppJS : Trả về { name, address, ttsScript } đã dịch
+    deactivate Dict
+    AppJS -> UI : Cập nhật thẻ thông tin POI & kịch bản đọc
+end
+
+AppJS -> Map : renderPoiMarkers()
+activate Map
+Map --> UI : Vẽ lại nhãn tên các địa danh theo ngôn ngữ mới
+deactivate Map
+
+AppJS -> AppJS : checkGeofenceAndDistances()
+AppJS --> Tourist : Hiển thị toàn bộ ứng dụng bằng ngôn ngữ đã chọn
+deactivate AppJS
+deactivate UI
+@enduml

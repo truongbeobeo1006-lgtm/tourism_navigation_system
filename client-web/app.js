@@ -780,18 +780,28 @@ function findPoiMultilang(poi) {
 function getLocalizedPoi(poi, lang) {
   if (!poi) return poi;
   const l = lang || state.selectedLang || 'vi';
+  const customScript = poi.customScripts && poi.customScripts[l];
+  const customAudio = poi.customAudioUrls && poi.customAudioUrls[l];
   const multilang = findPoiMultilang(poi);
-  if (!multilang) return poi;
+  if (!multilang) {
+    return {
+      ...poi,
+      address: poi.address || 'Quận 1, TP. Hồ Chí Minh',
+      ttsScript: customScript || poi.ttsScript || ('Chào mừng bạn đến ' + poi.name + '.'),
+      audioUrl: customAudio || poi.audioUrl || null
+    };
+  }
 
   const locName = (multilang.name && multilang.name[l]) ? multilang.name[l] : poi.name;
   const locAddr = (multilang.address && multilang.address[l]) ? multilang.address[l] : (poi.address || poi.category || 'TP. Hồ Chí Minh');
-  const locScript = (multilang.script && multilang.script[l]) ? multilang.script[l] : (poi.ttsScript || locName);
+  const locScript = customScript || ((multilang.script && multilang.script[l]) ? multilang.script[l] : (poi.ttsScript || locName));
 
   return {
     ...poi,
     name: locName,
     address: locAddr,
-    ttsScript: locScript
+    ttsScript: locScript,
+    audioUrl: customAudio || poi.audioUrl || null
   };
 }
 
@@ -939,6 +949,7 @@ function applyUiTranslations(lang) {
   // 11. Refresh map landmark markers with localized labels
   if (typeof renderPoiMarkers === 'function') {
     renderPoiMarkers();
+  renderRoutePoiList();
   }
 }
 
@@ -1056,6 +1067,9 @@ const state = {
   audioCurrentTime: 0,
   playbackInterval: null,
   bannerTimeout: null,
+  routeLayer: null,
+  routeDistance: 0,
+  routeDuration: 0,
 };
 
 // DOM References
@@ -1207,6 +1221,79 @@ function initMap() {
   });
 }
 
+// ==========================================
+// ROUTE PLANNING - GET REAL ROAD ROUTE (Của Kiệt)
+// ==========================================
+async function getRoadRoute(start, end) {
+  try {
+    const url =
+      `https://router.project-osrm.org/route/v1/driving/` +
+      `${start.lng},${start.lat};${end.lng},${end.lat}` +
+      `?overview=full&geometries=geojson`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Không thể tìm đường đi!');
+    }
+    const data = await response.json();
+    if (data.code !== 'Ok' || !data.routes.length) {
+      throw new Error('Không tìm thấy tuyến đường phù hợp!');
+    }
+
+    const route = data.routes[0];
+    if (state.routeLayer) {
+      state.map.removeLayer(state.routeLayer);
+    }
+
+    state.routeLayer = L.geoJSON(route.geometry, {
+      style: { color: '#2563eb', weight: 6, opacity: 0.85 }
+    }).addTo(state.map);
+
+    state.routeDistance = route.distance;
+    state.routeDuration = route.duration;
+
+    state.map.fitBounds(state.routeLayer.getBounds(), { padding: [40, 40] });
+
+    const distanceDisplay = document.getElementById('routeDistanceDisplay');
+    if (distanceDisplay) {
+      distanceDisplay.textContent = (route.distance / 1000).toFixed(2) + ' km';
+    }
+    const durationDisplay = document.getElementById('routeDurationDisplay');
+    if (durationDisplay) {
+      durationDisplay.textContent = Math.ceil(route.duration / 60) + ' phút';
+    }
+  } catch (error) {
+    console.error('Lỗi tìm đường:', error);
+    alert(error.message);
+  }
+}
+
+function renderRoutePoiList() {
+  const routePoiList = document.getElementById('routePoiList');
+  if (!routePoiList) return;
+  routePoiList.innerHTML = '';
+
+  state.pois.forEach(poi => {
+    const label = document.createElement('label');
+    label.className = 'route-poi-item';
+    label.style.display = 'flex';
+    label.style.alignItems = 'center';
+    label.style.gap = '8px';
+    label.style.fontSize = '13px';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = poi.id;
+
+    const span = document.createElement('span');
+    span.textContent = poi.name;
+
+    label.appendChild(checkbox);
+    label.appendChild(span);
+    routePoiList.appendChild(label);
+  });
+}
+
 function renderPoiMarkers() {
   if (!state.map) return;
   Object.values(state.poiMarkers).forEach(m => state.map.removeLayer(m));
@@ -1259,37 +1346,65 @@ function renderPoiMarkers() {
 // 3. API INTEGRATION & DATA
 // ==========================================
 async function fetchPois() {
+  let loaded = null;
   try {
-    const url = `${CONFIG.API_GATEWAY_URL}/api/v1/pois?lat=${state.currentLat}&lng=${state.currentLng}&radius=3000&lang=${state.selectedLang}`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      // Deduplicate by name
-      const map = new Map();
-      data.forEach(p => {
-        if (!map.has(p.name)) {
-          // Merge with static address
-          const fallback = FALLBACK_POIS.find(f => f.name === p.name);
-          p.address = fallback ? fallback.address : 'Quận 1, TP. Hồ Chí Minh';
-          p.durationSec = p.durationSec || 135;
-          map.set(p.name, p);
-        }
-      });
-      state.pois = Array.from(map.values());
-    } else {
-      state.pois = FALLBACK_POIS;
+    const liveBase = window.location.protocol.startsWith('http') ? '' : 'http://127.0.0.1:3000';
+    const liveRes = await fetch(`${liveBase}/api/v1/pois?lang=${state.selectedLang}`, { headers: { 'Accept': 'application/json' } });
+    if (liveRes.ok) {
+      const liveData = await liveRes.json();
+      if (Array.isArray(liveData)) loaded = liveData;
     }
-  } catch (err) {
-    console.info('API Gateway offline. Using District 1 verified POIs:', err.message);
+  } catch (e) {}
+
+  if (!loaded) {
+    try {
+      const url = `${CONFIG.API_GATEWAY_URL}/api/v1/pois?lat=${state.currentLat}&lng=${state.currentLng}&radius=3000&lang=${state.selectedLang}`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const gwData = await res.json();
+        if (Array.isArray(gwData) && gwData.length > 0) loaded = gwData;
+      }
+    } catch (err) {
+      console.info('API Gateway offline. Using District 1 verified POIs:', err.message);
+    }
+  }
+
+  if (Array.isArray(loaded) && loaded.length > 0) {
+    const map = new Map();
+    loaded.filter(p => p.isActive !== false).forEach(p => {
+      const key = p.id || p.name;
+      if (!map.has(key)) {
+        const fallback = FALLBACK_POIS.find(f => f.name === p.name);
+        p.address = p.address || (fallback ? fallback.address : 'Quận 1, TP. Hồ Chí Minh');
+        p.durationSec = p.durationSec || (fallback ? fallback.durationSec : 135);
+        map.set(key, p);
+      }
+    });
+    state.pois = Array.from(map.values());
+  } else if (!Array.isArray(loaded)) {
     state.pois = FALLBACK_POIS;
+  } else {
+    state.pois = [];
   }
 
   renderPoiMarkers();
 
-  // Default active POI: Dinh Độc Lập
-  const defaultPoi = state.pois.find(p => p.name.includes('Dinh Độc Lập')) || state.pois[0];
-  selectPoi(defaultPoi, false);
+  // Giữ điểm POI đang chọn nếu vẫn còn trong danh sách, hoặc chọn Dinh Độc Lập mặc định
+  if (state.pois.length > 0) {
+    const currentStillExists = state.activePoi && state.pois.find(p => p.id === state.activePoi.id || p.name === state.activePoi.name);
+    if (currentStillExists) {
+      state.activePoi = currentStillExists;
+      const l = state.selectedLang || 'vi';
+      const locPoi = getLocalizedPoi(currentStillExists, l);
+      dom.poiName.innerText = locPoi.name;
+      if (dom.sheetPoiName) dom.sheetPoiName.innerText = locPoi.name;
+      dom.poiAddress.innerText = locPoi.address || 'Quận 1, TP. Hồ Chí Minh';
+      dom.poiScriptText.innerText = locPoi.ttsScript || locPoi.name;
+    } else {
+      const defaultPoi = state.pois.find(p => p.name.includes('Dinh Độc Lập')) || state.pois[0];
+      selectPoi(defaultPoi, false);
+    }
+  }
   checkGeofenceAndDistances();
 }
 
@@ -1459,7 +1574,7 @@ function checkGeofenceAndDistances() {
         showGeofenceBanner(poiInsideZone);
 
         // Auto start narration
-        startPlayback();
+        startPlayback('auto');
       }
     }
   } else {
@@ -1566,8 +1681,27 @@ function sendRealtimeHeartbeat() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'DEVICE_ONLINE', deviceId: devId, deviceType: isMobile ? 'mobile' : 'web' })
-  }).catch(() => { });
+  })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (data && data.poisVersion) {
+        if (state.poisVersion && state.poisVersion !== data.poisVersion) {
+          fetchPois();
+        }
+        state.poisVersion = data.poisVersion;
+      }
+    })
+    .catch(() => { });
 }
+
+try {
+  const poiSyncChannel = new BroadcastChannel('poitour_sync_channel');
+  poiSyncChannel.onmessage = (ev) => {
+    if (ev.data && ev.data.type === 'POIS_UPDATED') {
+      fetchPois();
+    }
+  };
+} catch (e) {}
 
 function sendDeviceOffline() {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -1908,6 +2042,94 @@ function setupEventListeners() {
     startGpsTracking();
     switchTab('tabMap', document.getElementById('btnTabMap'));
   });
+
+  // Create / Save / Cancel Route (Của Kiệt)
+  const btnCreateRoute = document.getElementById('btnCreateRoute');
+  const createRouteForm = document.getElementById('createRouteForm');
+  const btnCancelRoute = document.getElementById('btnCancelRoute');
+  const btnSaveRoute = document.getElementById('btnSaveRoute');
+
+  if (btnCreateRoute && createRouteForm) {
+    btnCreateRoute.addEventListener('click', () => {
+      renderRoutePoiList();
+      createRouteForm.style.display = 'block';
+    });
+  }
+  if (btnCancelRoute && createRouteForm) {
+    btnCancelRoute.addEventListener('click', () => {
+      createRouteForm.style.display = 'none';
+    });
+  }
+  if (btnSaveRoute) {
+    btnSaveRoute.addEventListener('click', async () => {
+      const routeName = document.getElementById('routeName').value.trim();
+      const selectedPois = document.querySelectorAll('#routePoiList input[type="checkbox"]:checked');
+      const selectedPoiIds = Array.from(selectedPois).map(cb => cb.value);
+      const selectedPoisData = state.pois.filter(poi => selectedPoiIds.includes(String(poi.id)));
+
+      if (!routeName) {
+        alert('Vui lòng nhập tên tuyến đường!');
+        return;
+      }
+      if (selectedPoisData.length === 0) {
+        alert('Vui lòng chọn ít nhất một địa điểm!');
+        return;
+      }
+
+      const start = { lat: state.currentLat, lng: state.currentLng };
+      const endPoi = selectedPoisData[selectedPoisData.length - 1];
+      const end = { lat: Number(endPoi.lat), lng: Number(endPoi.lng) };
+
+      if (!Number.isFinite(end.lat) || !Number.isFinite(end.lng)) {
+        alert('Địa điểm không có tọa độ hợp lệ!');
+        return;
+      }
+
+      await getRoadRoute(start, end);
+      switchTab('tabMap', document.getElementById('btnTabMap'));
+
+      try {
+        const response = await fetch('http://localhost:8083/api/routes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: routeName, poiIds: selectedPoiIds })
+        });
+        if (response.ok) {
+          const savedRoute = await response.json();
+          alert('Lưu tuyến đường thành công!\nMã tuyến đường: ' + savedRoute.id);
+        }
+      } catch (error) {
+        console.warn('Tracking service (:8083) offline, đã vẽ đường đi OSRM trên bản đồ:', error.message);
+      }
+    });
+  }
+}
+
+async function loadRoutes() {
+  const toursList = document.getElementById('toursList');
+  if (!toursList) return;
+  try {
+    const response = await fetch('http://localhost:8083/api/routes');
+    if (!response.ok) return;
+    const routes = await response.json();
+    if (!Array.isArray(routes) || routes.length === 0) return;
+    toursList.innerHTML = '';
+    routes.forEach(route => {
+      const card = document.createElement('div');
+      card.className = 'tour-card';
+      const title = document.createElement('h3');
+      title.className = 'tour-name';
+      title.textContent = route.name;
+      const description = document.createElement('p');
+      description.className = 'tour-desc';
+      description.textContent = 'Mã tuyến: ' + route.id + ' | Số địa điểm: ' + (route.poiIds?.length || 0);
+      card.appendChild(title);
+      card.appendChild(description);
+      toursList.appendChild(card);
+    });
+  } catch (error) {
+    console.info('Tracking service (:8083) offline, giữ các tuyến gợi ý mặc định.');
+  }
 }
 
 function switchTab(tabId, activeBtn) {
@@ -1929,6 +2151,7 @@ function switchTab(tabId, activeBtn) {
     }, 100);
   } else if (tabId === 'tabTours') {
     dom.screenTitle.innerText = 'Lộ trình Tổng quan';
+    loadRoutes();
   } else if (tabId === 'tabSettings') {
     dom.screenTitle.innerText = 'Cài đặt hệ thống';
   }
