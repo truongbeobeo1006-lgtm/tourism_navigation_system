@@ -823,28 +823,18 @@ if (str.includes('chứng tích') || str.includes('chung tich') || str.includes(
 function getLocalizedPoi(poi, lang) {
   if (!poi) return poi;
   const l = lang || state.selectedLang || 'vi';
-  const customScript = poi.customScripts && poi.customScripts[l];
-  const customAudio = poi.customAudioUrls && poi.customAudioUrls[l];
   const multilang = findPoiMultilang(poi);
-  if (!multilang) {
-    return {
-      ...poi,
-      address: poi.address || 'Quận 1, TP. Hồ Chí Minh',
-      ttsScript: customScript || poi.ttsScript || ('Chào mừng bạn đến ' + poi.name + '.'),
-      audioUrl: customAudio || poi.audioUrl || null
-    };
-  }
+  if (!multilang) return poi;
 
   const locName = (multilang.name && multilang.name[l]) ? multilang.name[l] : poi.name;
   const locAddr = (multilang.address && multilang.address[l]) ? multilang.address[l] : (poi.address || poi.category || 'TP. Hồ Chí Minh');
-  const locScript = customScript || ((multilang.script && multilang.script[l]) ? multilang.script[l] : (poi.ttsScript || locName));
+  const locScript = (multilang.script && multilang.script[l]) ? multilang.script[l] : (poi.ttsScript || locName);
 
   return {
     ...poi,
     name: locName,
     address: locAddr,
-    ttsScript: locScript,
-    audioUrl: customAudio || poi.audioUrl || null
+    ttsScript: locScript
   };
 }
 
@@ -1136,6 +1126,7 @@ const state = {
   audioCurrentTime: 0,
   playbackInterval: null,
   bannerTimeout: null,
+  // Route Planning
   routeLayer: null,
   routeDistance: 0,
   routeDuration: 0,
@@ -1289,294 +1280,291 @@ function initMap() {
     updateUserPosition(e.latlng.lat, e.latlng.lng);
   });
 }
+  // ==========================================
+  // ROUTE PLANNING - GET REAL ROAD ROUTE
+  // ==========================================
+  async function getRoadRoute(start, end) {
+    try {
+      const url =
+        `https://router.project-osrm.org/route/v1/driving/` +
+        `${start.lng},${start.lat};${end.lng},${end.lat}` +
+        `?overview=full&geometries=geojson`;
 
-// ==========================================
-// ROUTE PLANNING - GET REAL ROAD ROUTE (Của Kiệt)
-// ==========================================
-async function getRoadRoute(start, end) {
-  try {
-    const url =
-      `https://router.project-osrm.org/route/v1/driving/` +
-      `${start.lng},${start.lat};${end.lng},${end.lat}` +
-      `?overview=full&geometries=geojson`;
+      const response = await fetch(url);
 
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Không thể tìm đường đi!');
+      if (!response.ok) {
+        throw new Error('Không thể tìm đường đi!');
+      }
+
+      const data = await response.json();
+
+      if (data.code !== 'Ok' || !data.routes.length) {
+        throw new Error('Không tìm thấy tuyến đường phù hợp!');
+      }
+
+      const route = data.routes[0];
+
+      // Xóa tuyến đường cũ nếu có
+      if (state.routeLayer) {
+        state.map.removeLayer(state.routeLayer);
+      }
+
+      // Vẽ tuyến đường mới lên bản đồ
+      state.routeLayer = L.geoJSON(route.geometry, {
+        style: {
+          color: '#2563eb',
+          weight: 6,
+          opacity: 0.85
+        }
+      }).addTo(state.map);
+
+      // Lưu khoảng cách và thời gian
+      state.routeDistance = route.distance;
+      state.routeDuration = route.duration;
+
+      // Tự động zoom để thấy toàn bộ tuyến đường
+      state.map.fitBounds(state.routeLayer.getBounds(), {
+        padding: [40, 40]
+      });
+
+      console.log('Khoảng cách:', (route.distance / 1000).toFixed(2), 'km');
+      console.log('Thời gian:', Math.ceil(route.duration / 60), 'phút');
+// Hiển thị khoảng cách
+const distanceDisplay = document.getElementById('routeDistanceDisplay');
+
+if (distanceDisplay) {
+  distanceDisplay.textContent =
+    (route.distance / 1000).toFixed(2) + ' km';
+}
+
+// Hiển thị thời gian
+const durationDisplay = document.getElementById('routeDurationDisplay');
+
+if (durationDisplay) {
+  durationDisplay.textContent =
+    Math.ceil(route.duration / 60) + ' phút';
+}
+    } catch (error) {
+      console.error('Lỗi tìm đường:', error);
+      alert(error.message);
     }
-    const data = await response.json();
-    if (data.code !== 'Ok' || !data.routes.length) {
-      throw new Error('Không tìm thấy tuyến đường phù hợp!');
-    }
-
-    const route = data.routes[0];
-    if (state.routeLayer) {
-      state.map.removeLayer(state.routeLayer);
-    }
-
-    state.routeLayer = L.geoJSON(route.geometry, {
-      style: { color: '#2563eb', weight: 6, opacity: 0.85 }
-    }).addTo(state.map);
-
-    state.routeDistance = route.distance;
-    state.routeDuration = route.duration;
-
-    state.map.fitBounds(state.routeLayer.getBounds(), { padding: [40, 40] });
-
-    const distanceDisplay = document.getElementById('routeDistanceDisplay');
-    if (distanceDisplay) {
-      distanceDisplay.textContent = (route.distance / 1000).toFixed(2) + ' km';
-    }
-    const durationDisplay = document.getElementById('routeDurationDisplay');
-    if (durationDisplay) {
-      durationDisplay.textContent = Math.ceil(route.duration / 60) + ' phút';
-    }
-  } catch (error) {
-    console.error('Lỗi tìm đường:', error);
-    alert(error.message);
   }
-}
+  function renderPoiMarkers() {
+    if (!state.map) return;
+    Object.values(state.poiMarkers).forEach(m => state.map.removeLayer(m));
+    Object.values(state.poiGeofenceCircles).forEach(c => state.map.removeLayer(c));
+    state.poiMarkers = {};
+    state.poiGeofenceCircles = {};
 
-function renderRoutePoiList() {
-  const routePoiList = document.getElementById('routePoiList');
-  if (!routePoiList) return;
-  routePoiList.innerHTML = '';
+    const l = state.selectedLang || 'vi';
 
-  state.pois.forEach(poi => {
-    const label = document.createElement('label');
-    label.className = 'route-poi-item';
-    label.style.display = 'flex';
-    label.style.alignItems = 'center';
-    label.style.gap = '8px';
-    label.style.fontSize = '13px';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.value = poi.id;
-
-    const span = document.createElement('span');
-    span.textContent = poi.name;
-
-    label.appendChild(checkbox);
-    label.appendChild(span);
-    routePoiList.appendChild(label);
-  });
-}
-
-function renderPoiMarkers() {
-  if (!state.map) return;
-  Object.values(state.poiMarkers).forEach(m => state.map.removeLayer(m));
-  Object.values(state.poiGeofenceCircles).forEach(c => state.map.removeLayer(c));
-  state.poiMarkers = {};
-  state.poiGeofenceCircles = {};
-
-  const l = state.selectedLang || 'vi';
-
-  state.pois.forEach(poi => {
-    const locPoi = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(poi, l) : poi;
-    // Landmark Red Pin
-    const poiIcon = L.divIcon({
-      className: 'poi-marker-wrapper',
-      html: `
-        <div class="poi-landmark-marker" id="marker-${poi.id}">
-          <div class="poi-icon-circle">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M4 10v7h3v-7H4zm6 0v7h4v-7h-4zm7 0v7h3v-7h-3zM2 22h20v-3H2v3zm10-20L2 6v2h20V6l-10-4z"></path>
-            </svg>
+    state.pois.forEach(poi => {
+      const locPoi = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(poi, l) : poi;
+      // Landmark Red Pin
+      const poiIcon = L.divIcon({
+        className: 'poi-marker-wrapper',
+        html: `
+          <div class="poi-landmark-marker" id="marker-${poi.id}">
+            <div class="poi-icon-circle">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 10v7h3v-7H4zm6 0v7h4v-7h-4zm7 0v7h3v-7h-3zM2 22h20v-3H2v3zm10-20L2 6v2h20V6l-10-4z"></path>
+              </svg>
+            </div>
+            <div class="poi-label-pill">${locPoi.name}</div>
           </div>
-          <div class="poi-label-pill">${locPoi.name}</div>
-        </div>
-      `,
-      iconSize: [80, 56],
-      iconAnchor: [40, 26]
+        `,
+        iconSize: [80, 56],
+        iconAnchor: [40, 26]
+      });
+
+      const marker = L.marker([poi.lat, poi.lng], { icon: poiIcon, zIndexOffset: 1000 }).addTo(state.map);
+      marker.on('click', () => {
+        unlockAudio();
+        selectPoi(poi, true);
+      });
+      state.poiMarkers[poi.id] = marker;
+
+      // Dashed 30m Geofence Circle
+      const circle = L.circle([poi.lat, poi.lng], {
+        radius: poi.radiusM || 30,
+        color: '#0284c7',
+        fillColor: '#38bdf8',
+        fillOpacity: 0.18,
+        weight: 1.5,
+        dashArray: '5, 5'
+      }).addTo(state.map);
+      state.poiGeofenceCircles[poi.id] = circle;
     });
+  }
 
-    const marker = L.marker([poi.lat, poi.lng], { icon: poiIcon, zIndexOffset: 1000 }).addTo(state.map);
-    marker.on('click', () => {
-      unlockAudio();
-      selectPoi(poi, true);
+
+  // ==========================================
+  // 3. API INTEGRATION & DATA
+  // ==========================================
+
+  // Render danh sách địa điểm trong form tạo tuyến đường
+  function renderRoutePoiList() {
+    const routePoiList = document.getElementById('routePoiList');
+
+    if (!routePoiList) return;
+
+    routePoiList.innerHTML = '';
+
+    state.pois.forEach(poi => {
+      const label = document.createElement('label');
+      label.className = 'route-poi-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = poi.id;
+
+      const span = document.createElement('span');
+      span.textContent = poi.name;
+
+      label.appendChild(checkbox);
+      label.appendChild(span);
+
+      routePoiList.appendChild(label);
     });
-    state.poiMarkers[poi.id] = marker;
+  }
 
-    // Dashed 30m Geofence Circle
-    const circle = L.circle([poi.lat, poi.lng], {
-      radius: poi.radiusM || 30,
-      color: '#0284c7',
-      fillColor: '#38bdf8',
-      fillOpacity: 0.18,
-      weight: 1.5,
-      dashArray: '5, 5'
-    }).addTo(state.map);
-    state.poiGeofenceCircles[poi.id] = circle;
-  });
-}
-
-// ==========================================
-// 3. API INTEGRATION & DATA
-// ==========================================
-async function fetchPois() {
-  let loaded = null;
-  try {
-    const liveBase = window.location.protocol.startsWith('http') ? '' : 'http://127.0.0.1:3000';
-    const liveRes = await fetch(`${liveBase}/api/v1/pois?lang=${state.selectedLang}`, { headers: { 'Accept': 'application/json' } });
-    if (liveRes.ok) {
-      const liveData = await liveRes.json();
-      if (Array.isArray(liveData)) loaded = liveData;
-    }
-  } catch (e) {}
-
-  if (!loaded) {
+  async function fetchPois() {
+    
     try {
       const url = `${CONFIG.API_GATEWAY_URL}/api/v1/pois?lat=${state.currentLat}&lng=${state.currentLng}&radius=3000&lang=${state.selectedLang}`;
       const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if (res.ok) {
-        const gwData = await res.json();
-        if (Array.isArray(gwData) && gwData.length > 0) loaded = gwData;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        // Deduplicate by name
+        const map = new Map();
+        data.forEach(p => {
+          if (!map.has(p.name)) {
+            // Merge with static address
+            const fallback = FALLBACK_POIS.find(f => f.name === p.name);
+            p.address = fallback ? fallback.address : 'Quận 1, TP. Hồ Chí Minh';
+            p.durationSec = p.durationSec || 135;
+            map.set(p.name, p);
+          }
+        });
+        state.pois = Array.from(map.values());
+      } else {
+        state.pois = FALLBACK_POIS;
       }
     } catch (err) {
       console.info('API Gateway offline. Using District 1 verified POIs:', err.message);
+      state.pois = FALLBACK_POIS;
     }
+
+    renderPoiMarkers();
+      renderRoutePoiList();
+
+    // Default active POI: Dinh Độc Lập
+    const defaultPoi = state.pois.find(p => p.name.includes('Dinh Độc Lập')) || state.pois[0];
+    selectPoi(defaultPoi, false);
+    checkGeofenceAndDistances();
   }
 
-  if (Array.isArray(loaded) && loaded.length > 0) {
-    const map = new Map();
-    loaded.filter(p => p.isActive !== false).forEach(p => {
-      const key = p.id || p.name;
-      if (!map.has(key)) {
-        const fallback = FALLBACK_POIS.find(f => f.name === p.name);
-        p.address = p.address || (fallback ? fallback.address : 'Quận 1, TP. Hồ Chí Minh');
-        p.durationSec = p.durationSec || (fallback ? fallback.durationSec : 135);
-        map.set(key, p);
+  // ==========================================
+  // 4. REAL GPS & POSITION TRACKING
+  // ==========================================
+  function startGpsTracking() {
+    if (!navigator.geolocation) {
+      onGpsPositionError({ code: 0, message: 'Thiết bị không hỗ trợ Geolocation' });
+      return;
+    }
+
+    dom.gpsPill.className = 'gps-badge connecting';
+    dom.gpsText.innerText = 'GPS: Đang lấy vị trí thực...';
+
+    // 1. Get fast immediate fix from hardware GPS
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        console.log('[GPS Fast Fix Received]:', pos.coords.latitude, pos.coords.longitude);
+        onGpsPositionUpdate(pos);
+      },
+      (err) => {
+        console.warn('[GPS Fast Fix Pending]:', err.message);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
+
+    // 2. Continuous real-time position tracking
+    if (state.watchId !== null) {
+      navigator.geolocation.clearWatch(state.watchId);
+      state.watchId = null;
+    }
+
+    state.watchId = navigator.geolocation.watchPosition(
+      onGpsPositionUpdate,
+      onGpsPositionError,
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 15000
       }
-    });
-    state.pois = Array.from(map.values());
-  } else if (!Array.isArray(loaded)) {
-    state.pois = FALLBACK_POIS;
-  } else {
-    state.pois = [];
+    );
   }
 
-  renderPoiMarkers();
+  function onGpsPositionUpdate(pos) {
+    const { latitude, longitude, accuracy } = pos.coords;
+    state.isSimulating = false;
+    state.hasRealGps = true;
 
-  // Giữ điểm POI đang chọn nếu vẫn còn trong danh sách, hoặc chọn Dinh Độc Lập mặc định
-  if (state.pois.length > 0) {
-    const currentStillExists = state.activePoi && state.pois.find(p => p.id === state.activePoi.id || p.name === state.activePoi.name);
-    if (currentStillExists) {
-      state.activePoi = currentStillExists;
-      const l = state.selectedLang || 'vi';
-      const locPoi = getLocalizedPoi(currentStillExists, l);
-      dom.poiName.innerText = locPoi.name;
-      if (dom.sheetPoiName) dom.sheetPoiName.innerText = locPoi.name;
-      dom.poiAddress.innerText = locPoi.address || 'Quận 1, TP. Hồ Chí Minh';
-      dom.poiScriptText.innerText = locPoi.ttsScript || locPoi.name;
-    } else {
-      const defaultPoi = state.pois.find(p => p.name.includes('Dinh Độc Lập')) || state.pois[0];
-      selectPoi(defaultPoi, false);
+    dom.gpsPill.className = 'gps-badge active';
+    const _lGps = state.selectedLang || 'vi';
+    const _tGps = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[_lGps]) ? UI_LOCALES[_lGps] : { gpsReal: 'GPS Thật', youAreHere: 'Bạn ở đây' };
+    dom.gpsText.innerText = accuracy ? `${_tGps.gpsReal}: ±${Math.round(accuracy)}m` : _tGps.gpsReal;
+    if (state.userMarker) {
+      state.userMarker.bindPopup(`<b>${_tGps.youAreHere || 'Bạn ở đây'}</b>`);
+    }
+    if (dom.recenterBtn) dom.recenterBtn.classList.add('active-tracking');
+
+    // Cập nhật vị trí và marker người dùng tới đúng tọa độ GPS thực tế
+    updateUserPosition(latitude, longitude, accuracy);
+
+    // Căn giữa bản đồ vào vị trí GPS thực tế của du khách
+    if (!state.hasFirstGpsFix) {
+      state.hasFirstGpsFix = true;
+      state.map.setView([latitude, longitude], 16);
     }
   }
-  checkGeofenceAndDistances();
-}
 
-// ==========================================
-// 4. REAL GPS & POSITION TRACKING
-// ==========================================
-function startGpsTracking() {
-  if (!navigator.geolocation) {
-    onGpsPositionError({ code: 0, message: 'Thiết bị không hỗ trợ Geolocation' });
-    return;
+  function onGpsPositionError(err) {
+    console.warn('[GPS] Vị trí phần cứng:', err.message);
+    // Laptop/Mac without GPS chip or permission denied -> fallback gracefully to simulation
+    state.isSimulating = true;
+    dom.gpsPill.className = 'gps-badge sim';
+    dom.gpsText.innerText = 'GPS: Mô phỏng';
+    if (dom.recenterBtn) dom.recenterBtn.classList.remove('active-tracking');
   }
 
-  dom.gpsPill.className = 'gps-badge connecting';
-  dom.gpsText.innerText = 'GPS: Đang lấy vị trí thực...';
+  function updateUserPosition(lat, lng, accuracy = null) {
+    state.currentLat = lat;
+    state.currentLng = lng;
 
-  // 1. Get fast immediate fix from hardware GPS
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      console.log('[GPS Fast Fix Received]:', pos.coords.latitude, pos.coords.longitude);
-      onGpsPositionUpdate(pos);
-    },
-    (err) => {
-      console.warn('[GPS Fast Fix Pending]:', err.message);
-    },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-  );
-
-  // 2. Continuous real-time position tracking
-  if (state.watchId !== null) {
-    navigator.geolocation.clearWatch(state.watchId);
-    state.watchId = null;
-  }
-
-  state.watchId = navigator.geolocation.watchPosition(
-    onGpsPositionUpdate,
-    onGpsPositionError,
-    {
-      enableHighAccuracy: true,
-      maximumAge: 1000,
-      timeout: 15000
+    if (state.userMarker) {
+      state.userMarker.setLatLng([lat, lng]);
     }
-  );
-}
 
-function onGpsPositionUpdate(pos) {
-  const { latitude, longitude, accuracy } = pos.coords;
-  state.isSimulating = false;
-  state.hasRealGps = true;
-
-  dom.gpsPill.className = 'gps-badge active';
-  const _lGps = state.selectedLang || 'vi';
-  const _tGps = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[_lGps]) ? UI_LOCALES[_lGps] : { gpsReal: 'GPS Thật', youAreHere: 'Bạn ở đây' };
-  dom.gpsText.innerText = accuracy ? `${_tGps.gpsReal}: ±${Math.round(accuracy)}m` : _tGps.gpsReal;
-  if (state.userMarker) {
-    state.userMarker.bindPopup(`<b>${_tGps.youAreHere || 'Bạn ở đây'}</b>`);
-  }
-  if (dom.recenterBtn) dom.recenterBtn.classList.add('active-tracking');
-
-  // Cập nhật vị trí và marker người dùng tới đúng tọa độ GPS thực tế
-  updateUserPosition(latitude, longitude, accuracy);
-
-  // Căn giữa bản đồ vào vị trí GPS thực tế của du khách
-  if (!state.hasFirstGpsFix) {
-    state.hasFirstGpsFix = true;
-    state.map.setView([latitude, longitude], 16);
-  }
-}
-
-function onGpsPositionError(err) {
-  console.warn('[GPS] Vị trí phần cứng:', err.message);
-  // Laptop/Mac without GPS chip or permission denied -> fallback gracefully to simulation
-  state.isSimulating = true;
-  dom.gpsPill.className = 'gps-badge sim';
-  dom.gpsText.innerText = 'GPS: Mô phỏng';
-  if (dom.recenterBtn) dom.recenterBtn.classList.remove('active-tracking');
-}
-
-function updateUserPosition(lat, lng, accuracy = null) {
-  state.currentLat = lat;
-  state.currentLng = lng;
-
-  if (state.userMarker) {
-    state.userMarker.setLatLng([lat, lng]);
-  }
-
-  // Draw or update GPS Accuracy Circle
-  if (accuracy && accuracy < 250) {
-    if (!state.accuracyCircle) {
-      state.accuracyCircle = L.circle([lat, lng], {
-        radius: accuracy,
-        color: '#0284c7',
-        fillColor: '#38bdf8',
-        fillOpacity: 0.12,
-        weight: 1
-      }).addTo(state.map);
-    } else {
-      state.accuracyCircle.setLatLng([lat, lng]);
-      state.accuracyCircle.setRadius(accuracy);
+    // Draw or update GPS Accuracy Circle
+    if (accuracy && accuracy < 250) {
+      if (!state.accuracyCircle) {
+        state.accuracyCircle = L.circle([lat, lng], {
+          radius: accuracy,
+          color: '#0284c7',
+          fillColor: '#38bdf8',
+          fillOpacity: 0.12,
+          weight: 1
+        }).addTo(state.map);
+      } else {
+        state.accuracyCircle.setLatLng([lat, lng]);
+        state.accuracyCircle.setRadius(accuracy);
+      }
+    } else if (state.accuracyCircle) {
+      state.map.removeLayer(state.accuracyCircle);
+      state.accuracyCircle = null;
     }
-  } else if (state.accuracyCircle) {
-    state.map.removeLayer(state.accuracyCircle);
-    state.accuracyCircle = null;
-  }
 
   checkGeofenceAndDistances();
 }
@@ -1635,7 +1623,7 @@ function checkGeofenceAndDistances() {
       if (now - lastTime > CONFIG.GEOFENCE_COOLDOWN_MS) {
         state.lastTriggeredTime[poiInsideZone.id] = now;
         console.log(`[GEOFENCE TRIGGERED] Entered: ${locTargetPoi.name} (${roundedDist}m)`);
-
+        
         // Audio notification cue
         playNotificationChime();
 
@@ -1689,8 +1677,8 @@ function calculateHaversine(lat1, lon1, lat2, lon2) {
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
@@ -1738,7 +1726,7 @@ function getOrCreateDeviceId() {
     try {
       localStorage.setItem('poi_tour_device_id', devId);
       sessionStorage.setItem('poi_tour_device_id', devId);
-    } catch (e) { }
+    } catch (e) {}
   }
   return devId;
 }
@@ -1750,27 +1738,8 @@ function sendRealtimeHeartbeat() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'DEVICE_ONLINE', deviceId: devId, deviceType: isMobile ? 'mobile' : 'web' })
-  })
-    .then(r => r.ok ? r.json() : null)
-    .then(data => {
-      if (data && data.poisVersion) {
-        if (state.poisVersion && state.poisVersion !== data.poisVersion) {
-          fetchPois();
-        }
-        state.poisVersion = data.poisVersion;
-      }
-    })
-    .catch(() => { });
+  }).catch(() => {});
 }
-
-try {
-  const poiSyncChannel = new BroadcastChannel('poitour_sync_channel');
-  poiSyncChannel.onmessage = (ev) => {
-    if (ev.data && ev.data.type === 'POIS_UPDATED') {
-      fetchPois();
-    }
-  };
-} catch (e) {}
 
 function sendDeviceOffline() {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -1779,7 +1748,7 @@ function sendDeviceOffline() {
   if (navigator.sendBeacon) {
     navigator.sendBeacon(CONFIG.REALTIME_URL, new Blob([payload], { type: 'application/json' }));
   } else {
-    fetch(CONFIG.REALTIME_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => { });
+    fetch(CONFIG.REALTIME_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
   }
 }
 
@@ -1798,28 +1767,24 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-function notifyPoiPlay(poi, triggerType = 'manual') {
+function notifyPoiPlay(poi) {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   const devId = getOrCreateDeviceId();
-  const payload = JSON.stringify({
-    type: 'POI_PLAY',
-    deviceId: devId,
-    poiId: poi.id,
-    poiName: poi.name,
-    language: state.selectedLang || 'vi',
-    deviceType: isMobile ? 'mobile' : 'web',
-    triggerType: triggerType // 'auto' (Geofence GPS 30m) hoặc 'manual' (Chọn điểm trên bản đồ / bấm nút)
-  });
-
-  // Chỉ gửi 1 lần duy nhất (sửa lỗi nhân đôi số lượt nghe)
   fetch(CONFIG.REALTIME_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: payload
-  }).catch(() => { });
+    body: JSON.stringify({
+      type: 'POI_PLAY',
+      deviceId: devId,
+      poiId: poi.id,
+      poiName: poi.name,
+      language: state.selectedLang || 'vi',
+      deviceType: isMobile ? 'mobile' : 'web'
+    })
+  }).catch(() => {});
 }
 
-// ========================================== 
+// ==========================================
 // 7. AUDIO & TTS NARRATION ENGINE
 // ==========================================
 function togglePlayback() {
@@ -1831,8 +1796,8 @@ function togglePlayback() {
   }
 }
 
-function startPlayback(triggerType = 'manual') {
-  if (state.activePoi) notifyPoiPlay(state.activePoi, triggerType);
+function startPlayback() {
+  if (state.activePoi) notifyPoiPlay(state.activePoi);
   if (!state.activePoi) return;
 
   unlockAudio();
@@ -1874,11 +1839,11 @@ function playViaTTS() {
 
   const currentLang = state.selectedLang || 'vi';
   const langMeta = (typeof LANG_MAP !== 'undefined' && LANG_MAP[currentLang]) ? LANG_MAP[currentLang] : { tag: 'vi-VN' };
-
+  
   // 1. Get localized text in the exact selected language
   const locPoi = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(state.activePoi, currentLang) : state.activePoi;
   const textToSpeak = locPoi.ttsScript || locPoi.name;
-
+  
   console.log(`[TTS] Speaking in ${currentLang} (${langMeta.tag}):`, textToSpeak.substring(0, 40) + '...');
   const utterance = new SpeechSynthesisUtterance(textToSpeak);
   window._activeUtterance = utterance;
@@ -1933,9 +1898,9 @@ function stopPlayback() {
   updatePlayButtonUI(false);
   if (state.activePoi) {
     const _l2 = state.selectedLang || 'vi';
-    const _t2 = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[_l2]) ? UI_LOCALES[_l2] : { startNarration: 'Bắt đầu thuyết minh' };
-    const _loc2 = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(state.activePoi, _l2) : state.activePoi;
-    dom.startNarrationText.innerText = `${_t2.startNarration}: ${_loc2.name}`;
+  const _t2 = (typeof UI_LOCALES !== 'undefined' && UI_LOCALES[_l2]) ? UI_LOCALES[_l2] : { startNarration: 'Bắt đầu thuyết minh' };
+  const _loc2 = (typeof getLocalizedPoi === 'function') ? getLocalizedPoi(state.activePoi, _l2) : state.activePoi;
+  dom.startNarrationText.innerText = `${_t2.startNarration}: ${_loc2.name}`;
   }
   clearInterval(state.playbackInterval);
 
@@ -2078,63 +2043,108 @@ function setupEventListeners() {
   });
 
 
-  // Create / Save / Cancel Route (Của Kiệt)
+  // Simulation Tool 3: Real Device GPS
+  dom.realGpsBtn.addEventListener('click', () => {
+    startGpsTracking();
+    switchTab('tabMap', document.getElementById('btnTabMap'));
+  });
+
+  // Create Route Form
+  console.log('Danh sách POI:', state.pois);
   const btnCreateRoute = document.getElementById('btnCreateRoute');
   const createRouteForm = document.getElementById('createRouteForm');
   const btnCancelRoute = document.getElementById('btnCancelRoute');
-  const btnSaveRoute = document.getElementById('btnSaveRoute');
 
   if (btnCreateRoute && createRouteForm) {
     btnCreateRoute.addEventListener('click', () => {
-      renderRoutePoiList();
       createRouteForm.style.display = 'block';
     });
   }
+
   if (btnCancelRoute && createRouteForm) {
     btnCancelRoute.addEventListener('click', () => {
       createRouteForm.style.display = 'none';
     });
   }
+
+  // Save Route
+  const btnSaveRoute = document.getElementById('btnSaveRoute');
+
   if (btnSaveRoute) {
     btnSaveRoute.addEventListener('click', async () => {
       const routeName = document.getElementById('routeName').value.trim();
-      const selectedPois = document.querySelectorAll('#routePoiList input[type="checkbox"]:checked');
-      const selectedPoiIds = Array.from(selectedPois).map(cb => cb.value);
-      const selectedPoisData = state.pois.filter(poi => selectedPoiIds.includes(String(poi.id)));
+
+      const selectedPois = document.querySelectorAll(
+        '#routePoiList input[type="checkbox"]:checked'
+      );
+
+      const selectedPoiIds = Array.from(selectedPois).map(
+        checkbox => checkbox.value
+      );
+
+      const selectedPoisData = state.pois.filter(poi =>
+        selectedPoiIds.includes(String(poi.id))
+      );
 
       if (!routeName) {
         alert('Vui lòng nhập tên tuyến đường!');
         return;
       }
+
       if (selectedPoisData.length === 0) {
         alert('Vui lòng chọn ít nhất một địa điểm!');
         return;
       }
 
-      const start = { lat: state.currentLat, lng: state.currentLng };
+      const start = {
+        lat: state.currentLat,
+        lng: state.currentLng
+      };
+
       const endPoi = selectedPoisData[selectedPoisData.length - 1];
-      const end = { lat: Number(endPoi.lat), lng: Number(endPoi.lng) };
+
+      const end = {
+        lat: Number(endPoi.lat),
+        lng: Number(endPoi.lng)
+      };
 
       if (!Number.isFinite(end.lat) || !Number.isFinite(end.lng)) {
         alert('Địa điểm không có tọa độ hợp lệ!');
         return;
       }
 
+      // Tìm đường đi trên bản đồ
       await getRoadRoute(start, end);
-      switchTab('tabMap', document.getElementById('btnTabMap'));
 
       try {
+        // Gửi dữ liệu đến Tracking Service
         const response = await fetch('http://localhost:8083/api/routes', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: routeName, poiIds: selectedPoiIds })
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: routeName,
+            poiIds: selectedPoiIds
+          })
         });
-        if (response.ok) {
-          const savedRoute = await response.json();
-          alert('Lưu tuyến đường thành công!\nMã tuyến đường: ' + savedRoute.id);
+
+        if (!response.ok) {
+          throw new Error('Không thể lưu tuyến đường vào hệ thống!');
         }
+
+        const savedRoute = await response.json();
+
+        console.log('Tuyến đường đã lưu:', savedRoute);
+
+        alert(
+          'Lưu tuyến đường thành công!\n' +
+          'Mã tuyến đường: ' + savedRoute.id
+        );
+
       } catch (error) {
-        console.warn('Tracking service (:8083) offline, đã vẽ đường đi OSRM trên bản đồ:', error.message);
+        console.error('Lỗi lưu tuyến đường:', error);
+        alert('Lỗi lưu tuyến đường: ' + error.message);
       }
     });
   }
@@ -2142,31 +2152,50 @@ function setupEventListeners() {
 
 async function loadRoutes() {
   const toursList = document.getElementById('toursList');
+
   if (!toursList) return;
+
   try {
     const response = await fetch('http://localhost:8083/api/routes');
-    if (!response.ok) return;
+
+    if (!response.ok) {
+      throw new Error('Không thể tải danh sách tuyến đường!');
+    }
+
     const routes = await response.json();
-    if (!Array.isArray(routes) || routes.length === 0) return;
+
     toursList.innerHTML = '';
+
+    if (routes.length === 0) {
+      toursList.textContent = 'Chưa có tuyến đường nào được lưu.';
+      return;
+    }
+
     routes.forEach(route => {
       const card = document.createElement('div');
       card.className = 'tour-card';
+
       const title = document.createElement('h3');
       title.className = 'tour-name';
       title.textContent = route.name;
+
       const description = document.createElement('p');
       description.className = 'tour-desc';
-      description.textContent = 'Mã tuyến: ' + route.id + ' | Số địa điểm: ' + (route.poiIds?.length || 0);
+      description.textContent =
+        'Mã tuyến: ' + route.id +
+        ' | Số địa điểm: ' + (route.poiIds?.length || 0);
+
       card.appendChild(title);
       card.appendChild(description);
+
       toursList.appendChild(card);
     });
+
   } catch (error) {
-    console.info('Tracking service (:8083) offline, giữ các tuyến gợi ý mặc định.');
+    console.error('Lỗi tải tuyến đường:', error);
+    toursList.textContent = 'Không thể tải danh sách tuyến đường.';
   }
 }
-
 function switchTab(tabId, activeBtn) {
   // Hide all tabs
   document.querySelectorAll('.tab-page').forEach(page => page.classList.remove('active'));
@@ -2184,7 +2213,7 @@ function switchTab(tabId, activeBtn) {
     setTimeout(() => {
       if (state.map) state.map.invalidateSize();
     }, 100);
-  } else if (tabId === 'tabTours') {
+} else if (tabId === 'tabTours') {
     dom.screenTitle.innerText = 'Lộ trình Tổng quan';
     loadRoutes();
   } else if (tabId === 'tabSettings') {
