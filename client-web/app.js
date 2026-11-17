@@ -697,8 +697,47 @@ const POI_MULTILANG_SCRIPTS = {
       th: 'ตลาดเบนถั่นพร้อมหอนาฬิกาสี่ด้านอันเป็นเอกลักษณ์ คือหัวใจทางการค้าที่คึกคักของเขต 1 ที่ซึ่งนักท่องเที่ยวจะได้สัมผัสอาหารริมทางและวัฒนธรรมท้องถิ่น'
     }
   },
-  // 6. Bảo Tàng Chứng Tích Chiến Tranh
+    // 6. Phố Đi Bộ Nguyễn Huệ
   'q1-poi-0006': {
+    name: {
+      vi: 'Phố Đi Bộ Nguyễn Huệ',
+      en: 'Nguyen Hue Walking Street',
+      zh: '阮惠步行街',
+      ja: 'グエンフエ歩行者天国',
+      ko: '응우옌후에 보행자 전용 거리',
+      fr: 'Rue piétonne Nguyen Hue',
+      ru: 'Пешеходная улица Нгуен Хюэ',
+      de: 'Nguyen-Hue-Fußgängerzone',
+      es: 'Calle peatonal Nguyen Hue',
+      th: 'ถนนคนเดินเหงียนเหวะ'
+    },
+    address: {
+      vi: 'Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1',
+      en: 'Nguyen Hue Street, Ben Nghe Ward, District 1',
+      zh: '第一区仁义坊阮惠街',
+      ja: '1区ベンゲー坊グエンフエ通り',
+      ko: '1군 벤응에동 응우옌후에 거리',
+      fr: 'Rue Nguyen Hue, Ben Nghe, 1er Arr.',
+      ru: 'Ул. Нгуен Хюэ, район 1',
+      de: 'Nguyen Hue Str., Distrikt 1',
+      es: 'Calle Nguyen Hue, Distrito 1',
+      th: 'ถนน Nguyen Hue, แขวง Ben Nghe, เขต 1'
+    },
+    script: {
+      vi: 'Phố Đi Bộ Nguyễn Huệ là quảng trường đi bộ hiện đại bậc nhất trung tâm Quận 1, trải dài từ trụ sở Ủy ban Nhân dân Thành phố đến bờ sông Sài Gòn, rực rỡ sắc màu về đêm.',
+      en: 'Nguyen Hue Walking Street is a premier pedestrian boulevard in District 1, extending from City Hall down to the scenic Saigon River waterfront, lively with music and cultural events.',
+      zh: '阮惠步行街是第一区最现代化的步行广场，从市政厅一直延伸至风景秀丽的西贡河畔，夜景璀璨迷人。',
+      ja: 'グエンフエ歩行者天国は1区の中心部に位置する現代的な広場で、人民委員会庁舎からサイゴン川沿いまで延び、夜にはライトアップで賑わいます。',
+      ko: '응우옌후에 보행자 거리는 시청에서 사이공 강변까지 이어지는 1구의 현대적인 명소로, 밤마다 화려한 조명과 활기로 가득합니다.',
+      fr: 'La rue piétonne Nguyen Hue est une esplanade moderne reliant l\'Hôtel de Ville au fleuve Saïgon, animée et illuminée chaque soir.',
+      ru: 'Пешеходная улица Нгуен Хюэ — современная эспланада в центре 1-го района, тянущаяся от здания Народного комитета до реки Сайгон.',
+      de: 'Die Nguyen-Hue-Fußgängerzone ist eine moderne Promenade, die vom Rathaus bis zum Saigon-Fluss reicht und abends lebendig beleuchtet ist.',
+      es: 'La calle peatonal Nguyen Hue es un bulevar moderno que se extiende desde el Ayuntamiento hasta el río Saigón, lleno de vida y luces por la noche.',
+      th: 'ถนนคนเดินเหงียนเหวะเป็นลานคนเดินที่ทันสมัยที่สุดในเขต 1 ทอดยาวจากศาลาว่าการเมืองไปยังริมแม่น้ำไซง่อน คึกคักด้วยแสงสีในยามค่ำคืน'
+    }
+  },
+  // 6. Bảo Tàng Chứng Tích Chiến Tranh
+  'q1-poi-0007': {
     name: {
       vi: 'Bảo Tàng Chứng Tích Chiến Tranh',
       en: 'War Remnants Museum',
@@ -752,7 +791,8 @@ function findPoiMultilang(poi) {
   if (poi.id === 'poi-buu-dien') return POI_MULTILANG_SCRIPTS['q1-poi-0003'];
   if (poi.id === 'poi-nha-hat') return POI_MULTILANG_SCRIPTS['q1-poi-0004'];
   if (poi.id === 'poi-cho-ben-thanh') return POI_MULTILANG_SCRIPTS['q1-poi-0005'];
-  if (poi.id === 'poi-bao-tang') return POI_MULTILANG_SCRIPTS['q1-poi-0006'];
+  if (poi.id === 'poi-pho-di-bo') return POI_MULTILANG_SCRIPTS['q1-poi-0006'];
+  if (poi.id === 'poi-bao-tang') return POI_MULTILANG_SCRIPTS['q1-poi-0007'];
 
   // Fuzzy check on name and ID
   const str = ((poi.id || '') + ' ' + (poi.name || '')).toLowerCase();
@@ -771,9 +811,12 @@ function findPoiMultilang(poi) {
   if (str.includes('bến thành') || str.includes('ben thanh')) {
     return POI_MULTILANG_SCRIPTS['q1-poi-0005'];
   }
-  if (str.includes('chứng tích') || str.includes('chung tich') || str.includes('war remnants')) {
-    return POI_MULTILANG_SCRIPTS['q1-poi-0006'];
-  }
+if (str.includes('nguyễn huệ') || str.includes('nguyen hue') || str.includes('walking street') || str.includes('pho di bo')) {
+  return POI_MULTILANG_SCRIPTS['q1-poi-0006'];
+}
+if (str.includes('chứng tích') || str.includes('chung tich') || str.includes('war remnants')) {
+  return POI_MULTILANG_SCRIPTS['q1-poi-0007'];
+}
   return null;
 }
 
@@ -984,7 +1027,7 @@ const FALLBACK_POIS = [
     lat: 10.77692,
     lng: 106.69531,
     radiusM: 30,
-    imageUrl: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=300&auto=format&fit=crop&q=80',
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPoo8BQjeSuYLPbmHzPmtJEmha2b6jxHY8HhzVNcdbtA&s=10',
     langCode: 'vi',
     ttsScript: 'Chào mừng bạn đến Dinh Độc Lập, còn gọi là Dinh Thống Nhất. Đây là công trình lịch sử mang tính biểu tượng của Sài Gòn, chứng kiến thời khắc lịch sử ngày 30 tháng 4 năm 1975.',
     durationSec: 135, // 02:15
@@ -997,7 +1040,7 @@ const FALLBACK_POIS = [
     lat: 10.77972,
     lng: 106.69904,
     radiusM: 30,
-    imageUrl: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=300&auto=format&fit=crop&q=80',
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpDsbz6LyVKcZOpkUjV7mbHRwncUsKWxonIy6BLFe_fw&s=10',
     langCode: 'vi',
     ttsScript: 'Bạn đang đứng trước Nhà Thờ Đức Bà Sài Gòn, kiệt tác kiến trúc Gothic cổ kính được xây dựng từ năm 1877 với toàn bộ gạch ngói nhập khẩu từ Marseille, Pháp.',
     durationSec: 120,
@@ -1010,7 +1053,7 @@ const FALLBACK_POIS = [
     lat: 10.77957,
     lng: 106.69930,
     radiusM: 30,
-    imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=300&auto=format&fit=crop&q=80',
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR77BOmHazGRPAP75DIsB7yspi6vXNMUWPiMuO4wjboUw&s=10',
     langCode: 'vi',
     ttsScript: 'Bưu Điện Trung Tâm Sài Gòn là một trong những công trình kiến trúc thời Pháp đẹp nhất tại Quận 1, kết hợp hài hòa giữa phong cách Phục Hưng phương Tây và họa tiết phương Đông.',
     durationSec: 110,
@@ -1023,7 +1066,7 @@ const FALLBACK_POIS = [
     lat: 10.77665,
     lng: 106.70318,
     radiusM: 30,
-    imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300&auto=format&fit=crop&q=80',
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQI9NMNeCC1IuOI6l7kw5tqL4dQSebw8Ew4l-FEZnN6qw&s=10',
     langCode: 'vi',
     ttsScript: 'Nhà Hát Lớn Thành Phố khánh thành năm 1900 mang đậm phong cách kiến trúc Flamboyant Pháp, là trung tâm biểu diễn nghệ thuật danh giá hàng đầu.',
     durationSec: 130,
@@ -1036,10 +1079,36 @@ const FALLBACK_POIS = [
     lat: 10.77253,
     lng: 106.69803,
     radiusM: 30,
-    imageUrl: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=300&auto=format&fit=crop&q=80',
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGr3g4fVHv3abCcRM1cGv9qJPIuq16sVz2zRH3kHTfhA&s=10',
     langCode: 'vi',
     ttsScript: 'Chợ Bến Thành với tháp đồng hồ bốn mặt nổi tiếng là trái tim thương mại sôi động của Quận 1, nơi du khách thỏa sức khám phá ẩm thực đường phố và văn hóa bản địa đặc sắc.',
     durationSec: 140,
+    audioUrl: null
+  },
+  {
+    id: 'poi-pho-di-bo',
+    name: 'Phố Đi Bộ Nguyễn Huệ',
+    address: 'Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1',
+    lat: 10.77362,
+    lng: 106.70408,
+    radiusM: 40,
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG-tkjat6rJ0PI-xQkfQBIMZTPwXSeJhtdZqGlCHuCNg&s=10',
+    langCode: 'vi',
+    ttsScript: 'Phố Đi Bộ Nguyễn Huệ là quảng trường đi bộ hiện đại bậc nhất trung tâm Quận 1, trải dài từ trụ sở Ủy ban Nhân dân Thành phố đến bờ sông Sài Gòn, rực rỡ sắc màu về đêm.',
+    durationSec: 120,
+    audioUrl: null
+  },
+  {
+    id: 'poi-bao-tang',
+    name: 'Bảo Tàng Chứng Tích Chiến Tranh',
+    address: '28 Võ Văn Tần, Phường Võ Thị Sáu, Quận 3',
+    lat: 10.77940,
+    lng: 106.69225,
+    radiusM: 30,
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHvTzJd0cYble5uFo_PpZ2yvz5tdz_Ro72XoOj2ez9rQ&s=10',
+    langCode: 'vi',
+    ttsScript: 'Bảo Tàng Chứng Tích Chiến Tranh lưu giữ hàng ngàn hiện vật và tư liệu lịch sử quý giá, truyền tải thông điệp sâu sắc về khát vọng hòa bình và sự kiên cường của dân tộc.',
+    durationSec: 150,
     audioUrl: null
   }
 ];
@@ -2008,40 +2077,6 @@ function setupEventListeners() {
     state.autoPlayGeofence = e.target.checked;
   });
 
-  // Simulation Tool 1: Near Dinh (10m) -> Triggers 30m geofence
-  dom.simNearBtn.addEventListener('click', () => {
-    if (state.watchId !== null) {
-      navigator.geolocation.clearWatch(state.watchId);
-      state.watchId = null;
-    }
-    state.isSimulating = true;
-    dom.gpsPill.className = 'gps-badge sim';
-    dom.gpsText.innerText = 'GPS: Mô phỏng';
-    if (dom.recenterBtn) dom.recenterBtn.classList.remove('active-tracking');
-    updateUserPosition(10.77685, 106.69530); // ~10m from Dinh
-    switchTab('tabMap', document.getElementById('btnTabMap'));
-  });
-
-  // Simulation Tool 2: Far from Dinh (350m)
-  dom.simFarBtn.addEventListener('click', () => {
-    if (state.watchId !== null) {
-      navigator.geolocation.clearWatch(state.watchId);
-      state.watchId = null;
-    }
-    state.isSimulating = true;
-    dom.gpsPill.className = 'gps-badge sim';
-    dom.gpsText.innerText = 'GPS: Mô phỏng';
-    if (dom.recenterBtn) dom.recenterBtn.classList.remove('active-tracking');
-    stopPlayback();
-    updateUserPosition(10.77450, 106.69420); // ~316m - 350m
-    switchTab('tabMap', document.getElementById('btnTabMap'));
-  });
-
-  // Simulation Tool 3: Real Device GPS
-  dom.realGpsBtn.addEventListener('click', () => {
-    startGpsTracking();
-    switchTab('tabMap', document.getElementById('btnTabMap'));
-  });
 
   // Create / Save / Cancel Route (Của Kiệt)
   const btnCreateRoute = document.getElementById('btnCreateRoute');

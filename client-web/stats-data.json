@@ -1,13 +1,14 @@
 {
-  "totalAudience": 31,
+  "totalAudience": 70,
   "autoListens": 3,
-  "manualListens": 28,
+  "manualListens": 67,
   "poiListens": {
-    "Dinh Độc Lập": 17,
-    "Chợ Bến Thành": 8,
-    "Phố Đi Bộ Nguyễn Huệ": 2,
-    "Bưu Điện Trung Tâm": 3,
-    "Nhà Hát Thành Phố": 1
+    "Dinh Độc Lập": 21,
+    "Chợ Bến Thành": 13,
+    "Phố Đi Bộ Nguyễn Huệ": 8,
+    "Bưu Điện Trung Tâm": 18,
+    "Nhà Hát Thành Phố": 5,
+    "Nhà Thờ Đức Bà": 5
   },
   "recentEvents": [
     {
@@ -16,7 +17,15 @@
       "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794856550107
+      "timestamp": 1794890678763
+    },
+    {
+      "poiName": "Nhà Thờ Đức Bà",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794890677330
     },
     {
       "poiName": "Bưu Điện Trung Tâm",
@@ -24,39 +33,63 @@
       "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794856274657
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Điện thoại di động (Mobile) • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794855969070
+      "timestamp": 1794890671646
     },
     {
       "poiName": "Nhà Hát Thành Phố",
       "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Điện thoại di động (Mobile) • Chọn trên bản đồ",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794855962708
+      "timestamp": 1794890669715
+    },
+    {
+      "poiName": "Phố Đi Bộ Nguyễn Huệ",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794890667295
+    },
+    {
+      "poiName": "Chợ Bến Thành",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794890664262
+    },
+    {
+      "poiName": "Phố Đi Bộ Nguyễn Huệ",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794889604368
     },
     {
       "poiName": "Bưu Điện Trung Tâm",
       "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Điện thoại di động (Mobile) • Chọn trên bản đồ",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794855959175
+      "timestamp": 1794888596866
     },
     {
-      "poiName": "Dinh Độc Lập",
+      "poiName": "Nhà Thờ Đức Bà",
       "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Điện thoại di động (Mobile) • Chọn trên bản đồ",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794855956045
+      "timestamp": 1794888595336
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794888583919
     },
     {
       "poiName": "Phố Đi Bộ Nguyễn Huệ",
@@ -64,79 +97,31 @@
       "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794855919370
+      "timestamp": 1794888506384
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794888376384
     },
     {
       "poiName": "Phố Đi Bộ Nguyễn Huệ",
-      "poiCode": "GPS-AUTO",
-      "deviceInfo": "Trình duyệt Web • Tự động Geofence",
-      "language": "Tiếng Việt",
-      "triggerType": "auto",
-      "timestamp": 1794855910217
-    },
-    {
-      "poiName": "Chợ Bến Thành",
       "poiCode": "MAP-MANUAL",
       "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794855902974
+      "timestamp": 1794888038765
     },
     {
-      "poiName": "Chợ Bến Thành",
+      "poiName": "Nhà Hát Thành Phố",
       "poiCode": "MAP-MANUAL",
       "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794855902020
-    },
-    {
-      "poiName": "Chợ Bến Thành",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794855899533
-    },
-    {
-      "poiName": "Chợ Bến Thành",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794855893680
-    },
-    {
-      "poiName": "Chợ Bến Thành",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794855890707
-    },
-    {
-      "poiName": "Chợ Bến Thành",
-      "poiCode": "GPS-AUTO",
-      "deviceInfo": "Trình duyệt Web • Tự động Geofence",
-      "language": "Tiếng Việt",
-      "triggerType": "auto",
-      "timestamp": 1794855887110
-    },
-    {
-      "poiName": "Chợ Bến Thành",
-      "poiCode": "GPS-AUTO",
-      "deviceInfo": "Trình duyệt Web • Tự động Geofence",
-      "language": "Tiếng Việt",
-      "triggerType": "auto",
-      "timestamp": 1794854898440
-    },
-    {
-      "poiName": "Dinh Độc Lập",
-      "poiCode": "MAP-MANUAL",
-      "deviceInfo": "Điện thoại di động (Mobile) • Chọn trên bản đồ",
-      "language": "Tiếng Việt",
-      "triggerType": "manual",
-      "timestamp": 1794854609490
+      "timestamp": 1794888034533
     },
     {
       "poiName": "Dinh Độc Lập",
@@ -144,7 +129,7 @@
       "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794854412467
+      "timestamp": 1794888030269
     },
     {
       "poiName": "Chợ Bến Thành",
@@ -152,31 +137,47 @@
       "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794854394733
+      "timestamp": 1794888025783
     },
     {
-      "poiName": "Dinh Độc Lập",
+      "poiName": "Bưu Điện Trung Tâm",
       "poiCode": "MAP-MANUAL",
       "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794853913577
+      "timestamp": 1794887997968
     },
     {
-      "poiName": "Dinh Độc Lập",
+      "poiName": "Phố Đi Bộ Nguyễn Huệ",
       "poiCode": "MAP-MANUAL",
       "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
       "language": "Tiếng Việt",
       "triggerType": "manual",
-      "timestamp": 1794853912709
+      "timestamp": 1794887662549
+    },
+    {
+      "poiName": "Bưu Điện Trung Tâm",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794887656284
+    },
+    {
+      "poiName": "Nhà Thờ Đức Bà",
+      "poiCode": "MAP-MANUAL",
+      "deviceInfo": "Trình duyệt Web • Chọn trên bản đồ",
+      "language": "Tiếng Việt",
+      "triggerType": "manual",
+      "timestamp": 1794887654301
     }
   ],
   "hourlyByDay": {
     "2026-11-17": [
       0,
       0,
-      0,
-      0,
+      23,
+      16,
       0,
       0,
       0,
@@ -193,7 +194,7 @@
       "lng": 106.69531,
       "radiusM": 30,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=300&auto=format&fit=crop&q=80",
+      "imageUrl": "https://dinhdoclap.gov.vn/wp-content/uploads/2025/12/luu-nhap-tu-dong-9989.jpg",
       "ttsScript": "Chào mừng bạn đến Dinh Độc Lập, còn gọi là Dinh Thống Nhất. Đây là công trình lịch sử mang tính biểu tượng của Sài Gòn, chứng kiến thời khắc lịch sử ngày 30 tháng 4 năm 1975.",
       "durationSec": 135,
       "audioUrl": null,
@@ -212,7 +213,7 @@
       "lng": 106.6993,
       "radiusM": 30,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=300&auto=format&fit=crop&q=80",
+      "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpDsbz6LyVKcZOpkUjV7mbHRwncUsKWxonIy6BLFe_fw&s=10",
       "ttsScript": "Bưu Điện Trung Tâm Sài Gòn là một trong những công trình kiến trúc thời Pháp đẹp nhất tại Quận 1, kết hợp hài hòa giữa phong cách Phục Hưng phương Tây và họa tiết phương Đông.",
       "durationSec": 110,
       "audioUrl": null,
@@ -231,7 +232,7 @@
       "lng": 106.69904,
       "radiusM": 30,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=300&auto=format&fit=crop&q=80",
+      "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpDsbz6LyVKcZOpkUjV7mbHRwncUsKWxonIy6BLFe_fw&s=10",
       "ttsScript": "Bạn đang đứng trước Nhà Thờ Đức Bà Sài Gòn, kiệt tác kiến trúc Gothic cổ kính được xây dựng từ năm 1877 với toàn bộ gạch ngói nhập khẩu từ Marseille, Pháp.",
       "durationSec": 120,
       "audioUrl": null,
@@ -250,7 +251,7 @@
       "lng": 106.70318,
       "radiusM": 30,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300&auto=format&fit=crop&q=80",
+      "imageUrl": "https://cdn3.ivivu.com/2022/10/nha-hat-thanh-pho-HCM-ivivu1.jpg",
       "ttsScript": "Nhà Hát Lớn Thành Phố khánh thành năm 1900 mang đậm phong cách kiến trúc Flamboyant Pháp, là trung tâm biểu diễn nghệ thuật danh giá hàng đầu.",
       "durationSec": 130,
       "audioUrl": null,
@@ -269,7 +270,7 @@
       "lng": 106.69803,
       "radiusM": 30,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1528127269322-539801943592?w=300&auto=format&fit=crop&q=80",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Ben_Thanh_market_2.jpg/330px-Ben_Thanh_market_2.jpg?utm_source=vi.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
       "ttsScript": "Chợ Bến Thành với tháp đồng hồ bốn mặt nổi tiếng là trái tim thương mại sôi động của Quận 1, nơi du khách thỏa sức khám phá ẩm thực đường phố và văn hóa bản địa đặc sắc.",
       "durationSec": 140,
       "audioUrl": null,
@@ -288,7 +289,7 @@
       "lng": 106.70408,
       "radiusM": 40,
       "isActive": true,
-      "imageUrl": "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=300&auto=format&fit=crop&q=80",
+      "imageUrl": "https://mia.vn/media/uploads/blog-du-lich/pho-di-bo-nguyen-hue-1-1691590967.jpg",
       "ttsScript": "Phố Đi Bộ Nguyễn Huệ là quảng trường đi bộ hiện đại bậc nhất, trải dài từ trụ sở Ủy ban Nhân dân Thành phố đến bờ sông Sài Gòn, rực rỡ sắc màu về đêm.",
       "durationSec": 125,
       "audioUrl": null,
@@ -300,6 +301,6 @@
       "customAudioUrls": {}
     }
   ],
-  "poisVersion": 1794852558899,
-  "lastUpdated": "2026-11-16T19:15:50.107Z"
+  "poisVersion": 1794888396850,
+  "lastUpdated": "2026-11-17T04:44:38.763Z"
 }
